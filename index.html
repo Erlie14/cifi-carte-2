@@ -130,7 +130,7 @@ const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Su
 const SECTION_SANS_THEME = 'Autres informations';   // pour les colonnes sans « __ »
 // À l'ouverture de la fiche : 'premiere' (seule la 1re section est dépliée), 'toutes' ou 'aucune'
 const OUVERTURE = 'premiere';
-const VERSION = '8';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
+const VERSION = '9';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
 
 // Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
 const NIVEAUX = {
@@ -260,10 +260,16 @@ const lignes = l => `<dl>${l.map(([k,v,g]) => `<dt>${esc(k)}</dt><dd${g ? ' clas
 
 let cfg = { popup: [], sections: [] }, labels = {}, allCols = [];
 const libel = c => labels[c] || joli(c);
-const champsDe = (liste, raw) => liste.map(x => [libel(x.c), formater(x.c, raw[x.c]), x.gras]).filter(a => a[1] !== null);
+function fmt(c, v) {   // formatage selon le type réel de la colonne dans Grist
+  const t = types[c] || '';
+  if (typeof v === 'number' && t === 'Date') return new Date(v * 1000).toLocaleDateString('fr-FR', { timeZone:'UTC' });
+  if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
+  return formater(c, v);
+}
+const champsDe = (liste, raw) => liste.map(x => [libel(x.c), fmt(x.c, raw[x.c]), x.gras]).filter(a => a[1] !== null);
 const etatSections = new Map();   // mémorise les sections que vous avez dépliées / repliées
 function corpsFiche(d) {
-  const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, d.raw) })).filter(x => x.l.length);
+  const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, valeurs(d)) })).filter(x => x.l.length);
   if (!secs.length) return '<p class="vide">Aucune section à afficher. Cliquez sur « ⚙ Réglages de la fiche » (en haut à gauche de la carte) pour créer vos sections.</p>';
   const ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (OUVERTURE === 'toutes' || (OUVERTURE === 'premiere' && i === 0));
   return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
@@ -318,7 +324,7 @@ function fichier(d) {
   return `<div class="fiche" style="--niv:${d.niv.couleur}">
     <header><h3>${esc(d.nom || 'Sans nom')}</h3>
       <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
-    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.raw)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans ⚙ Réglages.</p>'}</div>
+    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, valeurs(d))) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans ⚙ Réglages.</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
 }
 
@@ -343,8 +349,8 @@ grist.onRecords((records, mappings) => {
     return;
   }
   afficherMsg('');
-  allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
-  if (!labelsCharges) chargerLibelles();
+  if (!allCols.length) allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
+  if (!labelsCharges) chargerLibelles(); else chargerTable();
   const vus = new Set(); sansGps = 0;
 
   records.forEach((raw, i) => {
@@ -372,16 +378,28 @@ grist.onRecords((records, mappings) => {
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
 }, { includeColumns: 'normal' });
 
-let labelsCharges = false;
-async function chargerLibelles() {   // libellés « humains » des colonnes (accès complet)
+let labelsCharges = false, tid = null, types = {}, donnees = new Map(), erreurAcces = '';
+const valeurs = d => donnees.get(d.id) || d.raw;
+async function chargerLibelles() {   // libellés et types des colonnes (accès complet)
   labelsCharges = true;
   try {
-    const tid = await grist.selectedTable.getTableId();
+    tid = await grist.selectedTable.getTableId();
     const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column');
     const ref = T.id[T.tableId.indexOf(tid)];
-    C.id.forEach((_, k) => { if (C.parentId[k] === ref) labels[C.colId[k]] = C.label[k]; });
-    rafraichir(); if (modal.classList.contains('ouvert')) dessinerReglages();
+    C.id.forEach((_, k) => { if (C.parentId[k] === ref) { labels[C.colId[k]] = C.label[k]; types[C.colId[k]] = C.type[k]; } });
   } catch (e) { console.warn('Libellés indisponibles', e); }
+  chargerTable();
+}
+async function chargerTable() {      // toutes les colonnes et toutes les lignes de la table
+  try {
+    if (!tid) tid = await grist.selectedTable.getTableId();
+    const t = await grist.docApi.fetchTable(tid);
+    const cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_'));
+    const m = new Map();
+    t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
+    allCols = cols; donnees = m; erreurAcces = '';
+  } catch (e) { erreurAcces = String((e && e.message) || e); }
+  rafraichir(); if (modal.classList.contains('ouvert')) dessinerReglages();
 }
 function rafraichir() {
   if (ficheId !== null) ouvrirFiche(ficheId, false);
@@ -404,7 +422,7 @@ function blocListe(g) {
 function dessinerReglages() {
   const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
   modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Réglages de la fiche"><div class="rg-tete"><h2>Réglages de la fiche</h2><button type="button" data-a="fermer">Fermer</button></div>
-    <div class="rg-corps"><section><h3>Popup (clic sur un point)</h3>${blocListe('p')}</section>
+    <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est bien en « Accès complet » dans le panneau de droite de Grist. (${esc(erreurAcces)})</p>` : `<p class="vide" style="font-size:13px;margin:10px 0 0">${allCols.length} colonnes détectées dans la table.</p>`}<section><h3>Popup (clic sur un point)</h3>${blocListe('p')}</section>
     ${cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section">
       <button type="button" data-a="sup" data-g="${i}" aria-label="Monter la section">▲</button><button type="button" data-a="sdown" data-g="${i}" aria-label="Descendre la section">▼</button><button type="button" data-a="sdel" data-g="${i}">Supprimer</button></div>${blocListe(String(i))}</section>`).join('')}
     <button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button></div></div>`;
