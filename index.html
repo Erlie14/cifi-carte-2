@@ -89,6 +89,22 @@
   .fp-outils { text-align:right; margin-bottom:8px; }
   .fp-outils button { padding:0; border:0; background:none; color:var(--accent); font:inherit; font-size:13px; cursor:pointer; text-decoration:underline; }
   .fiche .corps dl { padding-top:10px; }
+  .b { font-weight:700; }
+  #reglages { position:absolute; inset:0; z-index:1200; background:#0006; display:none; align-items:center; justify-content:center; padding:12px; }
+  #reglages.ouvert { display:flex; }
+  .rg-boite { background:#fff; border-radius:12px; width:min(620px,100%); max-height:100%; display:flex; flex-direction:column; box-shadow:0 8px 30px #0005; }
+  .rg-tete { display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .rg-tete h2 { margin:0; font-size:17px; }
+  .rg-corps { overflow:auto; padding:6px 18px 18px; }
+  .rg-corps section { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-top:12px; }
+  .rg-corps h3 { margin:0 0 8px; font-size:14px; }
+  .rg-corps ul { list-style:none; margin:0 0 8px; padding:0; }
+  .rg-corps li { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:13px; }
+  .rg-corps .nomcol { flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .rg-corps button, .rg-tete button { font:inherit; font-size:12px; padding:3px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; }
+  .rg-corps select, .rg-corps input[type=text] { font:inherit; font-size:13px; padding:5px 7px; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+  .rg-sec { display:flex; gap:6px; margin-bottom:8px; } .rg-sec input { flex:1; font-weight:600; }
+  .rg-ajout { margin-top:12px; background:var(--accent) !important; color:#fff; border-color:var(--accent) !important; padding:7px 12px !important; font-size:13px !important; }
   .fp-corps .vide { color:var(--muted); }
   .fp-pied { padding:12px 18px; border-top:1px solid var(--line); }
   .fp-pied button { padding:7px 12px; font:inherit; font-size:13px; cursor:pointer; background:#fff; color:var(--accent); border:1px solid var(--accent); border-radius:6px; }
@@ -114,7 +130,7 @@ const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Su
 const SECTION_SANS_THEME = 'Autres informations';   // pour les colonnes sans « __ »
 // À l'ouverture de la fiche : 'premiere' (seule la 1re section est dépliée), 'toutes' ou 'aucune'
 const OUVERTURE = 'premiere';
-const VERSION = '7';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
+const VERSION = '8';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
 
 // Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
 const NIVEAUX = {
@@ -195,10 +211,11 @@ const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div','panel');
   d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">' +
-                '<div class="count" id="count"></div><button class="link" id="tout" type="button">Voir tous les points</button>';
+                '<div class="count" id="count"></div><button class="link" id="reg" type="button">⚙ Réglages de la fiche</button><br><button class="link" id="tout" type="button">Voir tous les points</button>';
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
+  d.querySelector('#reg').addEventListener('click', ouvrirReglages);
   return d;
 };
 haut.addTo(map);
@@ -239,16 +256,18 @@ function appliquerFiltres() {
 
 const panneau = document.getElementById('fiche-panel');
 let ficheId = null;
-const lignes = l => `<dl>${l.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+const lignes = l => `<dl>${l.map(([k,v,g]) => `<dt>${esc(k)}</dt><dd${g ? ' class="b"' : ''}>${esc(v)}</dd>`).join('')}</dl>`;
 
+let cfg = { popup: [], sections: [] }, labels = {}, allCols = [];
+const libel = c => labels[c] || joli(c);
+const champsDe = (liste, raw) => liste.map(x => [libel(x.c), formater(x.c, raw[x.c]), x.gras]).filter(a => a[1] !== null);
 const etatSections = new Map();   // mémorise les sections que vous avez dépliées / repliées
 function corpsFiche(d) {
-  if (!d.sections.length)
-    return d.nbCols ? '<p class="vide">Aucune information renseignée pour cet établissement.</p>'
-      : '<p class="vide">Aucune colonne choisie. Dans le panneau de droite de Grist, remplissez « Fiche complète – section 1 (colonnes) » et les suivantes.</p>';
-  const ouvert = (t, i) => etatSections.has(t) ? etatSections.get(t) : (OUVERTURE === 'toutes' || (OUVERTURE === 'premiere' && i === 0));
-  return (d.sections.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
-    d.sections.map((sec, i) => `<details class="theme" data-t="${esc(sec.cle)}"${ouvert(sec.cle, i) ? ' open' : ''}><summary>${esc(titreSection(sec))} <span class="nb">(${sec.lignes.length})</span></summary>${lignes(sec.lignes)}</details>`).join('');
+  const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, d.raw) })).filter(x => x.l.length);
+  if (!secs.length) return '<p class="vide">Aucune section à afficher. Cliquez sur « ⚙ Réglages de la fiche » (en haut à gauche de la carte) pour créer vos sections.</p>';
+  const ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (OUVERTURE === 'toutes' || (OUVERTURE === 'premiere' && i === 0));
+  return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
+    secs.map((x, k) => `<details class="theme" data-t="s${x.i}"${ouvert('s' + x.i, k) ? ' open' : ''}><summary>${esc(x.sec.nom || 'Section')} <span class="nb">(${x.l.length})</span></summary>${lignes(x.l)}</details>`).join('');
 }
 
 function ouvrirFiche(id, focus = true) {
@@ -299,24 +318,20 @@ function fichier(d) {
   return `<div class="fiche" style="--niv:${d.niv.couleur}">
     <header><h3>${esc(d.nom || 'Sans nom')}</h3>
       <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
-    <div class="corps">${d.popup.length ? lignes(d.popup) : ''}</div>
+    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.raw)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans ⚙ Réglages.</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
 }
 
 /* ================= GRIST ================= */
 let sansGps = 0;
 grist.ready({
-  requiredAccess: 'read table',   // lecture seule de la table liée
+  requiredAccess: 'full',   // nécessaire pour lister toutes les colonnes (widget à héberger sur un serveur de confiance)
   allowSelectBy: true,
-  options: [1,2,3,4,5,6].map(n => ({ name:'titre' + n, title:'Titre de la section ' + n, type:'string', defaultValue:TITRES_DEFAUT[n - 1] })),
   columns: [
     { name:'nom',    title:'Nom de l’établissement', type:'Text' },
     { name:'lat',    title:'Latitude',  type:'Numeric' },
     { name:'lng',    title:'Longitude', type:'Numeric' },
     { name:'niveau', title:'Niveau de risque (Faible, Moyen, Élevé, Critique)', type:'Any', optional:true },
-    { name:'popup',  title:'Colonnes du popup (clic sur un point)', type:'Any', optional:true, allowMultiple:true },
-    ...[1,2,3,4,5,6].map(n => ({ name:'t' + n, title:'Fiche complète – section ' + n + ' (colonnes)', type:'Any', optional:true, allowMultiple:true })),
-    { name:'fiche',  title:'Fiche complète – autres colonnes (facultatif)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
 
@@ -328,19 +343,14 @@ grist.onRecords((records, mappings) => {
     return;
   }
   afficherMsg('');
-  const liste = k => [].concat((mappings && mappings[k]) || []).filter(c => c && !COLONNES_MASQUEES.includes(c));
-  const colsPopup = liste('popup'), colsFiche = liste('fiche');
+  allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
+  if (!labelsCharges) chargerLibelles();
   const vus = new Set(); sansGps = 0;
 
   records.forEach((raw, i) => {
     const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
-    const slots = [1,2,3,4,5,6].map(n => ({ cle:'t' + n, cols:liste('t' + n) }));
-    const sections = slots.map(x => ({ cle:x.cle, lignes:extraire(x.cols, raw).map(y => [y.label, y.val]) })).filter(x => x.lignes.length)
-      .concat(grouper(extraire(colsFiche, raw)));
-    const toutes = slots.flatMap(x => x.cols).concat(colsFiche);
-    const lp = extraire(colsPopup.length ? colsPopup : toutes.slice(0, 4), raw);   // popup (à défaut : 4 premières colonnes de la fiche)
-    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), popup:lp.map(x => [x.label, x.val]), sections, nbCols:colsPopup.length + toutes.length };
+    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), raw };
     vus.add(raw.id);
 
     let m = marqueurs.get(raw.id);
@@ -360,9 +370,70 @@ grist.onRecords((records, mappings) => {
   appliquerFiltres();
   if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
-});
+}, { includeColumns: 'normal' });
 
-grist.onOptions(o => { titresOpt = o || {}; if (ficheId !== null) ouvrirFiche(ficheId, false); });
+let labelsCharges = false;
+async function chargerLibelles() {   // libellés « humains » des colonnes (accès complet)
+  labelsCharges = true;
+  try {
+    const tid = await grist.selectedTable.getTableId();
+    const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column');
+    const ref = T.id[T.tableId.indexOf(tid)];
+    C.id.forEach((_, k) => { if (C.parentId[k] === ref) labels[C.colId[k]] = C.label[k]; });
+    rafraichir(); if (modal.classList.contains('ouvert')) dessinerReglages();
+  } catch (e) { console.warn('Libellés indisponibles', e); }
+}
+function rafraichir() {
+  if (ficheId !== null) ouvrirFiche(ficheId, false);
+  marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); });
+}
+grist.onOptions(o => { cfg = { popup: (o && o.cfg && o.cfg.popup) || [], sections: (o && o.cfg && o.cfg.sections) || [] }; rafraichir(); });
+
+/* ---- Fenêtre de réglages ---- */
+const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
+let minuteur;
+function sauver() { clearTimeout(minuteur); minuteur = setTimeout(() => grist.setOptions({ cfg }), 300); rafraichir(); dessinerReglages(); }
+const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
+function blocListe(g) {
+  const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
+  return `<ul>${l.map((x, i) => `<li><span class="nomcol">${esc(libel(x.c))}</span>
+      <label><input type="checkbox" data-a="gras" data-g="${g}" data-i="${i}"${x.gras ? ' checked' : ''}> gras</label>
+      <button type="button" data-a="up" data-g="${g}" data-i="${i}" aria-label="Monter">▲</button><button type="button" data-a="down" data-g="${g}" data-i="${i}" aria-label="Descendre">▼</button><button type="button" data-a="del" data-g="${g}" data-i="${i}" aria-label="Retirer">✕</button></li>`).join('')}</ul>
+    <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
+}
+function dessinerReglages() {
+  const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
+  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Réglages de la fiche"><div class="rg-tete"><h2>Réglages de la fiche</h2><button type="button" data-a="fermer">Fermer</button></div>
+    <div class="rg-corps"><section><h3>Popup (clic sur un point)</h3>${blocListe('p')}</section>
+    ${cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section">
+      <button type="button" data-a="sup" data-g="${i}" aria-label="Monter la section">▲</button><button type="button" data-a="sdown" data-g="${i}" aria-label="Descendre la section">▼</button><button type="button" data-a="sdel" data-g="${i}">Supprimer</button></div>${blocListe(String(i))}</section>`).join('')}
+    <button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button></div></div>`;
+  modal.querySelector('.rg-corps').scrollTop = y;
+}
+function ouvrirReglages() { dessinerReglages(); modal.classList.add('ouvert'); }
+function deplacer(l, i, d) { const j = i + d; if (j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; }
+modal.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return;
+  const a = b.dataset.a, g = b.dataset.g, i = +b.dataset.i;
+  if (e.target === modal || a === 'fermer') { modal.classList.remove('ouvert'); return; }
+  if (a === 'up' || a === 'down') deplacer(listeDe(g), i, a === 'up' ? -1 : 1);
+  else if (a === 'del') listeDe(g).splice(i, 1);
+  else if (a === 'sup' || a === 'sdown') deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1);
+  else if (a === 'sdel') { if (!confirm('Supprimer cette section ?')) return; cfg.sections.splice(+g, 1); }
+  else if (a === 'sadd') cfg.sections.push({ nom: 'Nouvelle section', cols: [] });
+  else return;
+  sauver();
+});
+modal.addEventListener('change', e => {
+  const t = e.target, a = t.dataset.a, g = t.dataset.g; if (!a) return;
+  if (a === 'add' && t.value) listeDe(g).push({ c: t.value, gras: false });
+  else if (a === 'gras') listeDe(g)[+t.dataset.i].gras = t.checked;
+  else if (a === 'nom') cfg.sections[+g].nom = t.value;
+  else return;
+  sauver();
+});
+modal.addEventListener('mousedown', e => { if (e.target === modal) modal.classList.remove('ouvert'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
 
 // Ligne sélectionnée dans Grist → mise en évidence et centrage sur la carte
 grist.onRecord(rec => {
