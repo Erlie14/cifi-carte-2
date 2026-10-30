@@ -116,6 +116,12 @@
   .fp-pied button { padding:7px 12px; font:inherit; font-size:13px; cursor:pointer; background:#fff; color:var(--accent); border:1px solid var(--accent); border-radius:6px; }
   @media (prefers-reduced-motion:reduce) { #fiche-panel { transition:none; } }
   @media (prefers-reduced-motion:reduce) { .fiche summary::after { transition:none; } }
+  .pin.sombre { color:#1d2733; } .pin.f-rond { border-radius:50%; } .pin.f-carre { border-radius:7px; }
+  .pin.f-losange { border-radius:7px; transform:rotate(45deg); } .pin.f-losange span { transform:rotate(-45deg); }
+  .pin.f-triangle { border-radius:0; border:0; clip-path:polygon(50% 4%,98% 92%,2% 92%); padding-top:7px; box-shadow:none; }
+  .legend .sep { margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
+  #filtres label { display:block; margin-top:6px; color:var(--muted); font-size:12px; }
+  #filtres select { display:block; width:210px; margin-top:2px; padding:5px; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:6px; }
 </style>
 </head>
 <body>
@@ -124,39 +130,20 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-/* ================= RÉGLAGES (modifiables) ================= */
-// Colonnes de votre table à NE PAS montrer dans la fiche (écrivez leur identifiant Grist exact).
-const COLONNES_MASQUEES = [];
-// THÉMATIQUES de la fiche complète : ce qui précède « __ » (deux tirets bas) dans l'identifiant d'une colonne donne le titre de la section.
-// Exemple : la colonne Controle__Date_dernier est rangée dans la section « Controle », avec l'intitulé « Date dernier ».
-// Pour mettre des accents ou un titre précis, complétez ici : { Identite: 'Identité', Suites: 'Suites données' }
-const TITRES_SECTIONS = {};
-// Titres par défaut des 6 sections de la fiche (modifiables aussi dans le panneau de droite de Grist, si votre Grist le propose).
+/* ================= RÉGLAGES PAR DÉFAUT ================= */
+const VERSION = '11';
 const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Suites données', 'Section 4', 'Section 5', 'Section 6'];
-const SECTION_SANS_THEME = 'Autres informations';   // pour les colonnes sans « __ »
-// À l'ouverture de la fiche : 'premiere' (seule la 1re section est dépliée), 'toutes' ou 'aucune'
-const OUVERTURE = 'premiere';
-const VERSION = '10';
-// Les réglages ne sont proposés qu'aux personnes pouvant modifier le document (Grist signale les lecteurs par ?readonly=...).
-const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
-
-// Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
 const NIVEAUX = {
-  faible:   { cle:'faible',   label:'Faible',   couleur:'#2a9d8f', lettre:'F' },
-  moyen:    { cle:'moyen',    label:'Moyen',    couleur:'#e9c46a', lettre:'M' },
-  eleve:    { cle:'eleve',    label:'Élevé',    couleur:'#f4821f', lettre:'É' },
-  critique: { cle:'critique', label:'Critique', couleur:'#c1121f', lettre:'C' },
-  neutre:   { cle:'neutre',   label:'Non renseigné', couleur:'#6b7785', lettre:'?' },
+  faible:{cle:'faible',label:'Faible',couleur:'#2a9d8f',lettre:'F'}, moyen:{cle:'moyen',label:'Moyen',couleur:'#e9c46a',lettre:'M'},
+  eleve:{cle:'eleve',label:'Élevé',couleur:'#f4821f',lettre:'É'}, critique:{cle:'critique',label:'Critique',couleur:'#c1121f',lettre:'C'},
+  neutre:{cle:'neutre',label:'Non renseigné',couleur:'#6b7785',lettre:'?'},
 };
-const MOTS = [ // mots reconnus (minuscules, sans accent)
-  ['critique', /critique|tres (eleve|fort|haut)|majeur|prioritaire/],
-  ['eleve',    /eleve|fort|haut|important/],
-  ['moyen',    /moyen|modere|intermediaire/],
-  ['faible',   /faible|bas|mineur|limite/],
-];
+const MOTS = [['critique',/critique|tres (eleve|fort|haut)|majeur|prioritaire/],['eleve',/eleve|fort|haut|important/],['moyen',/moyen|modere|intermediaire/],['faible',/faible|bas|mineur|limite/]];
+const PALETTE = ['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b','#e377c2','#17becf','#bcbd22','#7f7f7f'];
+const FORMES = ['rond','carre','losange','triangle'], SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
+const STYLES = { 'Normal':'', 'Gras':'b', 'Italique':'i', 'Pastille':'badge' };
 
-// Fonds de carte : Géoplateforme IGN. Pour une étanchéité totale, remplacez par vos propres tuiles.
-const geopf = (layer, fmt) => `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=${fmt}&LAYER=${layer}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
+const geopf = (l, f) => `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=${f}&LAYER=${l}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
 const fonds = {
   'Plan IGN': L.tileLayer(geopf('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2','image/png'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
   'Photographies aériennes': L.tileLayer(geopf('ORTHOIMAGERY.ORTHOPHOTOS','image/jpeg'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
@@ -165,320 +152,216 @@ const fonds = {
 /* ================= OUTILS ================= */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sansAccent = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-function niveau(v) {
-  if (v == null || v === '') return { ...NIVEAUX.neutre, texte:'' };
-  const t = sansAccent(v);
-  for (const [cle, re] of MOTS) if (re.test(t)) return { ...NIVEAUX[cle], texte:String(v) };
-  return { ...NIVEAUX.neutre, texte:String(v) };
-}
-const joli = k => k.replace(/_/g,' ').replace(/^./, c => c.toUpperCase());
+const joli = k => String(k).replace(/_/g,' ').replace(/^./, c => c.toUpperCase());
+function niveauDe(v) { if (v == null || v === '') return null; const t = sansAccent(v); for (const [c, re] of MOTS) if (re.test(t)) return NIVEAUX[c]; return null; }
 function formater(k, v) {
   if (v == null || v === '') return null;
+  if (v instanceof Date) { if (isNaN(v)) return null; const m = !v.getUTCHours() && !v.getUTCMinutes() && !v.getUTCSeconds(); return m ? v.toLocaleDateString('fr-FR',{timeZone:'UTC'}) : v.toLocaleString('fr-FR'); }
   if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
-  if (Array.isArray(v)) return v.filter(x => x !== 'L').join(', ') || null;       // listes de choix
-  if (v instanceof Date) {
-    if (isNaN(v)) return null;
-    const minuit = !v.getUTCHours() && !v.getUTCMinutes() && !v.getUTCSeconds();
-    return minuit ? v.toLocaleDateString('fr-FR', { timeZone:'UTC' }) : v.toLocaleString('fr-FR');
-  }
-  if (typeof v === 'object') return null;                                          // données techniques : ignorées
-  if (typeof v === 'number' && /date|le$|echeance|jour/i.test(k) && v > 1e9 && v < 5e9)
-    return new Date(v * 1000).toLocaleDateString('fr-FR');                         // colonnes de type Date
+  if (Array.isArray(v)) return v.filter(x => x !== 'L').join(', ') || null;
+  if (typeof v === 'object') return null;
+  if (typeof v === 'number' && /date|le$|echeance|jour/i.test(k) && v > 1e9 && v < 5e9) return new Date(v*1000).toLocaleDateString('fr-FR');
   return String(v);
 }
-function decouper(col) { const i = col.indexOf('__'); return i > 0 ? { theme: col.slice(0, i), nom: col.slice(i + 2) } : { theme: null, nom: col }; }
-let titresOpt = {};
-function titreSection(sec) {
-  if (/^t\d$/.test(sec.cle)) { const n = +sec.cle.slice(1); return (titresOpt['titre' + n] || '').trim() || TITRES_DEFAUT[n - 1]; }
-  return titreTheme(sec.cle.slice(2) || null);
-}
-const titreTheme = t => t === null ? SECTION_SANS_THEME : (TITRES_SECTIONS[t] || joli(t));
-function extraire(cols, raw) {
-  return cols.map(c => { const { theme, nom } = decouper(c); return { theme, label: joli(nom), val: formater(c, raw[c]) }; }).filter(x => x.val !== null);
-}
-function grouper(liste) {   // regroupe par thématique, dans l'ordre où les colonnes ont été choisies
-  const g = new Map();
-  for (const x of liste) { if (!g.has(x.theme)) g.set(x.theme, []); g.get(x.theme).push([x.label, x.val]); }
-  return [...g].map(([t, l]) => ({ cle: 'p:' + (t ?? ''), lignes: l }));
-}
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
+
+/* ================= ÉTAT ================= */
+let opts = {}, lastRec = null, lastMap = null, cfg = { popup:[], sections:[] }, legCats = [], legFormes = [], legTitre = '';
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true;
+const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
+const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
 
 /* ================= CARTE ================= */
 const map = L.map('map', { center:[46.6,2.5], zoom:6, layers:[fonds['Plan IGN']] });
 L.control.layers(fonds, null, { position:'topright' }).addTo(map);
 L.control.scale({ metric:true, imperial:false }).addTo(map);
-const cluster = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius:45 });
+const cluster = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius: () => opt('regrouper', true) === false ? 0 : 45 });
 map.addLayer(cluster);
 
-const marqueurs = new Map();      // id Grist → marqueur
-const masques = new Set();        // niveaux masqués via la légende
-let recherche = '', premierChargement = true, idSelectionne = null;
-
-// Panneau recherche + compteur
 const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div','panel');
-  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">' +
-                '<div class="count" id="count"></div><button class="link" id="reg" type="button">⚙ Réglages de la fiche</button><br><button class="link" id="tout" type="button">Voir tous les points</button>';
+  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><div class="count" id="count"></div><div id="filtres"></div><button class="link" id="tout" type="button">Voir tous les points</button>';
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
-  if (peutModifier) d.querySelector('#reg').addEventListener('click', ouvrirReglages); else d.querySelector('#reg').remove();
+  d.querySelector('#filtres').addEventListener('change', e => { filtreSel[e.target.dataset.c] = e.target.value; appliquerFiltres(); });
   return d;
 };
 haut.addTo(map);
 
-// Légende cliquable = filtre par niveau
 const legende = L.control({ position:'bottomleft' });
 legende.onAdd = () => {
-  const d = L.DomUtil.create('div','panel legend');
-  d.innerHTML = '<strong>Niveau de risque</strong>' + Object.values(NIVEAUX).map(n =>
-    `<button type="button" data-n="${n.cle}" aria-pressed="true"><i class="b-${n.cle}"></i>${n.label}</button>`).join('');
-  L.DomEvent.disableClickPropagation(d);
+  const d = L.DomUtil.create('div','panel legend'); L.DomEvent.disableClickPropagation(d);
   d.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    const on = b.getAttribute('aria-pressed') === 'true';
-    b.setAttribute('aria-pressed', String(!on));
-    on ? masques.add(b.dataset.n) : masques.delete(b.dataset.n);
-    appliquerFiltres();
+    const on = b.getAttribute('aria-pressed') === 'true'; b.setAttribute('aria-pressed', String(!on));
+    on ? masques.add(b.dataset.k) : masques.delete(b.dataset.k); appliquerFiltres();
   });
   return d;
 };
 legende.addTo(map);
-
-function recentrer() {
-  const pts = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng());
-  if (pts.length) map.fitBounds(pts, { padding:[40,40], maxZoom:15 });
+function majLegende() {
+  const d = legende.getContainer(); if (!d) return;
+  d.innerHTML = `<strong>${esc(legTitre || 'Niveau de risque')}</strong>` + legCats.map(c =>
+    `<button type="button" data-k="${esc(c.k)}" aria-pressed="${!masques.has(c.k)}"><i style="background:${c.couleur};border-radius:50%"></i>${esc(c.label)}</button>`).join('') +
+    (legFormes.length ? '<div class="sep">' + legFormes.map(f => `<div>${SYMBOLES[f.forme]} ${esc(f.label)}</div>`).join('') + '</div>' : '');
 }
+function recentrer() { const p = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng()); if (p.length) map.fitBounds(p, { padding:[40,40], maxZoom:15 }); }
 function appliquerFiltres() {
   let n = 0;
   for (const m of marqueurs.values()) {
-    const { niv, nom } = m._cifi;
-    const visible = !masques.has(niv.cle) && (!recherche || sansAccent(nom).includes(recherche));
-    if (visible) { n++; if (!cluster.hasLayer(m)) cluster.addLayer(m); }
-    else if (cluster.hasLayer(m)) cluster.removeLayer(m);
+    const { niv, nom, fv } = m._cifi;
+    const ok = !masques.has(niv.k) && (!recherche || sansAccent(nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || fv[c] === v);
+    if (ok) { n++; if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
-  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size>1?'s':''}` +
-    (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
+  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
+}
+function icone(d, sel) {
+  const t = +opt('taille', 30) || 30, cl = d.forme ? `f-${d.forme}${d.niv.cle === 'moyen' ? ' sombre' : ''}` : d.niv.cle;
+  return L.divIcon({ className:'', iconSize:[t,t], iconAnchor:[t/2,t/2], popupAnchor:[0,-t/2],
+    html:`<div class="pin ${cl}${sel ? ' sel' : ''}" style="background:${d.niv.couleur};width:${t}px;height:${t}px"><span>${esc(d.niv.lettre)}</span></div>` });
 }
 
-const panneau = document.getElementById('fiche-panel');
-let ficheId = null;
+/* ================= FICHES ================= */
 const lignes = l => `<dl>${l.map(([k, v, x]) => `<dt${x && x.gn ? ' class="b"' : ''}>${esc(k)}</dt><dd${x && x.vs === 'i' ? ' class="i"' : x && x.vs === 'b' ? ' class="b"' : ''}>${x && x.vs === 'badge' ? `<span class="badge">${esc(v)}</span>` : esc(v)}</dd>`).join('')}</dl>`;
+const champsDe = (liste, raw) => liste.map(x => [joli(x.c), formater(x.c, raw[x.c]), x]).filter(a => a[1] !== null);
+const aide = t => `<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">${t}</p>`;
 
-let cfg = { popup: [], sections: [] }, labels = {}, allCols = [];
-const libel = c => labels[c] || joli(c);
-function fmt(c, v) {   // formatage selon le type réel de la colonne dans Grist
-  const t = types[c] || '';
-  if (typeof v === 'number' && t === 'Date') return new Date(v * 1000).toLocaleDateString('fr-FR', { timeZone:'UTC' });
-  if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
-  return formater(c, v);
+function fichier(d) {
+  return `<div class="fiche" style="--niv:${d.niv.couleur}"><header><h3>${esc(d.nom || 'Sans nom')}</h3>
+    <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle === 'moyen' ? '#1d2733' : '#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
+    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.raw)) : aide('Choisissez les colonnes du popup dans le panneau de droite de Grist (« Colonnes du popup »).')}</div>
+    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
 }
-const champsDe = (liste, raw) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, raw[x.c]), x]).filter(a => a[1] !== null);
-const etatSections = new Map();   // mémorise les sections que vous avez dépliées / repliées
 function corpsFiche(d) {
-  const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, valeurs(d)) })).filter(x => x.l.length);
-  if (!secs.length) return '<p class="vide">Aucune section à afficher. Cliquez sur « ⚙ Réglages de la fiche » (en haut à gauche de la carte) pour créer vos sections.</p>';
-  const ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (OUVERTURE === 'toutes' || (OUVERTURE === 'premiere' && i === 0));
+  const secs = cfg.sections.map(sec => ({ sec, l: champsDe(sec.cols, d.raw) })).filter(x => x.l.length);
+  if (!secs.length) return '<p class="vide">Aucune section à afficher. Dans le panneau de droite de Grist, remplissez « Fiche – section 1 (colonnes) » et les suivantes.</p>';
+  const o = opt('ouverture', 'Première section'), ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (o === 'Toutes' || (o !== 'Aucune' && i === 0));
   return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
-    secs.map((x, k) => `<details class="theme" data-t="s${x.i}"${ouvert('s' + x.i, k) ? ' open' : ''}><summary>${esc(x.sec.nom || 'Section')} <span class="nb">(${x.l.length})</span></summary>${lignes(x.l)}</details>`).join('');
+    secs.map((x, k) => `<details class="theme" data-t="${x.sec.cle}"${ouvert(x.sec.cle, k) ? ' open' : ''}><summary>${esc(x.sec.nom)} <span class="nb">(${x.l.length})</span></summary>${lignes(x.l)}</details>`).join('');
 }
-
+const panneau = document.getElementById('fiche-panel');
 function ouvrirFiche(id, focus = true) {
-  const m = marqueurs.get(id); if (!m) return;
-  const d = m._cifi; ficheId = id;
+  const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id;
   panneau.style.setProperty('--niv', d.niv.couleur);
-  panneau.innerHTML =
-    `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button>
-       <h2>${esc(d.nom || 'Sans nom')}</h2>
-       <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></div>
-     <div class="fp-corps">${corpsFiche(d)}</div>
-     <div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button></div>`;
+  panneau.innerHTML = `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2>${esc(d.nom || 'Sans nom')}</h2>
+    <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle === 'moyen' ? '#1d2733' : '#fff'}">${esc(d.niv.texte || d.niv.label)}</span></div>
+    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button></div>`;
   panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
   if (focus) panneau.querySelector('.fp-fermer').focus();
 }
-function fermerFiche() {
-  ficheId = null; panneau.classList.remove('ouvert'); panneau.setAttribute('aria-hidden', 'true');
-}
+function fermerFiche() { ficheId = null; panneau.classList.remove('ouvert'); panneau.setAttribute('aria-hidden', 'true'); }
 panneau.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details.theme')) etatSections.set(e.target.dataset.t, e.target.open); }, true);
 panneau.addEventListener('click', e => {
   if (e.target.closest('.fp-fermer')) fermerFiche();
-  if (e.target.closest('.fp-tout')) {
-    const tous = [...panneau.querySelectorAll('details.theme')], ouvrir = tous.some(x => !x.open);
-    tous.forEach(x => { x.open = ouvrir; });
-  }
+  if (e.target.closest('.fp-tout')) { const t = [...panneau.querySelectorAll('details.theme')], o = t.some(x => !x.open); t.forEach(x => { x.open = o; }); }
   const sel = e.target.closest('.fp-select');
-  if (sel && ficheId !== null) {
-    grist.setSelectedRows([ficheId]);
-    if (grist.setCursorPos) grist.setCursorPos({ rowId: ficheId });
-    sel.textContent = '✓ Ligne sélectionnée dans Grist';
-  }
+  if (sel && ficheId !== null) { grist.setSelectedRows([ficheId]); if (grist.setCursorPos) grist.setCursorPos({ rowId:ficheId }); sel.textContent = '✓ Ligne sélectionnée dans Grist'; }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && ficheId !== null) fermerFiche(); });
-
 map.on('popupopen', e => {
-  const el = e.popup.getElement(); if (!el) return;
-  const b = el.querySelector('.btn-fiche'); if (!b) return;
+  const el = e.popup.getElement(), b = el && el.querySelector('.btn-fiche'); if (!b) return;
   L.DomEvent.disableClickPropagation(b);
   b.addEventListener('click', () => { ouvrirFiche(Number(b.dataset.id)); map.closePopup(); });
 });
 
-function icone(niv, sel) {
-  return L.divIcon({ className:'', iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-16],
-    html:`<div class="pin ${niv.cle}${sel?' sel':''}" style="background:${niv.couleur}"><span>${niv.lettre}</span></div>` });
-}
-
-function fichier(d) {
-  return `<div class="fiche" style="--niv:${d.niv.couleur}">
-    <header><h3>${esc(d.nom || 'Sans nom')}</h3>
-      <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
-    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, valeurs(d))) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans ⚙ Réglages.</p>'}</div>
-    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
-}
-
 /* ================= GRIST ================= */
-let sansGps = 0;
 grist.ready({
-  requiredAccess: 'full',   // nécessaire pour lister toutes les colonnes (widget à héberger sur un serveur de confiance)
-  allowSelectBy: true,
+  requiredAccess: 'read table', allowSelectBy: true,
   columns: [
     { name:'nom',    title:'Nom de l’établissement', type:'Text' },
-    { name:'lat',    title:'Latitude',  type:'Numeric' },
+    { name:'lat',    title:'Latitude', type:'Numeric' },
     { name:'lng',    title:'Longitude', type:'Numeric' },
-    { name:'niveau', title:'Niveau de risque (Faible, Moyen, Élevé, Critique)', type:'Any', optional:true },
+    { name:'niveau', title:'Couleur des points : colonne (ex. niveau de risque)', type:'Any', optional:true },
+    { name:'forme',  title:'Forme des points : colonne (facultatif)', type:'Any', optional:true },
+    { name:'filtres',title:'Filtres : colonnes à proposer', type:'Any', optional:true, allowMultiple:true },
+    { name:'popup',  title:'Colonnes du popup', type:'Any', optional:true, allowMultiple:true },
+    ...[1,2,3,4,5,6].map(n => ({ name:'t' + n, title:'Fiche – section ' + n + ' (colonnes)', type:'Any', optional:true, allowMultiple:true })),
+    { name:'gras',   title:'Colonnes dont le nom est en gras', type:'Any', optional:true, allowMultiple:true },
+  ],
+  options: [
+    ...[1,2,3,4,5,6].map(n => ({ name:'titre' + n, title:'Titre de la section ' + n, type:'string', defaultValue:TITRES_DEFAUT[n - 1] })),
+    { name:'noms_gras', title:'Tous les noms de colonnes en gras', type:'boolean', defaultValue:false },
+    { name:'style_valeurs', title:'Forme des valeurs', type:'choice', choices:Object.keys(STYLES), defaultValue:'Normal' },
+    { name:'ouverture', title:'Sections dépliées à l’ouverture', type:'choice', choices:['Première section','Toutes','Aucune'], defaultValue:'Première section' },
+    { name:'regrouper', title:'Regrouper les points proches', type:'boolean', defaultValue:true },
+    { name:'taille', title:'Taille des points (px)', type:'number', defaultValue:30 },
   ],
 });
+grist.onOptions(o => { opts = o || {}; if (lastRec) construire(); });
+grist.onRecords((records, mappings) => { lastRec = records; lastMap = mappings; construire(); });
 
-// Se déclenche à chaque modification de la table : la carte se met à jour seule.
-grist.onRecords((records, mappings) => {
-  const mapped = grist.mapColumnNames(records);
-  if (!mapped) {
-    afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>');
-    return;
-  }
+function construire() {
+  const m = lastMap, mapped = grist.mapColumnNames(lastRec);
+  if (!mapped || !m) { afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>'); return; }
   afficherMsg('');
-  if (!allCols.length) allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
-  if (!labelsCharges) chargerLibelles(); else chargerTable();
-  const vus = new Set(); sansGps = 0;
+  const liste = k => [].concat(m[k] || []).filter(Boolean);
+  const gras = new Set(liste('gras')), vs = STYLES[opt('style_valeurs', 'Normal')] ?? '';
+  const mk = c => ({ c, gn: gras.has(c) || opt('noms_gras', false) === true, vs });
+  cfg = { popup: liste('popup').map(mk), sections: [1,2,3,4,5,6].map(n => ({ cle:'s' + n, nom: String(opt('titre' + n, '')).trim() || TITRES_DEFAUT[n - 1], cols: liste('t' + n).map(mk) })).filter(x => x.cols.length) };
+  const cC = m.niveau, cF = m.forme, cFil = liste('filtres');
 
-  records.forEach((raw, i) => {
+  // catégories pour couleur et forme
+  const brut = c => v => (v == null || v === '') ? '' : String(formater(c, v) ?? v);
+  const vC = new Set(), vF = new Set();
+  lastRec.forEach(r => { if (cC) vC.add(brut(cC)(r[cC])); if (cF) vF.add(brut(cF)(r[cF])); });
+  const autres = [...vC].filter(v => v && !niveauDe(v)).sort(), valsF = [...vF].filter(Boolean).sort();
+  const nivDe = v => {
+    if (!cC) return { ...NIVEAUX.neutre, k:'neutre', texte:'' };
+    const t = brut(cC)(v), n = niveauDe(t);
+    if (n) return { ...n, k:n.cle, texte:t };
+    if (!t) return { ...NIVEAUX.neutre, k:'neutre', texte:'' };
+    return { cle:'cat', k:'c:' + t, label:t, texte:t, couleur:PALETTE[autres.indexOf(t) % PALETTE.length], lettre:t.charAt(0).toUpperCase() };
+  };
+  const formeDe = v => { const t = brut(cF)(v); return cF && t ? FORMES[valsF.indexOf(t) % FORMES.length] : null; };
+
+  const vus = new Set(), cats = new Map(); sansGps = 0;
+  lastRec.forEach((raw, i) => {
     const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
-    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), raw };
-    vus.add(raw.id);
-
-    let m = marqueurs.get(raw.id);
-    if (m) { m.setLatLng([lat,lng]); }
+    const niv = nivDe(cC ? raw[cC] : null), fv = {};
+    cFil.forEach(c => { fv[c] = formater(c, raw[c]) ?? '(vide)'; });
+    const d = { id:raw.id, nom:r.nom, niv, forme: cF ? formeDe(raw[cF]) : null, raw, fv };
+    vus.add(raw.id); cats.set(niv.k, niv);
+    let mk2 = marqueurs.get(raw.id);
+    if (mk2) mk2.setLatLng([lat, lng]);
     else {
-      m = L.marker([lat,lng], { title:r.nom || '', keyboard:true });
-      m.bindPopup(() => fichier(m._cifi), { maxWidth:320, className:'cifi-popup' });
-      m.on('click', () => grist.setSelectedRows([raw.id]));
-      marqueurs.set(raw.id, m);
+      mk2 = L.marker([lat, lng], { title:r.nom || '', keyboard:true });
+      mk2.bindPopup(() => fichier(mk2._cifi), { maxWidth:320, className:'cifi-popup' });
+      mk2.on('click', () => grist.setSelectedRows([raw.id]));
+      marqueurs.set(raw.id, mk2);
     }
-    m._cifi = data;
-    m.setIcon(icone(data.niv, raw.id === idSelectionne));
-    if (m.isPopupOpen()) m.getPopup().update();     // la fiche ouverte se rafraîchit aussi
+    mk2._cifi = d; mk2.setIcon(icone(d, raw.id === idSelectionne));
+    if (mk2.isPopupOpen()) mk2.getPopup().update();
   });
+  for (const [id, x] of [...marqueurs]) if (!vus.has(id)) { cluster.removeLayer(x); marqueurs.delete(id); }
 
-  for (const [id, m] of [...marqueurs]) if (!vus.has(id)) { cluster.removeLayer(m); marqueurs.delete(id); }
+  // légende et filtres
+  legTitre = cC ? joli(cC) : '';
+  legCats = [...cats.values()].sort((a, b) => a.label.localeCompare(b.label)).map(c => ({ k:c.k, label:c.cle === 'cat' ? c.label : c.label, couleur:c.couleur }));
+  legFormes = cF ? valsF.map(v => ({ forme:FORMES[valsF.indexOf(v) % FORMES.length], label:v })) : [];
+  majLegende();
+  const zone = document.getElementById('filtres');
+  zone.innerHTML = cFil.map(c => {
+    const vals = [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
+    if (filtreSel[c] && !vals.includes(filtreSel[c])) filtreSel[c] = '';
+    return `<label>${esc(joli(c))}<select data-c="${esc(c)}"><option value="">Tous</option>${vals.map(v => `<option${filtreSel[c] === v ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`;
+  }).join('');
+  Object.keys(filtreSel).forEach(c => { if (!cFil.includes(c)) delete filtreSel[c]; });
+
+  const reg = opt('regrouper', true) !== false; if (reg !== regroupPrec) { cluster.clearLayers(); regroupPrec = reg; }
   appliquerFiltres();
   if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
-}, { includeColumns: 'normal' });
+}
 
-let labelsCharges = false, tid = null, types = {}, donnees = new Map(), erreurAcces = '';
-const valeurs = d => donnees.get(d.id) || d.raw;
-async function chargerLibelles() {   // libellés et types des colonnes (accès complet)
-  labelsCharges = true;
-  try {
-    tid = await grist.selectedTable.getTableId();
-    const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column');
-    const ref = T.id[T.tableId.indexOf(tid)];
-    C.id.forEach((_, k) => { if (C.parentId[k] === ref) { labels[C.colId[k]] = C.label[k]; types[C.colId[k]] = C.type[k]; } });
-  } catch (e) { console.warn('Libellés indisponibles', e); }
-  chargerTable();
-}
-async function chargerTable() {      // toutes les colonnes et toutes les lignes de la table
-  try {
-    if (!tid) tid = await grist.selectedTable.getTableId();
-    const t = await grist.docApi.fetchTable(tid);
-    const cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_'));
-    const m = new Map();
-    t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
-    allCols = cols; donnees = m; erreurAcces = '';
-  } catch (e) { erreurAcces = String((e && e.message) || e); }
-  rafraichir(); if (modal.classList.contains('ouvert')) dessinerReglages();
-}
-function rafraichir() {
-  if (ficheId !== null) ouvrirFiche(ficheId, false);
-  marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); });
-}
-grist.onOptions(o => {
-  const c = (o && o.cfg) || {}, norm = l => (l || []).map(x => ({ c: x.c, nom: x.nom || '', gn: x.gn ?? !!x.gras, vs: x.vs || '' }));
-  cfg = { popup: norm(c.popup), sections: (c.sections || []).map(sec => ({ nom: sec.nom, cols: norm(sec.cols) })) };
-  rafraichir();
-});
-
-/* ---- Fenêtre de réglages ---- */
-const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
-let minuteur;
-function sauver() { clearTimeout(minuteur); minuteur = setTimeout(() => { Promise.resolve(grist.setOptions({ cfg })).catch(() => alert('Vous n’avez pas le droit de modifier ces réglages.')); }, 300); rafraichir(); dessinerReglages(); }
-const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
-function blocListe(g) {
-  const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
-  return `<ul>${l.map((x, i) => `<li><div class="rg-l1"><span class="nomcol">${esc(libel(x.c))}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span>
-      <button type="button" data-a="up" data-g="${g}" data-i="${i}" aria-label="Monter">▲</button><button type="button" data-a="down" data-g="${g}" data-i="${i}" aria-label="Descendre">▼</button><button type="button" data-a="del" data-g="${g}" data-i="${i}" aria-label="Retirer">✕</button></div>
-      <div class="rg-l2"><input type="text" value="${esc(x.nom || '')}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" data-g="${g}" data-i="${i}" aria-label="Nom affiché">
-      <label><input type="checkbox" data-a="gn" data-g="${g}" data-i="${i}"${x.gn ? ' checked' : ''}> nom en gras</label>
-      <select data-a="vs" data-g="${g}" data-i="${i}" aria-label="Forme de la valeur">${[['', 'Valeur normale'], ['b', 'Valeur en gras'], ['i', 'Valeur en italique'], ['badge', 'Valeur en pastille']].map(([v, t]) => `<option value="${v}"${(x.vs || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></li>`).join('')}</ul>
-    <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
-}
-function dessinerReglages() {
-  const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
-  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Réglages de la fiche"><div class="rg-tete"><h2>Réglages de la fiche</h2><button type="button" data-a="fermer">Fermer</button></div>
-    <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est bien en « Accès complet » dans le panneau de droite de Grist. (${esc(erreurAcces)})</p>` : `<p class="vide" style="font-size:13px;margin:10px 0 0">${allCols.length} colonnes détectées dans la table.</p>`}<section><h3>Popup (clic sur un point)</h3>${blocListe('p')}</section>
-    ${cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section">
-      <button type="button" data-a="sup" data-g="${i}" aria-label="Monter la section">▲</button><button type="button" data-a="sdown" data-g="${i}" aria-label="Descendre la section">▼</button><button type="button" data-a="sdel" data-g="${i}">Supprimer</button></div>${blocListe(String(i))}</section>`).join('')}
-    <button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button></div></div>`;
-  modal.querySelector('.rg-corps').scrollTop = y;
-}
-function ouvrirReglages() { dessinerReglages(); modal.classList.add('ouvert'); }
-function deplacer(l, i, d) { const j = i + d; if (j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; }
-modal.addEventListener('click', e => {
-  const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return;
-  const a = b.dataset.a, g = b.dataset.g, i = +b.dataset.i;
-  if (e.target === modal || a === 'fermer') { modal.classList.remove('ouvert'); return; }
-  if (a === 'up' || a === 'down') deplacer(listeDe(g), i, a === 'up' ? -1 : 1);
-  else if (a === 'del') listeDe(g).splice(i, 1);
-  else if (a === 'sup' || a === 'sdown') deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1);
-  else if (a === 'sdel') { if (!confirm('Supprimer cette section ?')) return; cfg.sections.splice(+g, 1); }
-  else if (a === 'sadd') cfg.sections.push({ nom: 'Nouvelle section', cols: [] });
-  else return;
-  sauver();
-});
-modal.addEventListener('change', e => {
-  const t = e.target, a = t.dataset.a, g = t.dataset.g; if (!a) return;
-  if (a === 'add' && t.value) listeDe(g).push({ c: t.value, nom: '', gn: false, vs: '' });
-  else if (a === 'gn') listeDe(g)[+t.dataset.i].gn = t.checked;
-  else if (a === 'vs') listeDe(g)[+t.dataset.i].vs = t.value;
-  else if (a === 'lib') listeDe(g)[+t.dataset.i].nom = t.value;
-  else if (a === 'nom') cfg.sections[+g].nom = t.value;
-  else return;
-  sauver();
-});
-modal.addEventListener('mousedown', e => { if (e.target === modal) modal.classList.remove('ouvert'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
-
-// Ligne sélectionnée dans Grist → mise en évidence et centrage sur la carte
 grist.onRecord(rec => {
-  const ancien = marqueurs.get(idSelectionne);
-  idSelectionne = rec ? rec.id : null;
-  if (ancien) ancien.setIcon(icone(ancien._cifi.niv, false));
-  const m = marqueurs.get(idSelectionne);
-  if (!m) return;
-  const dejaOuverte = m.isPopupOpen();
-  m.setIcon(icone(m._cifi.niv, true));
-  if (!dejaOuverte && cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
+  const a = marqueurs.get(idSelectionne); idSelectionne = rec ? rec.id : null;
+  if (a) a.setIcon(icone(a._cifi, false));
+  const m = marqueurs.get(idSelectionne); if (!m) return;
+  const ouverte = m.isPopupOpen(); m.setIcon(icone(m._cifi, true));
+  if (!ouverte && cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 });
 </script>
 </body>
