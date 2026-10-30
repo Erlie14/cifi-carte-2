@@ -124,6 +124,15 @@
   #filtres select { display:block; width:210px; margin-top:2px; padding:5px; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:6px; }
   .rg-corps label { display:block; margin:8px 0; font-size:13px; } .rg-corps label select, .rg-corps label input[type=number] { margin-left:6px; }
   .rg-corps .rg-sec { margin-bottom:6px; } .rg-corps .rg-sec input { width:100%; }
+  .leaflet-top.leaflet-left .panel { max-height:72vh; overflow:auto; }
+  .leaflet-tooltip.nom-etab { display:none; font:600 12px system-ui,sans-serif; border:1px solid #0004; padding:2px 6px; }
+  .noms-on .leaflet-tooltip.nom-etab { display:block; }
+  #compteurs { margin-top:6px; line-height:1.5; } #compteurs strong { font-size:16px; color:var(--accent); }
+  #filtres details { margin-top:6px; border:1px solid var(--line); border-radius:6px; }
+  #filtres summary { padding:5px 8px; cursor:pointer; font-size:13px; }
+  #filtres details label { display:block; margin:0; padding:2px 10px; color:var(--ink); font-size:13px; }
+  #filtres .liste { max-height:160px; overflow:auto; padding-bottom:4px; }
+  .rg-corps label input[type=text] { width:100%; margin:4px 0 0; box-sizing:border-box; }
 </style>
 </head>
 <body>
@@ -133,7 +142,7 @@
 
 <script>
 /* ================= RÉGLAGES PAR DÉFAUT ================= */
-const VERSION = '12';
+const VERSION = '13';
 const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Suites données', 'Section 4', 'Section 5', 'Section 6'];
 const NIVEAUX = {
   faible:{cle:'faible',label:'Faible',couleur:'#2a9d8f',lettre:'F'}, moyen:{cle:'moyen',label:'Moyen',couleur:'#e9c46a',lettre:'M'},
@@ -168,7 +177,7 @@ function formater(k, v) {
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
 
 /* ================= ÉTAT ================= */
-let opts = {}, lastRec = null, lastMap = null, cfg = { popup:[], sections:[] }, legCats = [], legFormes = [], legTitre = '';
+let sigFiltres = '', opts = {}, lastRec = null, lastMap = null, cfg = { popup:[], sections:[] }, legCats = [], legFormes = [], legTitre = '';
 let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true;
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
@@ -183,11 +192,21 @@ map.addLayer(cluster);
 const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div','panel');
-  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><div class="count" id="count"></div><div id="filtres"></div><button class="link" id="tout" type="button">Voir tous les points</button>';
+  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><div class="count" id="count"></div><div id="compteurs"></div><div id="filtres"></div><button class="link" id="noms" type="button" aria-pressed="false">Afficher les noms</button><br><button class="link" id="tout" type="button">Voir tous les points</button>';
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
-  d.querySelector('#filtres').addEventListener('change', e => { filtreSel[e.target.dataset.c] = e.target.value; appliquerFiltres(); });
+  d.querySelector('#filtres').addEventListener('change', e => {
+    const c = e.target.dataset.c; if (!c) return;
+    const det = e.target.closest('details');
+    filtreSel[c] = [...det.querySelectorAll('input:checked')].map(x => x.value);
+    det.querySelector('summary').textContent = joli(c) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : '');
+    appliquerFiltres();
+  });
+  d.querySelector('#noms').addEventListener('click', e => {
+    const on = document.getElementById('map').classList.toggle('noms-on');
+    e.target.setAttribute('aria-pressed', String(on)); e.target.textContent = on ? 'Masquer les noms' : 'Afficher les noms';
+  });
   return d;
 };
 haut.addTo(map);
@@ -210,13 +229,15 @@ function majLegende() {
     (legFormes.length ? '<div class="sep">' + legFormes.map(f => `<div>${SYMBOLES[f.forme]} ${esc(f.label)}</div>`).join('') + '</div>' : '');
 }
 function recentrer() { const p = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng()); if (p.length) map.fitBounds(p, { padding:[40,40], maxZoom:15 }); }
+let cptDef = [];
 function appliquerFiltres() {
-  let n = 0;
+  let n = 0; const cpt = cptDef.map(x => ({ ...x, n: 0 }));
   for (const m of marqueurs.values()) {
     const { niv, nom, fv } = m._cifi;
-    const ok = !masques.has(niv.k) && (!recherche || sansAccent(nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || fv[c] === v);
-    if (ok) { n++; if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
+    const ok = !masques.has(niv.k) && (!recherche || sansAccent(nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || !v.length || v.includes(fv[c]));
+    if (ok) { n++; cpt.forEach(x => { if (m._cifi[x.k]) x.n++; }); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
+  document.getElementById('compteurs').innerHTML = cpt.map(x => `<div><strong>${x.n}</strong> ${esc(x.titre)}</div>`).join('');
   document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
 }
 function icone(d, sel) {
@@ -277,13 +298,19 @@ grist.ready({
     { name:'lng',    title:'Longitude', type:'Numeric' },
     { name:'niveau', title:'Couleur des points : colonne (ex. niveau de risque)', type:'Any', optional:true },
     { name:'forme',  title:'Forme des points : colonne (facultatif)', type:'Any', optional:true },
-    { name:'filtres',title:'Filtres : colonnes à proposer', type:'Any', optional:true, allowMultiple:true },
+    { name:'filtres',title:'Filtres : colonnes à proposer (choix multiples)', type:'Any', optional:true, allowMultiple:true },
+    { name:'ctrl',   title:'Compteur « à contrôler » : colonne', type:'Any', optional:true },
+    { name:'actif',  title:'Compteur « actifs » : colonne', type:'Any', optional:true },
     { name:'popup',  title:'Colonnes du popup', type:'Any', optional:true, allowMultiple:true },
     ...[1,2,3,4,5,6].map(n => ({ name:'t' + n, title:'Fiche – section ' + n + ' (colonnes)', type:'Any', optional:true, allowMultiple:true })),
     { name:'gras',   title:'Colonnes dont le nom est en gras', type:'Any', optional:true, allowMultiple:true },
   ],
   options: [
     ...[1,2,3,4,5,6].map(n => ({ name:'titre' + n, title:'Titre de la section ' + n, type:'string', defaultValue:TITRES_DEFAUT[n - 1] })),
+    { name:'ctrl_titre', title:'Compteur 1 : titre', type:'string', defaultValue:'À contrôler' },
+    { name:'ctrl_valeur', title:'Compteur 1 : valeur comptée', type:'string', defaultValue:'À contrôler' },
+    { name:'actif_titre', title:'Compteur 2 : titre', type:'string', defaultValue:'Actifs' },
+    { name:'actif_valeur', title:'Compteur 2 : valeur comptée', type:'string', defaultValue:'Actif' },
     { name:'noms_gras', title:'Tous les noms de colonnes en gras', type:'boolean', defaultValue:false },
     { name:'style_valeurs', title:'Forme des valeurs', type:'choice', choices:Object.keys(STYLES), defaultValue:'Normal' },
     { name:'ouverture', title:'Sections dépliées à l’ouverture', type:'choice', choices:['Première section','Toutes','Aucune'], defaultValue:'Première section' },
@@ -301,6 +328,11 @@ function ouvrirReglages() {
     <div class="rg-corps"><section><h3>Titres des sections de la fiche</h3>
       ${[1,2,3,4,5,6].map(n => `<div class="rg-sec"><input type="text" data-o="titre${n}" value="${esc(opt('titre' + n, TITRES_DEFAUT[n - 1]))}" aria-label="Titre de la section ${n}"></div>`).join('')}
       <p class="vide" style="font-size:12px;margin:4px 0 0">Une section n’apparaît dans la fiche que si des colonnes lui sont associées dans le panneau de droite (« Fiche – section N »).</p></section>
+    <section><h3>Compteurs (panneau de gauche)</h3>
+      <label>Compteur 1 – titre <input type="text" data-o="ctrl_titre" value="${esc(opt('ctrl_titre', 'À contrôler'))}"></label>
+      <label>Compteur 1 – valeur comptée <input type="text" data-o="ctrl_valeur" value="${esc(opt('ctrl_valeur', 'À contrôler'))}"></label>
+      <label>Compteur 2 – titre <input type="text" data-o="actif_titre" value="${esc(opt('actif_titre', 'Actifs'))}"></label>
+      <label>Compteur 2 – valeur comptée <input type="text" data-o="actif_valeur" value="${esc(opt('actif_valeur', 'Actif'))}"></label></section>
     <section><h3>Affichage</h3>
       <label><input type="checkbox" data-o="noms_gras"${opt('noms_gras', false) === true ? ' checked' : ''}> Tous les noms de colonnes en gras</label>
       <label>Forme des valeurs ${sel('style_valeurs', Object.keys(STYLES))}</label>
@@ -333,7 +365,9 @@ function construire() {
   const gras = new Set(liste('gras')), vs = STYLES[opt('style_valeurs', 'Normal')] ?? '';
   const mk = c => ({ c, gn: gras.has(c) || opt('noms_gras', false) === true, vs });
   cfg = { popup: liste('popup').map(mk), sections: [1,2,3,4,5,6].map(n => ({ cle:'s' + n, nom: String(opt('titre' + n, '')).trim() || TITRES_DEFAUT[n - 1], cols: liste('t' + n).map(mk) })).filter(x => x.cols.length) };
-  const cC = m.niveau, cF = m.forme, cFil = liste('filtres');
+  const cC = m.niveau, cF = m.forme, cFil = liste('filtres'), cCtrl = m.ctrl, cAct = m.actif;
+  const egal = (v, t) => { const f = formater('', v); return f !== null && sansAccent(f).trim() === sansAccent(String(t)).trim(); };
+  cptDef = [cCtrl && { k:'ctrl', titre:String(opt('ctrl_titre', 'À contrôler')) }, cAct && { k:'actif', titre:String(opt('actif_titre', 'Actifs')) }].filter(Boolean);
 
   // catégories pour couleur et forme
   const brut = c => v => (v == null || v === '') ? '' : String(formater(c, v) ?? v);
@@ -355,7 +389,7 @@ function construire() {
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
     const niv = nivDe(cC ? raw[cC] : null), fv = {};
     cFil.forEach(c => { fv[c] = formater(c, raw[c]) ?? '(vide)'; });
-    const d = { id:raw.id, nom:r.nom, niv, forme: cF ? formeDe(raw[cF]) : null, raw, fv };
+    const d = { id:raw.id, nom:r.nom, niv, forme: cF ? formeDe(raw[cF]) : null, raw, fv, ctrl: !!cCtrl && egal(raw[cCtrl], opt('ctrl_valeur', 'À contrôler')), actif: !!cAct && egal(raw[cAct], opt('actif_valeur', 'Actif')) };
     vus.add(raw.id); cats.set(niv.k, niv);
     let mk2 = marqueurs.get(raw.id);
     if (mk2) mk2.setLatLng([lat, lng]);
@@ -363,8 +397,10 @@ function construire() {
       mk2 = L.marker([lat, lng], { title:r.nom || '', keyboard:true });
       mk2.bindPopup(() => fichier(mk2._cifi), { maxWidth:320, className:'cifi-popup' });
       mk2.on('click', () => grist.setSelectedRows([raw.id]));
+      mk2.bindTooltip(String(r.nom || ''), { permanent:true, direction:'right', offset:[14,0], className:'nom-etab' });
       marqueurs.set(raw.id, mk2);
     }
+    if (mk2.setTooltipContent) mk2.setTooltipContent(String(r.nom || ''));
     mk2._cifi = d; mk2.setIcon(icone(d, raw.id === idSelectionne));
     if (mk2.isPopupOpen()) mk2.getPopup().update();
   });
@@ -376,13 +412,14 @@ function construire() {
   legFormes = cF ? valsF.map(v => ({ forme:FORMES[valsF.indexOf(v) % FORMES.length], label:v })) : [];
   majLegende();
   const zone = document.getElementById('filtres');
-  zone.innerHTML = cFil.map(c => {
-    const vals = [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
-    if (filtreSel[c] && !vals.includes(filtreSel[c])) filtreSel[c] = '';
-    return `<label>${esc(joli(c))}<select data-c="${esc(c)}"><option value="">Tous</option>${vals.map(v => `<option${filtreSel[c] === v ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`;
-  }).join('');
-  Object.keys(filtreSel).forEach(c => { if (!cFil.includes(c)) delete filtreSel[c]; });
-
+  const valsDe = c => [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
+  const sig = JSON.stringify(cFil.map(c => [c, valsDe(c)]));
+  Object.keys(filtreSel).forEach(c => { if (!cFil.includes(c)) delete filtreSel[c]; else filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
+  if (sig !== sigFiltres) {
+    sigFiltres = sig;
+    zone.innerHTML = cFil.map(c => { const sl = new Set(filtreSel[c] || []);
+      return `<details${sl.size ? ' open' : ''}><summary>${esc(joli(c))}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${valsDe(c).map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`; }).join('');
+  }
   const reg = opt('regrouper', true) !== false; if (reg !== regroupPrec) { cluster.clearLayers(); regroupPrec = reg; }
   appliquerFiltres();
   if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
