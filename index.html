@@ -122,6 +122,8 @@
   .legend .sep { margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
   #filtres label { display:block; margin-top:6px; color:var(--muted); font-size:12px; }
   #filtres select { display:block; width:210px; margin-top:2px; padding:5px; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:6px; }
+  .rg-corps label { display:block; margin:8px 0; font-size:13px; } .rg-corps label select, .rg-corps label input[type=number] { margin-left:6px; }
+  .rg-corps .rg-sec { margin-bottom:6px; } .rg-corps .rg-sec input { width:100%; }
 </style>
 </head>
 <body>
@@ -131,7 +133,7 @@
 
 <script>
 /* ================= RÉGLAGES PAR DÉFAUT ================= */
-const VERSION = '11';
+const VERSION = '12';
 const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Suites données', 'Section 4', 'Section 5', 'Section 6'];
 const NIVEAUX = {
   faible:{cle:'faible',label:'Faible',couleur:'#2a9d8f',lettre:'F'}, moyen:{cle:'moyen',label:'Moyen',couleur:'#e9c46a',lettre:'M'},
@@ -290,6 +292,33 @@ grist.ready({
   ],
 });
 grist.onOptions(o => { opts = o || {}; if (lastRec) construire(); });
+
+/* ---- Fenêtre « Configurer le widget », ouverte par le bouton du panneau de droite de Grist ---- */
+const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
+const sel = (n, choix) => `<select data-o="${n}">${choix.map(c => `<option${opt(n, choix[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
+function ouvrirReglages() {
+  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><button type="button" data-a="fermer">Fermer</button></div>
+    <div class="rg-corps"><section><h3>Titres des sections de la fiche</h3>
+      ${[1,2,3,4,5,6].map(n => `<div class="rg-sec"><input type="text" data-o="titre${n}" value="${esc(opt('titre' + n, TITRES_DEFAUT[n - 1]))}" aria-label="Titre de la section ${n}"></div>`).join('')}
+      <p class="vide" style="font-size:12px;margin:4px 0 0">Une section n’apparaît dans la fiche que si des colonnes lui sont associées dans le panneau de droite (« Fiche – section N »).</p></section>
+    <section><h3>Affichage</h3>
+      <label><input type="checkbox" data-o="noms_gras"${opt('noms_gras', false) === true ? ' checked' : ''}> Tous les noms de colonnes en gras</label>
+      <label>Forme des valeurs ${sel('style_valeurs', Object.keys(STYLES))}</label>
+      <label>Sections dépliées à l’ouverture ${sel('ouverture', ['Première section', 'Toutes', 'Aucune'])}</label>
+      <label><input type="checkbox" data-o="regrouper"${opt('regrouper', true) !== false ? ' checked' : ''}> Regrouper les points proches</label>
+      <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label></section></div></div>`;
+  modal.classList.add('ouvert');
+}
+grist.onEditOptions(ouvrirReglages);   // crée le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
+modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-a="fermer"]')) modal.classList.remove('ouvert'); });
+modal.addEventListener('change', e => {
+  const t = e.target, n = t.dataset.o; if (!n) return;
+  const v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.min(48, Math.max(16, +t.value || 30)) : t.value;
+  opts[n] = v; if (lastRec) construire();
+  Promise.resolve(grist.setOption(n, v)).catch(() => alert('Vous n’avez pas le droit de modifier la configuration de ce widget.'));
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
+
 grist.onRecords((records, mappings) => { lastRec = records; lastMap = mappings; construire(); });
 
 function construire() {
