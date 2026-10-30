@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIFI – Carte des contrôles</title>
+
+<!--
+  Les bibliothèques sont chargées depuis le dossier "lib" (aucun site tiers).
+  Si le dossier lib est vide, exécutez telecharger-libs.ps1 (Windows) ou telecharger-libs.sh (Linux/Mac). Voir LISEZMOI.md.
+  grist-plugin-api.js est fourni par Grist lui-même : changez l'adresse si votre instance est différente.
+-->
+<link rel="stylesheet" href="./lib/leaflet.css">
+<link rel="stylesheet" href="./lib/MarkerCluster.css">
+<link rel="stylesheet" href="./lib/MarkerCluster.Default.css">
+<script src="./lib/leaflet.js"></script>
+<script src="./lib/leaflet.markercluster.js"></script>
+<script src="https://grist.numerique.gouv.fr/grist-plugin-api.js"></script>
+
+<style>
+  :root { --ink:#1d2733; --muted:#5d6b7a; --paper:#fff; --line:#dde3ea; --accent:#1f4e8c; }
+  html, body { height:100%; margin:0; font-family:system-ui,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
+  #map { height:100%; width:100%; }
+  #msg { position:absolute; inset:0; z-index:1000; display:none; align-items:center; justify-content:center;
+         background:rgba(255,255,255,.95); padding:24px; text-align:center; line-height:1.5; font-size:15px; }
+
+  /* Marqueurs : couleur + forme + lettre */
+  .pin { width:30px; height:30px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1px #0007;
+         display:flex; align-items:center; justify-content:center; font:700 12px/1 system-ui,sans-serif; color:#fff; box-sizing:border-box; }
+  .pin.moyen { color:#1d2733; border-radius:7px; }
+  .pin.eleve { border-radius:7px; transform:rotate(45deg); }
+  .pin.eleve span { transform:rotate(-45deg); }
+  .pin.critique { box-shadow:0 0 0 4px #c1121f55, 0 0 0 1px #0007; }
+  .pin.sel { outline:3px solid var(--accent); outline-offset:3px; }
+
+  /* Panneaux */
+  .panel { background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:0 2px 8px #0002; padding:10px; font-size:13px; }
+  .panel input[type=search] { width:210px; box-sizing:border-box; padding:7px 9px; font:inherit; border:1px solid var(--line); border-radius:6px; }
+  .panel .count { margin-top:6px; color:var(--muted); line-height:1.4; }
+  .panel button.link { margin-top:4px; padding:0; border:0; background:none; color:var(--accent); font:inherit; cursor:pointer; text-decoration:underline; }
+  .legend button { display:flex; align-items:center; gap:8px; width:100%; padding:5px 6px; margin:1px 0; font:inherit; text-align:left;
+                   background:none; border:1px solid transparent; border-radius:6px; cursor:pointer; color:var(--ink); }
+  .legend button:hover { background:#f1f4f8; }
+  .legend button[aria-pressed=false] { opacity:.45; text-decoration:line-through; }
+  .legend strong { display:block; margin-bottom:4px; }
+  .legend i { flex:none; width:13px; height:13px; border:1px solid #0006; }
+  .b-faible { background:#2a9d8f; border-radius:50%; } .b-moyen { background:#e9c46a; border-radius:3px; }
+  .b-eleve { background:#f4821f; transform:rotate(45deg) scale(.85); } .b-critique { background:#c1121f; border-radius:50%; box-shadow:0 0 0 2px #c1121f55; }
+  .b-neutre { background:#6b7785; border-radius:50%; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline:3px solid #f4821f; outline-offset:2px; }
+
+  /* Popup pliable */
+  .cifi-popup .leaflet-popup-content-wrapper { border-radius:12px; padding:0; overflow:hidden; }
+  .cifi-popup .leaflet-popup-content { margin:0; width:300px !important; }
+  .fiche header { padding:12px 14px 10px; border-left:6px solid var(--niv); background:#f6f8fb; }
+  .fiche h3 { margin:0 0 6px; font-size:15px; line-height:1.3; }
+  .fiche .niv { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; border:1px solid #0003; }
+  .fiche .corps { max-height:260px; overflow:auto; }
+  .fiche details { border-top:1px solid var(--line); }
+  .fiche summary { padding:9px 14px; cursor:pointer; font-weight:600; font-size:13px; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+  .fiche summary::-webkit-details-marker { display:none; }
+  .fiche summary::after { content:"▾"; color:var(--muted); transition:transform .15s; }
+  .fiche details[open] summary::after { transform:rotate(180deg); }
+  .fiche dl { margin:0; padding:0 14px 10px; display:grid; grid-template-columns:110px 1fr; gap:4px 10px; font-size:13px; }
+  .fiche dt { color:var(--muted); } .fiche dd { margin:0; overflow-wrap:anywhere; }
+  .fiche .pied { padding:10px 14px; border-top:1px solid var(--line); }
+  .fiche .pied button { padding:7px 12px; font:inherit; font-size:13px; cursor:pointer; background:var(--accent); color:#fff; border:0; border-radius:6px; }
+  /* Volet « fiche complète » */
+  #fiche-panel { position:absolute; top:0; right:0; bottom:0; width:min(400px,100%); z-index:1100; background:var(--paper);
+    box-shadow:-4px 0 18px #0003; display:flex; flex-direction:column; transform:translateX(105%); visibility:hidden;
+    transition:transform .2s ease, visibility .2s; }
+  #fiche-panel.ouvert { transform:none; visibility:visible; }
+  .fp-tete { position:relative; padding:16px 52px 14px 18px; border-left:8px solid var(--niv); background:#f6f8fb; border-bottom:1px solid var(--line); }
+  .fp-tete h2 { margin:0 0 8px; font-size:18px; line-height:1.3; }
+  .fp-tete .niv { display:inline-block; padding:3px 12px; border-radius:12px; font-size:13px; font-weight:600; border:1px solid #0003; }
+  .fp-fermer { position:absolute; top:10px; right:10px; width:34px; height:34px; border:1px solid var(--line); border-radius:50%;
+    background:#fff; font-size:16px; cursor:pointer; color:var(--ink); }
+  .fp-fermer:hover { background:#eef2f7; }
+  .fp-corps { flex:1; overflow:auto; padding:14px 18px; }
+  .fp-corps dl { margin:0; display:grid; grid-template-columns:130px 1fr; gap:10px 12px; font-size:14px; }
+  .fp-corps dt { color:var(--muted); } .fp-corps dd { margin:0; overflow-wrap:anywhere; }
+  .fp-corps .vide { color:var(--muted); }
+  .fp-pied { padding:12px 18px; border-top:1px solid var(--line); }
+  .fp-pied button { padding:7px 12px; font:inherit; font-size:13px; cursor:pointer; background:#fff; color:var(--accent); border:1px solid var(--accent); border-radius:6px; }
+  @media (prefers-reduced-motion:reduce) { #fiche-panel { transition:none; } }
+  @media (prefers-reduced-motion:reduce) { .fiche summary::after { transition:none; } }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="msg"></div>
+<aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
+
+<script>
+/* ================= RÉGLAGES (modifiables) ================= */
+// Colonnes de votre table à NE PAS montrer dans la fiche (écrivez leur identifiant Grist exact).
+const COLONNES_MASQUEES = [];
+// Nombre d'informations montrées dans la partie « Résumé » ; les autres vont dans « Toutes les informations ».
+const NB_RESUME = 4;
+const VERSION = '5';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
+
+// Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
+const NIVEAUX = {
+  faible:   { cle:'faible',   label:'Faible',   couleur:'#2a9d8f', lettre:'F' },
+  moyen:    { cle:'moyen',    label:'Moyen',    couleur:'#e9c46a', lettre:'M' },
+  eleve:    { cle:'eleve',    label:'Élevé',    couleur:'#f4821f', lettre:'É' },
+  critique: { cle:'critique', label:'Critique', couleur:'#c1121f', lettre:'C' },
+  neutre:   { cle:'neutre',   label:'Non renseigné', couleur:'#6b7785', lettre:'?' },
+};
+const MOTS = [ // mots reconnus (minuscules, sans accent)
+  ['critique', /critique|tres (eleve|fort|haut)|majeur|prioritaire/],
+  ['eleve',    /eleve|fort|haut|important/],
+  ['moyen',    /moyen|modere|intermediaire/],
+  ['faible',   /faible|bas|mineur|limite/],
+];
+
+// Fonds de carte : Géoplateforme IGN. Pour une étanchéité totale, remplacez par vos propres tuiles.
+const geopf = (layer, fmt) => `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=${fmt}&LAYER=${layer}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
+const fonds = {
+  'Plan IGN': L.tileLayer(geopf('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2','image/png'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
+  'Photographies aériennes': L.tileLayer(geopf('ORTHOIMAGERY.ORTHOPHOTOS','image/jpeg'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
+};
+
+/* ================= OUTILS ================= */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sansAccent = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function niveau(v) {
+  if (v == null || v === '') return { ...NIVEAUX.neutre, texte:'' };
+  const t = sansAccent(v);
+  for (const [cle, re] of MOTS) if (re.test(t)) return { ...NIVEAUX[cle], texte:String(v) };
+  return { ...NIVEAUX.neutre, texte:String(v) };
+}
+const joli = k => k.replace(/_/g,' ').replace(/^./, c => c.toUpperCase());
+function formater(k, v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
+  if (Array.isArray(v)) return v.filter(x => x !== 'L').join(', ') || null;       // listes de choix
+  if (typeof v === 'object') return null;                                          // données techniques : ignorées
+  if (typeof v === 'number' && /date|le$|echeance|jour/i.test(k) && v > 1e9 && v < 5e9)
+    return new Date(v * 1000).toLocaleDateString('fr-FR');                         // colonnes de type Date
+  return String(v);
+}
+const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
+
+/* ================= CARTE ================= */
+const map = L.map('map', { center:[46.6,2.5], zoom:6, layers:[fonds['Plan IGN']] });
+L.control.layers(fonds, null, { position:'topright' }).addTo(map);
+L.control.scale({ metric:true, imperial:false }).addTo(map);
+const cluster = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius:45 });
+map.addLayer(cluster);
+
+const marqueurs = new Map();      // id Grist → marqueur
+const masques = new Set();        // niveaux masqués via la légende
+let recherche = '', premierChargement = true, idSelectionne = null;
+
+// Panneau recherche + compteur
+const haut = L.control({ position:'topleft' });
+haut.onAdd = () => {
+  const d = L.DomUtil.create('div','panel');
+  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">' +
+                '<div class="count" id="count"></div><button class="link" id="tout" type="button">Voir tous les points</button>';
+  L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+  d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
+  d.querySelector('#tout').addEventListener('click', recentrer);
+  return d;
+};
+haut.addTo(map);
+
+// Légende cliquable = filtre par niveau
+const legende = L.control({ position:'bottomleft' });
+legende.onAdd = () => {
+  const d = L.DomUtil.create('div','panel legend');
+  d.innerHTML = '<strong>Niveau de risque</strong>' + Object.values(NIVEAUX).map(n =>
+    `<button type="button" data-n="${n.cle}" aria-pressed="true"><i class="b-${n.cle}"></i>${n.label}</button>`).join('');
+  L.DomEvent.disableClickPropagation(d);
+  d.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') === 'true';
+    b.setAttribute('aria-pressed', String(!on));
+    on ? masques.add(b.dataset.n) : masques.delete(b.dataset.n);
+    appliquerFiltres();
+  });
+  return d;
+};
+legende.addTo(map);
+
+function recentrer() {
+  const pts = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng());
+  if (pts.length) map.fitBounds(pts, { padding:[40,40], maxZoom:15 });
+}
+function appliquerFiltres() {
+  let n = 0;
+  for (const m of marqueurs.values()) {
+    const { niv, nom } = m._cifi;
+    const visible = !masques.has(niv.cle) && (!recherche || sansAccent(nom).includes(recherche));
+    if (visible) { n++; if (!cluster.hasLayer(m)) cluster.addLayer(m); }
+    else if (cluster.hasLayer(m)) cluster.removeLayer(m);
+  }
+  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size>1?'s':''}` +
+    (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
+}
+
+const panneau = document.getElementById('fiche-panel');
+let ficheId = null;
+const lignes = l => `<dl>${l.map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+
+function ouvrirFiche(id, focus = true) {
+  const m = marqueurs.get(id); if (!m) return;
+  const d = m._cifi; ficheId = id;
+  panneau.style.setProperty('--niv', d.niv.couleur);
+  panneau.innerHTML =
+    `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button>
+       <h2>${esc(d.nom || 'Sans nom')}</h2>
+       <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></div>
+     <div class="fp-corps">${d.champs.length ? lignes(d.champs) : (d.nbCols ? '<p class="vide">Aucune information renseignée pour cet établissement.</p>' : '<p class="vide">Aucune colonne choisie. Dans le panneau de droite de Grist, section « Colonnes à afficher dans la fiche », ajoutez les colonnes voulues.</p>')}</div>
+     <div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button></div>`;
+  panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
+  if (focus) panneau.querySelector('.fp-fermer').focus();
+}
+function fermerFiche() {
+  ficheId = null; panneau.classList.remove('ouvert'); panneau.setAttribute('aria-hidden', 'true');
+}
+panneau.addEventListener('click', e => {
+  if (e.target.closest('.fp-fermer')) fermerFiche();
+  const sel = e.target.closest('.fp-select');
+  if (sel && ficheId !== null) {
+    grist.setSelectedRows([ficheId]);
+    if (grist.setCursorPos) grist.setCursorPos({ rowId: ficheId });
+    sel.textContent = '✓ Ligne sélectionnée dans Grist';
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ficheId !== null) fermerFiche(); });
+
+map.on('popupopen', e => {
+  const el = e.popup.getElement(); if (!el) return;
+  const b = el.querySelector('.btn-fiche'); if (!b) return;
+  L.DomEvent.disableClickPropagation(b);
+  b.addEventListener('click', () => { ouvrirFiche(Number(b.dataset.id)); map.closePopup(); });
+});
+
+function icone(niv, sel) {
+  return L.divIcon({ className:'', iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-16],
+    html:`<div class="pin ${niv.cle}${sel?' sel':''}" style="background:${niv.couleur}"><span>${niv.lettre}</span></div>` });
+}
+
+function fichier(d) {
+  const resume = d.champs.slice(0, NB_RESUME);
+  return `<div class="fiche" style="--niv:${d.niv.couleur}">
+    <header><h3>${esc(d.nom || 'Sans nom')}</h3>
+      <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle==='moyen'?'#1d2733':'#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
+    <div class="corps">${resume.length ? `<details open><summary>Résumé</summary>${lignes(resume)}</details>` : ''}</div>
+    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
+}
+
+/* ================= GRIST ================= */
+let sansGps = 0;
+grist.ready({
+  requiredAccess: 'read table',   // lecture seule de la table liée
+  allowSelectBy: true,
+  columns: [
+    { name:'nom',    title:'Nom de l’établissement', type:'Text' },
+    { name:'lat',    title:'Latitude',  type:'Numeric' },
+    { name:'lng',    title:'Longitude', type:'Numeric' },
+    { name:'niveau', title:'Niveau de risque (Faible, Moyen, Élevé, Critique)', type:'Any', optional:true },
+    { name:'details', title:'Colonnes à afficher dans la fiche', type:'Any', optional:true, allowMultiple:true },
+  ],
+});
+
+// Se déclenche à chaque modification de la table : la carte se met à jour seule.
+grist.onRecords((records, mappings) => {
+  const mapped = grist.mapColumnNames(records);
+  if (!mapped) {
+    afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>');
+    return;
+  }
+  afficherMsg('');
+  const cols = [].concat((mappings && mappings.details) || []).filter(c => c && !COLONNES_MASQUEES.includes(c));
+  const vus = new Set(); sansGps = 0;
+
+  records.forEach((raw, i) => {
+    const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
+    if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
+    const champs = cols.map(c => [joli(c), formater(c, raw[c])]).filter(([,v]) => v !== null);
+    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), champs, nbCols:cols.length };
+    vus.add(raw.id);
+
+    let m = marqueurs.get(raw.id);
+    if (m) { m.setLatLng([lat,lng]); }
+    else {
+      m = L.marker([lat,lng], { title:r.nom || '', keyboard:true });
+      m.bindPopup(() => fichier(m._cifi), { maxWidth:320, className:'cifi-popup' });
+      m.on('click', () => grist.setSelectedRows([raw.id]));
+      marqueurs.set(raw.id, m);
+    }
+    m._cifi = data;
+    m.setIcon(icone(data.niv, raw.id === idSelectionne));
+    if (m.isPopupOpen()) m.getPopup().update();     // la fiche ouverte se rafraîchit aussi
+  });
+
+  for (const [id, m] of [...marqueurs]) if (!vus.has(id)) { cluster.removeLayer(m); marqueurs.delete(id); }
+  appliquerFiltres();
+  if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
+  if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
+});
+
+// Ligne sélectionnée dans Grist → mise en évidence et centrage sur la carte
+grist.onRecord(rec => {
+  const ancien = marqueurs.get(idSelectionne);
+  idSelectionne = rec ? rec.id : null;
+  if (ancien) ancien.setIcon(icone(ancien._cifi.niv, false));
+  const m = marqueurs.get(idSelectionne);
+  if (!m) return;
+  const dejaOuverte = m.isPopupOpen();
+  m.setIcon(icone(m._cifi.niv, true));
+  if (!dejaOuverte && cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
+});
+</script>
+</body>
+</html>
