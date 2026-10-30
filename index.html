@@ -109,10 +109,12 @@ const COLONNES_MASQUEES = [];
 // Exemple : la colonne Controle__Date_dernier est rangée dans la section « Controle », avec l'intitulé « Date dernier ».
 // Pour mettre des accents ou un titre précis, complétez ici : { Identite: 'Identité', Suites: 'Suites données' }
 const TITRES_SECTIONS = {};
+// Titres par défaut des 6 sections de la fiche (modifiables aussi dans le panneau de droite de Grist, si votre Grist le propose).
+const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Suites données', 'Section 4', 'Section 5', 'Section 6'];
 const SECTION_SANS_THEME = 'Autres informations';   // pour les colonnes sans « __ »
 // À l'ouverture de la fiche : 'premiere' (seule la 1re section est dépliée), 'toutes' ou 'aucune'
 const OUVERTURE = 'premiere';
-const VERSION = '6';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
+const VERSION = '7';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
 
 // Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
 const NIVEAUX = {
@@ -150,12 +152,22 @@ function formater(k, v) {
   if (v == null || v === '') return null;
   if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
   if (Array.isArray(v)) return v.filter(x => x !== 'L').join(', ') || null;       // listes de choix
+  if (v instanceof Date) {
+    if (isNaN(v)) return null;
+    const minuit = !v.getUTCHours() && !v.getUTCMinutes() && !v.getUTCSeconds();
+    return minuit ? v.toLocaleDateString('fr-FR', { timeZone:'UTC' }) : v.toLocaleString('fr-FR');
+  }
   if (typeof v === 'object') return null;                                          // données techniques : ignorées
   if (typeof v === 'number' && /date|le$|echeance|jour/i.test(k) && v > 1e9 && v < 5e9)
     return new Date(v * 1000).toLocaleDateString('fr-FR');                         // colonnes de type Date
   return String(v);
 }
 function decouper(col) { const i = col.indexOf('__'); return i > 0 ? { theme: col.slice(0, i), nom: col.slice(i + 2) } : { theme: null, nom: col }; }
+let titresOpt = {};
+function titreSection(sec) {
+  if (/^t\d$/.test(sec.cle)) { const n = +sec.cle.slice(1); return (titresOpt['titre' + n] || '').trim() || TITRES_DEFAUT[n - 1]; }
+  return titreTheme(sec.cle.slice(2) || null);
+}
 const titreTheme = t => t === null ? SECTION_SANS_THEME : (TITRES_SECTIONS[t] || joli(t));
 function extraire(cols, raw) {
   return cols.map(c => { const { theme, nom } = decouper(c); return { theme, label: joli(nom), val: formater(c, raw[c]) }; }).filter(x => x.val !== null);
@@ -163,7 +175,7 @@ function extraire(cols, raw) {
 function grouper(liste) {   // regroupe par thématique, dans l'ordre où les colonnes ont été choisies
   const g = new Map();
   for (const x of liste) { if (!g.has(x.theme)) g.set(x.theme, []); g.get(x.theme).push([x.label, x.val]); }
-  return [...g].map(([t, l]) => ({ titre: titreTheme(t), lignes: l }));
+  return [...g].map(([t, l]) => ({ cle: 'p:' + (t ?? ''), lignes: l }));
 }
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
 
@@ -233,10 +245,10 @@ const etatSections = new Map();   // mémorise les sections que vous avez dépli
 function corpsFiche(d) {
   if (!d.sections.length)
     return d.nbCols ? '<p class="vide">Aucune information renseignée pour cet établissement.</p>'
-      : '<p class="vide">Aucune colonne choisie. Dans le panneau de droite de Grist, section « Colonnes de la fiche complète », ajoutez les colonnes voulues.</p>';
+      : '<p class="vide">Aucune colonne choisie. Dans le panneau de droite de Grist, remplissez « Fiche complète – section 1 (colonnes) » et les suivantes.</p>';
   const ouvert = (t, i) => etatSections.has(t) ? etatSections.get(t) : (OUVERTURE === 'toutes' || (OUVERTURE === 'premiere' && i === 0));
   return (d.sections.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
-    d.sections.map((sec, i) => `<details class="theme" data-t="${esc(sec.titre)}"${ouvert(sec.titre, i) ? ' open' : ''}><summary>${esc(sec.titre)} <span class="nb">(${sec.lignes.length})</span></summary>${lignes(sec.lignes)}</details>`).join('');
+    d.sections.map((sec, i) => `<details class="theme" data-t="${esc(sec.cle)}"${ouvert(sec.cle, i) ? ' open' : ''}><summary>${esc(titreSection(sec))} <span class="nb">(${sec.lignes.length})</span></summary>${lignes(sec.lignes)}</details>`).join('');
 }
 
 function ouvrirFiche(id, focus = true) {
@@ -296,13 +308,15 @@ let sansGps = 0;
 grist.ready({
   requiredAccess: 'read table',   // lecture seule de la table liée
   allowSelectBy: true,
+  options: [1,2,3,4,5,6].map(n => ({ name:'titre' + n, title:'Titre de la section ' + n, type:'string', defaultValue:TITRES_DEFAUT[n - 1] })),
   columns: [
     { name:'nom',    title:'Nom de l’établissement', type:'Text' },
     { name:'lat',    title:'Latitude',  type:'Numeric' },
     { name:'lng',    title:'Longitude', type:'Numeric' },
     { name:'niveau', title:'Niveau de risque (Faible, Moyen, Élevé, Critique)', type:'Any', optional:true },
     { name:'popup',  title:'Colonnes du popup (clic sur un point)', type:'Any', optional:true, allowMultiple:true },
-    { name:'fiche',  title:'Colonnes de la fiche complète', type:'Any', optional:true, allowMultiple:true },
+    ...[1,2,3,4,5,6].map(n => ({ name:'t' + n, title:'Fiche complète – section ' + n + ' (colonnes)', type:'Any', optional:true, allowMultiple:true })),
+    { name:'fiche',  title:'Fiche complète – autres colonnes (facultatif)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
 
@@ -321,9 +335,12 @@ grist.onRecords((records, mappings) => {
   records.forEach((raw, i) => {
     const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
-    const lf = extraire(colsFiche.length ? colsFiche : colsPopup, raw);                 // fiche complète
-    const lp = extraire(colsPopup.length ? colsPopup : colsFiche.slice(0, 4), raw);     // popup (à défaut : 4 premières de la fiche)
-    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), popup:lp.map(x => [x.label, x.val]), sections:grouper(lf), nbCols:colsFiche.length + colsPopup.length };
+    const slots = [1,2,3,4,5,6].map(n => ({ cle:'t' + n, cols:liste('t' + n) }));
+    const sections = slots.map(x => ({ cle:x.cle, lignes:extraire(x.cols, raw).map(y => [y.label, y.val]) })).filter(x => x.lignes.length)
+      .concat(grouper(extraire(colsFiche, raw)));
+    const toutes = slots.flatMap(x => x.cols).concat(colsFiche);
+    const lp = extraire(colsPopup.length ? colsPopup : toutes.slice(0, 4), raw);   // popup (à défaut : 4 premières colonnes de la fiche)
+    const data = { id:raw.id, nom:r.nom, niv:niveau(r.niveau), popup:lp.map(x => [x.label, x.val]), sections, nbCols:colsPopup.length + toutes.length };
     vus.add(raw.id);
 
     let m = marqueurs.get(raw.id);
@@ -344,6 +361,8 @@ grist.onRecords((records, mappings) => {
   if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
 });
+
+grist.onOptions(o => { titresOpt = o || {}; if (ficheId !== null) ouvrirFiche(ficheId, false); });
 
 // Ligne sélectionnée dans Grist → mise en évidence et centrage sur la carte
 grist.onRecord(rec => {
