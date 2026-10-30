@@ -309,7 +309,11 @@ function ouvrirReglages() {
       <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label></section></div></div>`;
   modal.classList.add('ouvert');
 }
-grist.onEditOptions(ouvrirReglages);   // crée le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
+function boutonSecours() {   // uniquement si cette version de Grist ne propose pas le bouton dans son panneau de droite
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = '⚙ Configurer le widget'; b.addEventListener('click', ouvrirReglages);
+  const t = document.getElementById('tout'); if (t) t.insertAdjacentElement('afterend', b);
+}
+try { if (typeof grist.onEditOptions === 'function') grist.onEditOptions(ouvrirReglages); else boutonSecours(); } catch (e) { boutonSecours(); }
 modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-a="fermer"]')) modal.classList.remove('ouvert'); });
 modal.addEventListener('change', e => {
   const t = e.target, n = t.dataset.o; if (!n) return;
