@@ -61,7 +61,7 @@
   .fiche summary::-webkit-details-marker { display:none; }
   .fiche summary::after { content:"▾"; color:var(--muted); transition:transform .15s; }
   .fiche details[open] summary::after { transform:rotate(180deg); }
-  .fiche dl { margin:0; padding:0 14px 10px; display:grid; grid-template-columns:110px 1fr; gap:4px 10px; font-size:13px; }
+  .fiche dl { margin:0; padding:0 14px 10px; display:grid; grid-template-columns:minmax(80px,38%) minmax(0,1fr); gap:4px 10px; font-size:13px; }
   .fiche dt { color:var(--muted); } .fiche dd { margin:0; overflow-wrap:anywhere; }
   .fiche .pied { padding:10px 14px; border-top:1px solid var(--line); }
   .fiche .pied button { padding:7px 12px; font:inherit; font-size:13px; cursor:pointer; background:var(--accent); color:#fff; border:0; border-radius:6px; }
@@ -77,7 +77,7 @@
     background:#fff; font-size:16px; cursor:pointer; color:var(--ink); }
   .fp-fermer:hover { background:#eef2f7; }
   .fp-corps { flex:1; overflow:auto; padding:14px 18px; }
-  .fp-corps dl { margin:0; display:grid; grid-template-columns:130px 1fr; gap:10px 12px; font-size:14px; }
+  .fp-corps dl { margin:0; display:grid; grid-template-columns:minmax(100px,38%) minmax(0,1fr); gap:10px 12px; font-size:14px; }
   .fp-corps dt { color:var(--muted); } .fp-corps dd { margin:0; overflow-wrap:anywhere; }
   .fp-corps details.theme { border:1px solid var(--line); border-radius:8px; margin-bottom:10px; overflow:hidden; }
   .fp-corps summary { padding:10px 14px; cursor:pointer; font-weight:600; font-size:14px; list-style:none; display:flex; align-items:center; gap:8px; background:#f6f8fb; }
@@ -90,6 +90,12 @@
   .fp-outils button { padding:0; border:0; background:none; color:var(--accent); font:inherit; font-size:13px; cursor:pointer; text-decoration:underline; }
   .fiche .corps dl { padding-top:10px; }
   .b { font-weight:700; }
+  .fiche dt, .fp-corps dt, .fiche dd, .fp-corps dd { min-width:0; overflow-wrap:anywhere; }
+  dt.b { color:var(--ink); } dd.i { font-style:italic; }
+  .badge { display:inline-block; padding:1px 9px; border-radius:10px; background:#e8eef7; border:1px solid #c9d6ea; }
+  .rg-corps li { flex-direction:column; align-items:stretch; border-bottom:1px solid #eef1f5; padding:6px 0; }
+  .rg-l1, .rg-l2 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; } .rg-l2 input[type=text] { flex:1; min-width:120px; }
+  .rg-corps .nomcol small { color:var(--muted); }
   #reglages { position:absolute; inset:0; z-index:1200; background:#0006; display:none; align-items:center; justify-content:center; padding:12px; }
   #reglages.ouvert { display:flex; }
   .rg-boite { background:#fff; border-radius:12px; width:min(620px,100%); max-height:100%; display:flex; flex-direction:column; box-shadow:0 8px 30px #0005; }
@@ -130,7 +136,9 @@ const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Su
 const SECTION_SANS_THEME = 'Autres informations';   // pour les colonnes sans « __ »
 // À l'ouverture de la fiche : 'premiere' (seule la 1re section est dépliée), 'toutes' ou 'aucune'
 const OUVERTURE = 'premiere';
-const VERSION = '9';   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
+const VERSION = '10';
+// Les réglages ne sont proposés qu'aux personnes pouvant modifier le document (Grist signale les lecteurs par ?readonly=...).
+const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);   // affichée en haut à gauche pour vérifier que la dernière version est bien chargée
 
 // Niveaux de risque : le widget lit le texte de votre colonne (accents et majuscules sans importance).
 const NIVEAUX = {
@@ -215,7 +223,7 @@ haut.onAdd = () => {
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
-  d.querySelector('#reg').addEventListener('click', ouvrirReglages);
+  if (peutModifier) d.querySelector('#reg').addEventListener('click', ouvrirReglages); else d.querySelector('#reg').remove();
   return d;
 };
 haut.addTo(map);
@@ -256,7 +264,7 @@ function appliquerFiltres() {
 
 const panneau = document.getElementById('fiche-panel');
 let ficheId = null;
-const lignes = l => `<dl>${l.map(([k,v,g]) => `<dt>${esc(k)}</dt><dd${g ? ' class="b"' : ''}>${esc(v)}</dd>`).join('')}</dl>`;
+const lignes = l => `<dl>${l.map(([k, v, x]) => `<dt${x && x.gn ? ' class="b"' : ''}>${esc(k)}</dt><dd${x && x.vs === 'i' ? ' class="i"' : x && x.vs === 'b' ? ' class="b"' : ''}>${x && x.vs === 'badge' ? `<span class="badge">${esc(v)}</span>` : esc(v)}</dd>`).join('')}</dl>`;
 
 let cfg = { popup: [], sections: [] }, labels = {}, allCols = [];
 const libel = c => labels[c] || joli(c);
@@ -266,7 +274,7 @@ function fmt(c, v) {   // formatage selon le type réel de la colonne dans Grist
   if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
   return formater(c, v);
 }
-const champsDe = (liste, raw) => liste.map(x => [libel(x.c), fmt(x.c, raw[x.c]), x.gras]).filter(a => a[1] !== null);
+const champsDe = (liste, raw) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, raw[x.c]), x]).filter(a => a[1] !== null);
 const etatSections = new Map();   // mémorise les sections que vous avez dépliées / repliées
 function corpsFiche(d) {
   const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, valeurs(d)) })).filter(x => x.l.length);
@@ -405,18 +413,24 @@ function rafraichir() {
   if (ficheId !== null) ouvrirFiche(ficheId, false);
   marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); });
 }
-grist.onOptions(o => { cfg = { popup: (o && o.cfg && o.cfg.popup) || [], sections: (o && o.cfg && o.cfg.sections) || [] }; rafraichir(); });
+grist.onOptions(o => {
+  const c = (o && o.cfg) || {}, norm = l => (l || []).map(x => ({ c: x.c, nom: x.nom || '', gn: x.gn ?? !!x.gras, vs: x.vs || '' }));
+  cfg = { popup: norm(c.popup), sections: (c.sections || []).map(sec => ({ nom: sec.nom, cols: norm(sec.cols) })) };
+  rafraichir();
+});
 
 /* ---- Fenêtre de réglages ---- */
 const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
 let minuteur;
-function sauver() { clearTimeout(minuteur); minuteur = setTimeout(() => grist.setOptions({ cfg }), 300); rafraichir(); dessinerReglages(); }
+function sauver() { clearTimeout(minuteur); minuteur = setTimeout(() => { Promise.resolve(grist.setOptions({ cfg })).catch(() => alert('Vous n’avez pas le droit de modifier ces réglages.')); }, 300); rafraichir(); dessinerReglages(); }
 const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
 function blocListe(g) {
   const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
-  return `<ul>${l.map((x, i) => `<li><span class="nomcol">${esc(libel(x.c))}</span>
-      <label><input type="checkbox" data-a="gras" data-g="${g}" data-i="${i}"${x.gras ? ' checked' : ''}> gras</label>
-      <button type="button" data-a="up" data-g="${g}" data-i="${i}" aria-label="Monter">▲</button><button type="button" data-a="down" data-g="${g}" data-i="${i}" aria-label="Descendre">▼</button><button type="button" data-a="del" data-g="${g}" data-i="${i}" aria-label="Retirer">✕</button></li>`).join('')}</ul>
+  return `<ul>${l.map((x, i) => `<li><div class="rg-l1"><span class="nomcol">${esc(libel(x.c))}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span>
+      <button type="button" data-a="up" data-g="${g}" data-i="${i}" aria-label="Monter">▲</button><button type="button" data-a="down" data-g="${g}" data-i="${i}" aria-label="Descendre">▼</button><button type="button" data-a="del" data-g="${g}" data-i="${i}" aria-label="Retirer">✕</button></div>
+      <div class="rg-l2"><input type="text" value="${esc(x.nom || '')}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" data-g="${g}" data-i="${i}" aria-label="Nom affiché">
+      <label><input type="checkbox" data-a="gn" data-g="${g}" data-i="${i}"${x.gn ? ' checked' : ''}> nom en gras</label>
+      <select data-a="vs" data-g="${g}" data-i="${i}" aria-label="Forme de la valeur">${[['', 'Valeur normale'], ['b', 'Valeur en gras'], ['i', 'Valeur en italique'], ['badge', 'Valeur en pastille']].map(([v, t]) => `<option value="${v}"${(x.vs || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></li>`).join('')}</ul>
     <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
 }
 function dessinerReglages() {
@@ -444,8 +458,10 @@ modal.addEventListener('click', e => {
 });
 modal.addEventListener('change', e => {
   const t = e.target, a = t.dataset.a, g = t.dataset.g; if (!a) return;
-  if (a === 'add' && t.value) listeDe(g).push({ c: t.value, gras: false });
-  else if (a === 'gras') listeDe(g)[+t.dataset.i].gras = t.checked;
+  if (a === 'add' && t.value) listeDe(g).push({ c: t.value, nom: '', gn: false, vs: '' });
+  else if (a === 'gn') listeDe(g)[+t.dataset.i].gn = t.checked;
+  else if (a === 'vs') listeDe(g)[+t.dataset.i].vs = t.value;
+  else if (a === 'lib') listeDe(g)[+t.dataset.i].nom = t.value;
   else if (a === 'nom') cfg.sections[+g].nom = t.value;
   else return;
   sauver();
