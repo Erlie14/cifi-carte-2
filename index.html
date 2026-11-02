@@ -133,6 +133,23 @@
   #filtres details label { display:block; margin:0; padding:2px 10px; color:var(--ink); font-size:13px; }
   #filtres .liste { max-height:160px; overflow:auto; padding-bottom:4px; }
   .rg-corps label input[type=text] { width:100%; margin:4px 0 0; box-sizing:border-box; }
+  .leaflet-top.leaflet-left .panel { width:250px; box-sizing:border-box; max-height:calc(100vh - 24px); overflow:auto; }
+  .panel input[type=search] { width:100%; }
+  .panel hr { border:0; border-top:1px solid var(--line); margin:8px 0; }
+  #liste { max-height:220px; overflow:auto; margin-top:6px; border:1px solid var(--line); border-radius:6px; }
+  #liste button { display:flex; align-items:center; gap:7px; width:100%; padding:5px 8px; font:inherit; font-size:13px; text-align:left; background:none; border:0; border-bottom:1px solid #eef1f5; cursor:pointer; color:var(--ink); }
+  #liste button:hover { background:#f1f4f8; } #liste i { flex:none; width:10px; height:10px; border-radius:50%; border:1px solid #0005; }
+  .legend { margin-top:8px; } .legend .sw { flex:none; width:18px; text-align:center; font-size:15px; line-height:1; }
+  .rg-onglets { display:flex; gap:6px; padding:8px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .rg-onglets button { font:inherit; font-size:13px; padding:6px 12px; border:1px solid var(--line); border-radius:16px; background:#fff; cursor:pointer; }
+  .rg-onglets button[aria-pressed=true] { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .rg-sous { font-size:12px; font-weight:700; color:var(--muted); margin:8px 0 2px; text-transform:uppercase; }
+  .rg-l2 select { max-width:100%; } .rg-corps input[type=color] { width:38px; height:28px; padding:0; border:1px solid var(--line); border-radius:6px; }
+  .pin.f-goutte { border-radius:50% 50% 50% 0; transform:rotate(-45deg); } .pin.f-goutte span { transform:rotate(45deg); }
+  .legend .gt { display:inline-block; width:11px; height:11px; border:1px solid #0006; border-radius:50% 50% 50% 0; transform:rotate(-45deg); }
+  .legend button.titre { width:auto; } .legend button.titre strong { display:inline; margin:0; }
+  .cpt-t { font-weight:700; margin-top:6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
+  .rg-etat { font-size:12px; color:var(--muted); margin:0 10px 0 auto; }
 </style>
 </head>
 <body>
@@ -141,18 +158,13 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-/* ================= RÉGLAGES PAR DÉFAUT ================= */
-const VERSION = '13';
-const TITRES_DEFAUT = ['Informations entreprise', 'Informations contrôles', 'Suites données', 'Section 4', 'Section 5', 'Section 6'];
-const NIVEAUX = {
-  faible:{cle:'faible',label:'Faible',couleur:'#2a9d8f',lettre:'F'}, moyen:{cle:'moyen',label:'Moyen',couleur:'#e9c46a',lettre:'M'},
-  eleve:{cle:'eleve',label:'Élevé',couleur:'#f4821f',lettre:'É'}, critique:{cle:'critique',label:'Critique',couleur:'#c1121f',lettre:'C'},
-  neutre:{cle:'neutre',label:'Non renseigné',couleur:'#6b7785',lettre:'?'},
-};
-const MOTS = [['critique',/critique|tres (eleve|fort|haut)|majeur|prioritaire/],['eleve',/eleve|fort|haut|important/],['moyen',/moyen|modere|intermediaire/],['faible',/faible|bas|mineur|limite/]];
-const PALETTE = ['#1f77b4','#d62728','#2ca02c','#ff7f0e','#9467bd','#8c564b','#e377c2','#17becf','#bcbd22','#7f7f7f'];
-const FORMES = ['rond','carre','losange','triangle'], SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
-const STYLES = { 'Normal':'', 'Gras':'b', 'Italique':'i', 'Pastille':'badge' };
+const VERSION = '15';
+const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
+const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
+const swatch = (f, c) => f === 'goutte' ? `<span class="sw"><i class="gt" style="background:${c}"></i></span>` : `<span class="sw" style="color:${c}">${SYMBOLES[f] || '●'}</span>`;
+const STYLES = { '':'Valeur normale', 'b':'Valeur en gras', 'i':'Valeur en italique', 'badge':'Valeur en pastille' };
+const OPS = [['=','est égal à'],['≠','est différent de'],['contient','contient'],['>','est supérieur à'],['<','est inférieur à'],['vide','est vide'],['rempli','n’est pas vide']];
+const DEFAUT = { couleur:'#1f4e8c', forme:'rond' };
 
 const geopf = (l, f) => `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=${f}&LAYER=${l}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
 const fonds = {
@@ -164,25 +176,65 @@ const fonds = {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sansAccent = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const joli = k => String(k).replace(/_/g,' ').replace(/^./, c => c.toUpperCase());
-function niveauDe(v) { if (v == null || v === '') return null; const t = sansAccent(v); for (const [c, re] of MOTS) if (re.test(t)) return NIVEAUX[c]; return null; }
 function formater(k, v) {
   if (v == null || v === '') return null;
   if (v instanceof Date) { if (isNaN(v)) return null; const m = !v.getUTCHours() && !v.getUTCMinutes() && !v.getUTCSeconds(); return m ? v.toLocaleDateString('fr-FR',{timeZone:'UTC'}) : v.toLocaleString('fr-FR'); }
   if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
   if (Array.isArray(v)) return v.filter(x => x !== 'L').join(', ') || null;
   if (typeof v === 'object') return null;
-  if (typeof v === 'number' && /date|le$|echeance|jour/i.test(k) && v > 1e9 && v < 5e9) return new Date(v*1000).toLocaleDateString('fr-FR');
   return String(v);
 }
+function sombre(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return false; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) > 170; }
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
 
 /* ================= ÉTAT ================= */
-let sigFiltres = '', opts = {}, lastRec = null, lastMap = null, cfg = { popup:[], sections:[] }, legCats = [], legFormes = [], legTitre = '';
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true;
+const nEntree = x => ({ c:x.c, nom:x.nom || '', gn:x.gn ?? !!x.gras, vs:x.vs || '' });
+const nRegle = r => ({ nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '',
+  contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' } });
+const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(s => ({ nom:s.nom || '', cols:(s.cols || []).map(nEntree) })), regles:(c.regles || []).map(nRegle), defaut:{ ...DEFAUT, ...(c.defaut || {}) } }; };
+let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false;
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigFiltres = '', listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
+const libel = c => labels[c] || joli(c);
+function fmt(c, v) {
+  const t = types[c] || '';
+  if (typeof v === 'number' && t === 'Date') return new Date(v * 1000).toLocaleDateString('fr-FR', { timeZone:'UTC' });
+  if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
+  return formater(c, v);
+}
 
-/* ================= CARTE ================= */
+/* ================= RÈGLES D'AFFICHAGE DES POINTS ================= */
+function numDe(c, v) { if (v instanceof Date) return v.getTime(); const t = types[c] || ''; if (typeof v === 'number') return (t === 'Date' || t.startsWith('DateTime')) ? v * 1000 : v; return null; }
+function numSaisie(s) {
+  s = String(s).trim().replace(',', '.'); if (s !== '' && !isNaN(Number(s))) return Number(s);
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s); if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+  const d = Date.parse(s); return isNaN(d) ? null : d;
+}
+function test(k, vals) {
+  const raw = vals[k.c], f = fmt(k.c, raw), t = sansAccent(f ?? '').trim(), a = sansAccent(k.v ?? '').trim();
+  switch (k.op) {
+    case '=': return t === a; case '≠': return t !== a; case 'contient': return t.includes(a);
+    case 'vide': return f === null; case 'rempli': return f !== null;
+    case '>': case '<': { const x = numDe(k.c, raw), y = numSaisie(k.v); if (x === null || y === null) return false; return k.op === '>' ? x > y : x < y; }
+  }
+  return false;
+}
+const regleActive = r => r.si.length && r.si.every(k => k.c);
+const nomRegle = r => r.nom.trim() || (r.si[0] && r.si[0].c ? `${libel(r.si[0].c)} ${(OPS.find(o => o[0] === r.si[0].op) || [])[0] || ''} ${r.si[0].v || ''}`.trim() : 'Règle');
+function styleDe(vals) {
+  let couleur = null, forme = null, contenu = null, cat = -1;
+  cfg.regles.forEach((r, i) => {
+    if (!regleActive(r) || !r.si.every(k => test(k, vals))) return;
+    if (cat < 0) cat = i;
+    if (couleur === null && r.couleur) couleur = r.couleur;
+    if (forme === null && r.forme) forme = r.forme;
+    if (contenu === null && r.contenu.t) contenu = r.contenu.t === 'emoji' ? r.contenu.e : (r.contenu.c ? String(fmt(r.contenu.c, vals[r.contenu.c]) ?? '').slice(0, 6) : '');
+  });
+  return { couleur: couleur || cfg.defaut.couleur, forme: forme || cfg.defaut.forme, contenu: contenu || '', cat };
+}
+
+/* ================= CARTE ET PANNEAU DE GAUCHE ================= */
 const map = L.map('map', { center:[46.6,2.5], zoom:6, layers:[fonds['Plan IGN']] });
 L.control.layers(fonds, null, { position:'topright' }).addTo(map);
 L.control.scale({ metric:true, imperial:false }).addTo(map);
@@ -191,85 +243,100 @@ map.addLayer(cluster);
 
 const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
-  const d = L.DomUtil.create('div','panel');
-  d.innerHTML = '<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><div class="count" id="count"></div><div id="compteurs"></div><div id="filtres"></div><button class="link" id="noms" type="button" aria-pressed="false">Afficher les noms</button><br><button class="link" id="tout" type="button">Voir tous les points</button>';
+  const d = L.DomUtil.create('div', 'panel');
+  d.innerHTML = `<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">
+    <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div>
+    <button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des établissements</button><div id="liste" style="display:none"></div><br>
+    <button class="link" id="tout" type="button">Voir tous les points</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
   d.querySelector('#filtres').addEventListener('change', e => {
-    const c = e.target.dataset.c; if (!c) return;
-    const det = e.target.closest('details');
+    const c = e.target.dataset.c; if (!c) return; const det = e.target.closest('details');
     filtreSel[c] = [...det.querySelectorAll('input:checked')].map(x => x.value);
-    det.querySelector('summary').textContent = joli(c) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : '');
+    det.querySelector('summary').textContent = libel(c) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : '');
     appliquerFiltres();
   });
-  d.querySelector('#noms').addEventListener('click', e => {
-    const on = document.getElementById('map').classList.toggle('noms-on');
-    e.target.setAttribute('aria-pressed', String(on)); e.target.textContent = on ? 'Masquer les noms' : 'Afficher les noms';
-  });
-  return d;
-};
-haut.addTo(map);
-
-const legende = L.control({ position:'bottomleft' });
-legende.onAdd = () => {
-  const d = L.DomUtil.create('div','panel legend'); L.DomEvent.disableClickPropagation(d);
-  d.addEventListener('click', e => {
+  d.querySelector('#liste-btn').addEventListener('click', () => { listeOuverte = !listeOuverte; setListe(listeOuverte); });
+  d.querySelector('#liste').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) allerA(Number(b.dataset.id)); });
+  d.querySelector('#legende').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'leg-toggle') { legOuverte = !legOuverte; majLegende(); return; }
     const on = b.getAttribute('aria-pressed') === 'true'; b.setAttribute('aria-pressed', String(!on));
     on ? masques.add(b.dataset.k) : masques.delete(b.dataset.k); appliquerFiltres();
   });
   return d;
 };
-legende.addTo(map);
-function majLegende() {
-  const d = legende.getContainer(); if (!d) return;
-  d.innerHTML = `<strong>${esc(legTitre || 'Niveau de risque')}</strong>` + legCats.map(c =>
-    `<button type="button" data-k="${esc(c.k)}" aria-pressed="${!masques.has(c.k)}"><i style="background:${c.couleur};border-radius:50%"></i>${esc(c.label)}</button>`).join('') +
-    (legFormes.length ? '<div class="sep">' + legFormes.map(f => `<div>${SYMBOLES[f.forme]} ${esc(f.label)}</div>`).join('') + '</div>' : '');
+haut.addTo(map);
+
+function allerA(id) {
+  const m = marqueurs.get(id); if (!m || !cluster.hasLayer(m)) return;
+  grist.setSelectedRows([id]);
+  cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 }
 function recentrer() { const p = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng()); if (p.length) map.fitBounds(p, { padding:[40,40], maxZoom:15 }); }
-let cptDef = [];
+function majLegende() {
+  const z = document.getElementById('legende'); if (!z) return;
+  z.innerHTML = legCats.length ? `<hr><button type="button" id="leg-toggle" class="titre" aria-expanded="${legOuverte}"><strong>Légende</strong> <span>${legOuverte ? '▾' : '▸'}</span></button>` +
+    (legOuverte ? legCats.map(c => `<button type="button" data-k="${esc(c.k)}" aria-pressed="${!masques.has(c.k)}">${swatch(c.forme, c.couleur)}${c.emoji ? esc(c.emoji) + ' ' : ''}${esc(c.label)}</button>`).join('') : '') : '';
+}
+function setListe(ouvert) {
+  const b = document.getElementById('liste-btn'), l = document.getElementById('liste'); if (!b || !l) return;
+  listeOuverte = ouvert; b.setAttribute('aria-expanded', String(ouvert));
+  b.textContent = ouvert ? 'Masquer la liste des établissements' : 'Afficher la liste des établissements';
+  l.style.display = ouvert ? 'block' : 'none'; majListe();
+}
+function appliquerAffichage() {   // éléments du panneau de gauche affichés ou masqués, selon la configuration générale
+  const A = k => opt('aff_' + k, true) !== false, show = (id, on) => { const e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; };
+  show('q', A('q')); show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout')); show('legende', A('legende')); show('liste-btn', A('liste'));
+  const sig = JSON.stringify([opt('ouv_liste', false), opt('ouv_legende', true)]);
+  if (sig !== sigAff) { sigAff = sig; listeOuverte = opt('ouv_liste', false) === true; legOuverte = opt('ouv_legende', true) !== false; }
+  setListe(listeOuverte && A('liste')); majLegende();
+}
+function majListe() {
+  if (!listeOuverte) return;
+  const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 500);
+  document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}"><i style="background:${m._cifi.style.couleur}"></i>${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
+}
 function appliquerFiltres() {
-  let n = 0; const cpt = cptDef.map(x => ({ ...x, n: 0 }));
+  let n = 0; const cnt = cptCols.map(c => [c, new Map()]);
   for (const m of marqueurs.values()) {
-    const { niv, nom, fv } = m._cifi;
-    const ok = !masques.has(niv.k) && (!recherche || sansAccent(nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || !v.length || v.includes(fv[c]));
-    if (ok) { n++; cpt.forEach(x => { if (m._cifi[x.k]) x.n++; }); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
+    const d = m._cifi;
+    const ok = !masques.has('r' + d.style.cat) && (!recherche || sansAccent(d.nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || !v.length || v.includes(d.fv[c]));
+    if (ok) { n++; cnt.forEach(([c, mp]) => mp.set(d.fv[c], (mp.get(d.fv[c]) || 0) + 1)); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
-  document.getElementById('compteurs').innerHTML = cpt.map(x => `<div><strong>${x.n}</strong> ${esc(x.titre)}</div>`).join('');
+  document.getElementById('compteurs').innerHTML = cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
+    [...mp].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
   document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
+  majListe();
 }
 function icone(d, sel) {
-  const t = +opt('taille', 30) || 30, cl = d.forme ? `f-${d.forme}${d.niv.cle === 'moyen' ? ' sombre' : ''}` : d.niv.cle;
-  return L.divIcon({ className:'', iconSize:[t,t], iconAnchor:[t/2,t/2], popupAnchor:[0,-t/2],
-    html:`<div class="pin ${cl}${sel ? ' sel' : ''}" style="background:${d.niv.couleur};width:${t}px;height:${t}px"><span>${esc(d.niv.lettre)}</span></div>` });
+  const t = +opt('taille', 30) || 30, s = d.style, c = s.contenu, g = s.forme === 'goutte';
+  return L.divIcon({ className:'', iconSize:[t,t], iconAnchor: g ? [t/2, Math.round(t * 1.2)] : [t/2, t/2], popupAnchor: g ? [0, -Math.round(t * 1.25)] : [0, -t/2],
+    html:`<div class="pin f-${s.forme}${sel ? ' sel' : ''}${sombre(s.couleur) ? ' sombre' : ''}" style="background:${s.couleur};width:${t}px;height:${t}px;font-size:${c.length > 2 ? 10 : Math.round(t * 0.5)}px"><span>${esc(c)}</span></div>` });
 }
 
 /* ================= FICHES ================= */
 const lignes = l => `<dl>${l.map(([k, v, x]) => `<dt${x && x.gn ? ' class="b"' : ''}>${esc(k)}</dt><dd${x && x.vs === 'i' ? ' class="i"' : x && x.vs === 'b' ? ' class="b"' : ''}>${x && x.vs === 'badge' ? `<span class="badge">${esc(v)}</span>` : esc(v)}</dd>`).join('')}</dl>`;
-const champsDe = (liste, raw) => liste.map(x => [joli(x.c), formater(x.c, raw[x.c]), x]).filter(a => a[1] !== null);
-const aide = t => `<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">${t}</p>`;
-
+const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, vals[x.c]), x]).filter(a => a[1] !== null);
+const etiquette = d => d.style.cat >= 0 ? `<span class="niv" style="background:${d.style.couleur};color:${sombre(d.style.couleur) ? '#1d2733' : '#fff'}">${esc(nomRegle(cfg.regles[d.style.cat]))}</span>` : '';
 function fichier(d) {
-  return `<div class="fiche" style="--niv:${d.niv.couleur}"><header><h3>${esc(d.nom || 'Sans nom')}</h3>
-    <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle === 'moyen' ? '#1d2733' : '#fff'}">${esc(d.niv.texte || d.niv.label)}</span></header>
-    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.raw)) : aide('Choisissez les colonnes du popup dans le panneau de droite de Grist (« Colonnes du popup »).')}</div>
+  return `<div class="fiche" style="--niv:${d.style.couleur}"><header><h3>${esc(d.nom || 'Sans nom')}</h3>${etiquette(d)}</header>
+    <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
 }
 function corpsFiche(d) {
-  const secs = cfg.sections.map(sec => ({ sec, l: champsDe(sec.cols, d.raw) })).filter(x => x.l.length);
-  if (!secs.length) return '<p class="vide">Aucune section à afficher. Dans le panneau de droite de Grist, remplissez « Fiche – section 1 (colonnes) » et les suivantes.</p>';
+  const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, d.vals) })).filter(x => x.l.length);
+  if (!secs.length) return '<p class="vide">Aucune section à afficher. Créez vos sections dans « Configurer le widget », onglet Fiche.</p>';
   const o = opt('ouverture', 'Première section'), ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (o === 'Toutes' || (o !== 'Aucune' && i === 0));
   return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
-    secs.map((x, k) => `<details class="theme" data-t="${x.sec.cle}"${ouvert(x.sec.cle, k) ? ' open' : ''}><summary>${esc(x.sec.nom)} <span class="nb">(${x.l.length})</span></summary>${lignes(x.l)}</details>`).join('');
+    secs.map((x, k) => `<details class="theme" data-t="s${x.i}"${ouvert('s' + x.i, k) ? ' open' : ''}><summary>${esc(x.sec.nom || 'Section')} <span class="nb">(${x.l.length})</span></summary>${lignes(x.l)}</details>`).join('');
 }
 const panneau = document.getElementById('fiche-panel');
 function ouvrirFiche(id, focus = true) {
   const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id;
-  panneau.style.setProperty('--niv', d.niv.couleur);
-  panneau.innerHTML = `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2>${esc(d.nom || 'Sans nom')}</h2>
-    <span class="niv" style="background:${d.niv.couleur};color:${d.niv.cle === 'moyen' ? '#1d2733' : '#fff'}">${esc(d.niv.texte || d.niv.label)}</span></div>
+  panneau.style.setProperty('--niv', d.style.couleur);
+  panneau.innerHTML = `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2>${esc(d.nom || 'Sans nom')}</h2>${etiquette(d)}</div>
     <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button></div>`;
   panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
   if (focus) panneau.querySelector('.fp-fermer').focus();
@@ -279,8 +346,8 @@ panneau.addEventListener('toggle', e => { if (e.target.matches && e.target.match
 panneau.addEventListener('click', e => {
   if (e.target.closest('.fp-fermer')) fermerFiche();
   if (e.target.closest('.fp-tout')) { const t = [...panneau.querySelectorAll('details.theme')], o = t.some(x => !x.open); t.forEach(x => { x.open = o; }); }
-  const sel = e.target.closest('.fp-select');
-  if (sel && ficheId !== null) { grist.setSelectedRows([ficheId]); if (grist.setCursorPos) grist.setCursorPos({ rowId:ficheId }); sel.textContent = '✓ Ligne sélectionnée dans Grist'; }
+  const sl = e.target.closest('.fp-select');
+  if (sl && ficheId !== null) { grist.setSelectedRows([ficheId]); if (grist.setCursorPos) grist.setCursorPos({ rowId:ficheId }); sl.textContent = '✓ Ligne sélectionnée dans Grist'; }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && ficheId !== null) fermerFiche(); });
 map.on('popupopen', e => {
@@ -288,140 +355,89 @@ map.on('popupopen', e => {
   L.DomEvent.disableClickPropagation(b);
   b.addEventListener('click', () => { ouvrirFiche(Number(b.dataset.id)); map.closePopup(); });
 });
+function rafraichir() { if (ficheId !== null) ouvrirFiche(ficheId, false); marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); }); }
 
 /* ================= GRIST ================= */
 grist.ready({
-  requiredAccess: 'read table', allowSelectBy: true,
+  requiredAccess: 'full',   // nécessaire pour lister toutes les colonnes : à n'utiliser qu'avec un widget hébergé sur un serveur de confiance
+  allowSelectBy: true,
+  onEditOptions: () => ouvrirReglages(),   // fait apparaître le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
   columns: [
-    { name:'nom',    title:'Nom de l’établissement', type:'Text' },
-    { name:'lat',    title:'Latitude', type:'Numeric' },
-    { name:'lng',    title:'Longitude', type:'Numeric' },
-    { name:'niveau', title:'Couleur des points : colonne (ex. niveau de risque)', type:'Any', optional:true },
-    { name:'forme',  title:'Forme des points : colonne (facultatif)', type:'Any', optional:true },
-    { name:'filtres',title:'Filtres : colonnes à proposer (choix multiples)', type:'Any', optional:true, allowMultiple:true },
-    { name:'ctrl',   title:'Compteur « à contrôler » : colonne', type:'Any', optional:true },
-    { name:'actif',  title:'Compteur « actifs » : colonne', type:'Any', optional:true },
-    { name:'popup',  title:'Colonnes du popup', type:'Any', optional:true, allowMultiple:true },
-    ...[1,2,3,4,5,6].map(n => ({ name:'t' + n, title:'Fiche – section ' + n + ' (colonnes)', type:'Any', optional:true, allowMultiple:true })),
-    { name:'gras',   title:'Colonnes dont le nom est en gras', type:'Any', optional:true, allowMultiple:true },
-  ],
-  options: [
-    ...[1,2,3,4,5,6].map(n => ({ name:'titre' + n, title:'Titre de la section ' + n, type:'string', defaultValue:TITRES_DEFAUT[n - 1] })),
-    { name:'ctrl_titre', title:'Compteur 1 : titre', type:'string', defaultValue:'À contrôler' },
-    { name:'ctrl_valeur', title:'Compteur 1 : valeur comptée', type:'string', defaultValue:'À contrôler' },
-    { name:'actif_titre', title:'Compteur 2 : titre', type:'string', defaultValue:'Actifs' },
-    { name:'actif_valeur', title:'Compteur 2 : valeur comptée', type:'string', defaultValue:'Actif' },
-    { name:'noms_gras', title:'Tous les noms de colonnes en gras', type:'boolean', defaultValue:false },
-    { name:'style_valeurs', title:'Forme des valeurs', type:'choice', choices:Object.keys(STYLES), defaultValue:'Normal' },
-    { name:'ouverture', title:'Sections dépliées à l’ouverture', type:'choice', choices:['Première section','Toutes','Aucune'], defaultValue:'Première section' },
-    { name:'regrouper', title:'Regrouper les points proches', type:'boolean', defaultValue:true },
-    { name:'taille', title:'Taille des points (px)', type:'number', defaultValue:30 },
+    { name:'nom',     title:'Nom de l’établissement', type:'Text' },
+    { name:'lat',     title:'Latitude', type:'Numeric' },
+    { name:'lng',     title:'Longitude', type:'Numeric' },
+    { name:'filtres', title:'Filtres : colonnes à proposer (choix multiples)', type:'Any', optional:true, allowMultiple:true },
+    { name:'compteurs', title:'Compteurs : colonnes à compter (choix multiples)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
-grist.onOptions(o => { opts = o || {}; if (lastRec) construire(); });
-
-/* ---- Fenêtre « Configurer le widget », ouverte par le bouton du panneau de droite de Grist ---- */
-const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
-const sel = (n, choix) => `<select data-o="${n}">${choix.map(c => `<option${opt(n, choix[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-function ouvrirReglages() {
-  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><button type="button" data-a="fermer">Fermer</button></div>
-    <div class="rg-corps"><section><h3>Titres des sections de la fiche</h3>
-      ${[1,2,3,4,5,6].map(n => `<div class="rg-sec"><input type="text" data-o="titre${n}" value="${esc(opt('titre' + n, TITRES_DEFAUT[n - 1]))}" aria-label="Titre de la section ${n}"></div>`).join('')}
-      <p class="vide" style="font-size:12px;margin:4px 0 0">Une section n’apparaît dans la fiche que si des colonnes lui sont associées dans le panneau de droite (« Fiche – section N »).</p></section>
-    <section><h3>Compteurs (panneau de gauche)</h3>
-      <label>Compteur 1 – titre <input type="text" data-o="ctrl_titre" value="${esc(opt('ctrl_titre', 'À contrôler'))}"></label>
-      <label>Compteur 1 – valeur comptée <input type="text" data-o="ctrl_valeur" value="${esc(opt('ctrl_valeur', 'À contrôler'))}"></label>
-      <label>Compteur 2 – titre <input type="text" data-o="actif_titre" value="${esc(opt('actif_titre', 'Actifs'))}"></label>
-      <label>Compteur 2 – valeur comptée <input type="text" data-o="actif_valeur" value="${esc(opt('actif_valeur', 'Actif'))}"></label></section>
-    <section><h3>Affichage</h3>
-      <label><input type="checkbox" data-o="noms_gras"${opt('noms_gras', false) === true ? ' checked' : ''}> Tous les noms de colonnes en gras</label>
-      <label>Forme des valeurs ${sel('style_valeurs', Object.keys(STYLES))}</label>
-      <label>Sections dépliées à l’ouverture ${sel('ouverture', ['Première section', 'Toutes', 'Aucune'])}</label>
-      <label><input type="checkbox" data-o="regrouper"${opt('regrouper', true) !== false ? ' checked' : ''}> Regrouper les points proches</label>
-      <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label></section></div></div>`;
-  modal.classList.add('ouvert');
-}
-function boutonSecours() {   // uniquement si cette version de Grist ne propose pas le bouton dans son panneau de droite
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = '⚙ Configurer le widget'; b.addEventListener('click', ouvrirReglages);
-  const t = document.getElementById('tout'); if (t) t.insertAdjacentElement('afterend', b);
-}
-try { if (typeof grist.onEditOptions === 'function') grist.onEditOptions(ouvrirReglages); else boutonSecours(); } catch (e) { boutonSecours(); }
-modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-a="fermer"]')) modal.classList.remove('ouvert'); });
-modal.addEventListener('change', e => {
-  const t = e.target, n = t.dataset.o; if (!n) return;
-  const v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.min(48, Math.max(16, +t.value || 30)) : t.value;
-  opts[n] = v; if (lastRec) construire();
-  Promise.resolve(grist.setOption(n, v)).catch(() => alert('Vous n’avez pas le droit de modifier la configuration de ce widget.'));
+grist.onOptions(o => { if (modal.classList.contains('ouvert')) return; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); });
+grist.onRecords((records, mappings) => {
+  lastRec = records; lastMap = mappings;
+  if (!allCols.length) allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
+  if (!donnees.size) construire();
+  maj();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
-
-grist.onRecords((records, mappings) => { lastRec = records; lastMap = mappings; construire(); });
+async function maj() { if (!labelsCharges) await chargerLibelles(); else await chargerTable(); construire(); }
+async function chargerLibelles() {
+  labelsCharges = true;
+  try {
+    tid = await grist.selectedTable.getTableId();
+    const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column'), ref = T.id[T.tableId.indexOf(tid)];
+    C.id.forEach((_, k) => { if (C.parentId[k] === ref) { labels[C.colId[k]] = C.label[k]; types[C.colId[k]] = C.type[k]; } });
+  } catch (e) { console.warn('Libellés indisponibles', e); }
+  await chargerTable();
+}
+async function chargerTable() {
+  try {
+    if (!tid) tid = await grist.selectedTable.getTableId();
+    const t = await grist.docApi.fetchTable(tid), cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_')), m = new Map();
+    t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
+    allCols = cols; donnees = m; erreurAcces = '';
+  } catch (e) { erreurAcces = String((e && e.message) || e); }
+}
 
 function construire() {
-  const m = lastMap, mapped = grist.mapColumnNames(lastRec);
+  if (!lastRec) return;
+  const mapped = grist.mapColumnNames(lastRec), m = lastMap;
   if (!mapped || !m) { afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>'); return; }
   afficherMsg('');
-  const liste = k => [].concat(m[k] || []).filter(Boolean);
-  const gras = new Set(liste('gras')), vs = STYLES[opt('style_valeurs', 'Normal')] ?? '';
-  const mk = c => ({ c, gn: gras.has(c) || opt('noms_gras', false) === true, vs });
-  cfg = { popup: liste('popup').map(mk), sections: [1,2,3,4,5,6].map(n => ({ cle:'s' + n, nom: String(opt('titre' + n, '')).trim() || TITRES_DEFAUT[n - 1], cols: liste('t' + n).map(mk) })).filter(x => x.cols.length) };
-  const cC = m.niveau, cF = m.forme, cFil = liste('filtres'), cCtrl = m.ctrl, cAct = m.actif;
-  const egal = (v, t) => { const f = formater('', v); return f !== null && sansAccent(f).trim() === sansAccent(String(t)).trim(); };
-  cptDef = [cCtrl && { k:'ctrl', titre:String(opt('ctrl_titre', 'À contrôler')) }, cAct && { k:'actif', titre:String(opt('actif_titre', 'Actifs')) }].filter(Boolean);
-
-  // catégories pour couleur et forme
-  const brut = c => v => (v == null || v === '') ? '' : String(formater(c, v) ?? v);
-  const vC = new Set(), vF = new Set();
-  lastRec.forEach(r => { if (cC) vC.add(brut(cC)(r[cC])); if (cF) vF.add(brut(cF)(r[cF])); });
-  const autres = [...vC].filter(v => v && !niveauDe(v)).sort(), valsF = [...vF].filter(Boolean).sort();
-  const nivDe = v => {
-    if (!cC) return { ...NIVEAUX.neutre, k:'neutre', texte:'' };
-    const t = brut(cC)(v), n = niveauDe(t);
-    if (n) return { ...n, k:n.cle, texte:t };
-    if (!t) return { ...NIVEAUX.neutre, k:'neutre', texte:'' };
-    return { cle:'cat', k:'c:' + t, label:t, texte:t, couleur:PALETTE[autres.indexOf(t) % PALETTE.length], lettre:t.charAt(0).toUpperCase() };
-  };
-  const formeDe = v => { const t = brut(cF)(v); return cF && t ? FORMES[valsF.indexOf(t) % FORMES.length] : null; };
-
-  const vus = new Set(), cats = new Map(); sansGps = 0;
+  const cFil = [].concat(m.filtres || []).filter(Boolean); cptCols = [].concat(m.compteurs || []).filter(Boolean);
+  const cTous = [...new Set([...cFil, ...cptCols])];
+  const vus = new Set(), presents = new Set(); sansGps = 0;
   lastRec.forEach((raw, i) => {
     const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
-    const niv = nivDe(cC ? raw[cC] : null), fv = {};
-    cFil.forEach(c => { fv[c] = formater(c, raw[c]) ?? '(vide)'; });
-    const d = { id:raw.id, nom:r.nom, niv, forme: cF ? formeDe(raw[cF]) : null, raw, fv, ctrl: !!cCtrl && egal(raw[cCtrl], opt('ctrl_valeur', 'À contrôler')), actif: !!cAct && egal(raw[cAct], opt('actif_valeur', 'Actif')) };
-    vus.add(raw.id); cats.set(niv.k, niv);
-    let mk2 = marqueurs.get(raw.id);
-    if (mk2) mk2.setLatLng([lat, lng]);
+    const vals = donnees.get(raw.id) || raw, fv = {};
+    cTous.forEach(c => { fv[c] = fmt(c, vals[c]) ?? '(vide)'; });
+    const d = { id:raw.id, nom:r.nom, vals, fv, style:styleDe(vals) };
+    vus.add(raw.id); presents.add(d.style.cat);
+    let mk = marqueurs.get(raw.id);
+    if (mk) mk.setLatLng([lat, lng]);
     else {
-      mk2 = L.marker([lat, lng], { title:r.nom || '', keyboard:true });
-      mk2.bindPopup(() => fichier(mk2._cifi), { maxWidth:320, className:'cifi-popup' });
-      mk2.on('click', () => grist.setSelectedRows([raw.id]));
-      mk2.bindTooltip(String(r.nom || ''), { permanent:true, direction:'right', offset:[14,0], className:'nom-etab' });
-      marqueurs.set(raw.id, mk2);
+      mk = L.marker([lat, lng], { title:r.nom || '', keyboard:true });
+      mk.bindPopup(() => fichier(mk._cifi), { maxWidth:320, className:'cifi-popup' });
+      mk.on('click', () => grist.setSelectedRows([raw.id]));
+      marqueurs.set(raw.id, mk);
     }
-    if (mk2.setTooltipContent) mk2.setTooltipContent(String(r.nom || ''));
-    mk2._cifi = d; mk2.setIcon(icone(d, raw.id === idSelectionne));
-    if (mk2.isPopupOpen()) mk2.getPopup().update();
+    mk._cifi = d; mk.setIcon(icone(d, raw.id === idSelectionne));
+    if (mk.isPopupOpen()) mk.getPopup().update();
   });
   for (const [id, x] of [...marqueurs]) if (!vus.has(id)) { cluster.removeLayer(x); marqueurs.delete(id); }
 
-  // légende et filtres
-  legTitre = cC ? joli(cC) : '';
-  legCats = [...cats.values()].sort((a, b) => a.label.localeCompare(b.label)).map(c => ({ k:c.k, label:c.cle === 'cat' ? c.label : c.label, couleur:c.couleur }));
-  legFormes = cF ? valsF.map(v => ({ forme:FORMES[valsF.indexOf(v) % FORMES.length], label:v })) : [];
+  legCats = cfg.regles.map((r, i) => ({ i, r })).filter(x => regleActive(x.r) && presents.has(x.i)).map(x => ({ k:'r' + x.i, label:nomRegle(x.r), couleur:x.r.couleur || cfg.defaut.couleur, forme:x.r.forme || cfg.defaut.forme, emoji:x.r.contenu.t === 'emoji' ? x.r.contenu.e : '' }));
+  if (legCats.length && presents.has(-1)) legCats.push({ k:'r-1', label:'Autres', couleur:cfg.defaut.couleur, forme:cfg.defaut.forme, emoji:'' });
   majLegende();
-  const zone = document.getElementById('filtres');
+
   const valsDe = c => [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
   const sig = JSON.stringify(cFil.map(c => [c, valsDe(c)]));
   Object.keys(filtreSel).forEach(c => { if (!cFil.includes(c)) delete filtreSel[c]; else filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
   if (sig !== sigFiltres) {
     sigFiltres = sig;
-    zone.innerHTML = cFil.map(c => { const sl = new Set(filtreSel[c] || []);
-      return `<details${sl.size ? ' open' : ''}><summary>${esc(joli(c))}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${valsDe(c).map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`; }).join('');
+    document.getElementById('filtres').innerHTML = cFil.map(c => { const sl = new Set(filtreSel[c] || []);
+      return `<details${sl.size ? ' open' : ''}><summary>${esc(libel(c))}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${valsDe(c).map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`; }).join('');
   }
   const reg = opt('regrouper', true) !== false; if (reg !== regroupPrec) { cluster.clearLayers(); regroupPrec = reg; }
-  appliquerFiltres();
+  appliquerFiltres(); appliquerAffichage();
   if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
 }
@@ -433,6 +449,126 @@ grist.onRecord(rec => {
   const ouverte = m.isPopupOpen(); m.setIcon(icone(m._cifi, true));
   if (!ouverte && cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 });
+
+/* ================= FENÊTRE « CONFIGURER LE WIDGET » ================= */
+const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
+let onglet = 'points', minuteur, etatSauv = '';
+const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
+const deplacer = (l, i, d) => { const j = i + d; if (j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; };
+const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
+const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
+const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}"` : ''}>${t}</button>`;
+
+function blocListe(g) {
+  const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
+  return `<ul>${l.map((x, i) => { const at = `data-g="${g}" data-i="${i}"`; return `<li><div class="rg-l1"><span class="nomcol">${esc(libel(x.c))}</span>${btn('up', at, '▲', 'Monter')}${btn('down', at, '▼', 'Descendre')}${btn('del', at, '✕', 'Retirer')}</div>
+    <div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché">
+    <label><input type="checkbox" data-a="gn" ${at}${x.gn ? ' checked' : ''}> nom en gras</label>
+    <select data-a="vs" ${at} aria-label="Forme de la valeur">${Object.entries(STYLES).map(([v, t]) => `<option value="${v}"${x.vs === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></li>`; }).join('')}</ul>
+    <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
+}
+function carteRegle(r, i) {
+  const R = `data-r="${i}"`;
+  return `<section><div class="rg-sec"><input type="text" value="${esc(r.nom)}" placeholder="Nom dans la légende (facultatif)" data-a="rnom" ${R}>${btn('rup', R, '▲', 'Monter')}${btn('rdown', R, '▼', 'Descendre')}${btn('rdel', R, 'Supprimer')}</div>
+    <div class="rg-sous">Si</div>
+    ${r.si.map((k, j) => { const K = `${R} data-k="${j}"`; return `<div class="rg-l2">${selCol(`data-a="cc" ${K}`, k.c)}<select data-a="co" ${K} aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" data-a="cv" ${K} value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}${btn('cdel', K, '✕', 'Retirer la condition')}</div>`; }).join('')}
+    ${btn('cadd', R, '+ condition (ET)')}
+    <div class="rg-sous">Alors</div>
+    <div class="rg-l2"><label><input type="checkbox" data-a="rc-on" ${R}${r.couleur ? ' checked' : ''}> Couleur</label><input type="color" data-a="rc" ${R} value="${r.couleur || '#c1121f'}"${r.couleur ? '' : ' disabled'} aria-label="Couleur">
+      <label><input type="checkbox" data-a="rf-on" ${R}${r.forme ? ' checked' : ''}> Forme</label>${selForme(`data-a="rf" ${R}`, r.forme || 'rond', !r.forme)}</div>
+    <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
+      ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div></section>`;
+}
+function contenuOnglet() {
+  if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label></div></section>
+    <p class="vide" style="font-size:12px">Chaque règle s’applique aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
+    ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button>`;
+  if (onglet === 'popup') return `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
+  if (onglet === 'fiche') return cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section" placeholder="Nom de la section">${btn('sup', `data-g="${i}"`, '▲', 'Monter')}${btn('sdown', `data-g="${i}"`, '▼', 'Descendre')}${btn('sdel', `data-g="${i}"`, 'Supprimer')}</div>${blocListe(String(i))}</section>`).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
+  const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
+  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende']];
+  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Cochez les éléments à proposer à vos utilisateurs. La liste et la légende peuvent aussi être dépliées ou repliées par défaut.</p>
+    ${elts.map(([k, t]) => `<label><input type="checkbox" data-o="aff_${k}"${opt('aff_' + k, true) !== false ? ' checked' : ''}> ${t} affiché${k === 'liste' || k === 'legende' ? `<span style="margin-left:18px"><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</span>` : ''}</label>`).join('')}</section>
+    <section><h3>Fiche et points</h3><label>Sections dépliées à l’ouverture ${sl('ouverture', ['Première section', 'Toutes', 'Aucune'])}</label>
+    <label><input type="checkbox" data-o="regrouper"${opt('regrouper', true) !== false ? ' checked' : ''}> Regrouper les points proches</label>
+    <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label></section>`;
+}
+function dessiner() {
+  const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
+  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><span id="rg-etat" class="rg-etat">${esc(etatSauv)}</span>${btn('fermer', '', 'Fermer')}</div>
+    <div class="rg-onglets">${[['points', 'Affichage des points'], ['popup', 'Popup'], ['fiche', 'Fiche'], ['general', 'Général']].map(([k, t]) => `<button type="button" data-a="onglet" data-t="${k}" aria-pressed="${onglet === k}">${t}</button>`).join('')}</div>
+    <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est en « Accès complet » dans le panneau de droite de Grist.</p>` : ''}${contenuOnglet()}</div></div>`;
+  modal.querySelector('.rg-corps').scrollTop = y;
+}
+function ouvrirReglages() { dessiner(); modal.classList.add('ouvert'); }
+function etat(t) { etatSauv = t; const e = document.getElementById('rg-etat'); if (e) e.textContent = t; }
+function enregistrer() {
+  clearTimeout(minuteur); etat('Enregistrement…');
+  minuteur = setTimeout(() => {
+    opts.cfg = cfg;
+    Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg))
+      .then(() => etat('✓ Enregistré')).catch(e => etat('⚠ Non enregistré : ' + ((e && e.message) || e)));
+  }, 300);
+}
+function sauver(redessiner = true) { enregistrer(); construire(); if (redessiner) dessiner(); }
+modal.addEventListener('click', e => {
+  if (e.target === modal) { modal.classList.remove('ouvert'); return; }
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const a = b.dataset.a, g = b.dataset.g, i = +b.dataset.i, r = +b.dataset.r, k = +b.dataset.k;
+  switch (a) {
+    case 'fermer': modal.classList.remove('ouvert'); return;
+    case 'onglet': onglet = b.dataset.t; dessiner(); return;
+    case 'up': case 'down': deplacer(listeDe(g), i, a === 'up' ? -1 : 1); break;
+    case 'del': listeDe(g).splice(i, 1); break;
+    case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
+    case 'sdel': if (!confirm('Supprimer cette section ?')) return; cfg.sections.splice(+g, 1); break;
+    case 'sadd': cfg.sections.push({ nom:'Nouvelle section', cols:[] }); break;
+    case 'radd': cfg.regles.push(nRegle({ si:[{ c:'', op:'=', v:'' }], couleur:'#c1121f' })); break;
+    case 'rup': case 'rdown': deplacer(cfg.regles, r, a === 'rup' ? -1 : 1); break;
+    case 'rdel': cfg.regles.splice(r, 1); break;
+    case 'cadd': cfg.regles[r].si.push({ c:'', op:'=', v:'' }); break;
+    case 'cdel': cfg.regles[r].si.splice(k, 1); break;
+    default: return;
+  }
+  sauver();
+});
+modal.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.o) {
+    const n = t.dataset.o, v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.min(48, Math.max(16, +t.value || 30)) : t.value;
+    opts[n] = v; construire(); enregistrer(); return;
+  }
+  const a = t.dataset.a; if (!a) return;
+  const g = t.dataset.g, i = +t.dataset.i, r = +t.dataset.r, k = +t.dataset.k, R = cfg.regles[r];
+  switch (a) {
+    case 'add': if (t.value) listeDe(g).push({ c:t.value, nom:'', gn:false, vs:'' }); break;
+    case 'lib': listeDe(g)[i].nom = t.value; break;
+    case 'gn': listeDe(g)[i].gn = t.checked; break;
+    case 'vs': listeDe(g)[i].vs = t.value; break;
+    case 'nom': cfg.sections[+g].nom = t.value; break;
+    case 'defc': cfg.defaut.couleur = t.value; break;
+    case 'deff': cfg.defaut.forme = t.value; break;
+    case 'rnom': R.nom = t.value; break;
+    case 'rc-on': R.couleur = t.checked ? '#c1121f' : ''; break;
+    case 'rc': R.couleur = t.value; break;
+    case 'rf-on': R.forme = t.checked ? 'rond' : ''; break;
+    case 'rf': R.forme = t.value; break;
+    case 'rct': R.contenu.t = t.value; break;
+    case 're': R.contenu.e = t.value; break;
+    case 'rcc': R.contenu.c = t.value; break;
+    case 'cc': R.si[k].c = t.value; break;
+    case 'co': R.si[k].op = t.value; break;
+    case 'cv': R.si[k].v = t.value; break;
+    default: return;
+  }
+  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co'].includes(a));
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
+function boutonSecours() {
+  const z = document.getElementById('cfg-secours'); if (!z || !peutModifier) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = '⚙ Configurer le widget'; b.addEventListener('click', ouvrirReglages); z.appendChild(b);
+}
+if (/[?&]config=1/.test(location.search)) boutonSecours();   // secours : ajouter ?config=1 à l'adresse du widget
 </script>
 </body>
 </html>
