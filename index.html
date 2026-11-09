@@ -150,6 +150,71 @@
   .legend button.titre { width:auto; } .legend button.titre strong { display:inline; margin:0; }
   .cpt-t { font-weight:700; margin-top:6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
   .rg-etat { font-size:12px; color:var(--muted); margin:0 10px 0 auto; }
+  .fiche dl { font-size:var(--fs-popup,13px); } .fp-corps dl { font-size:var(--fs-fiche,14px); }
+  .fiche h3 { font-size:calc(var(--fs-popup,13px) + 3px); } .fp-tete h2 { font-size:calc(var(--fs-fiche,14px) + 4px); }
+  dt.i { font-style:italic; }
+  .rg-l2 label { display:inline-flex; align-items:center; gap:3px; margin:0; } .rg-lab { font-size:12px; color:var(--muted); margin-left:4px; }
+  .commune input { width:220px; box-sizing:border-box; }
+  #commune-res { margin-top:4px; } #commune-res button { display:block; width:100%; padding:6px 8px; font:inherit; font-size:13px; text-align:left; background:none; border:0; border-bottom:1px solid #eef1f5; cursor:pointer; color:var(--ink); }
+  #commune-res button:hover { background:#f1f4f8; } #commune-res small { color:var(--muted); }
+  .legend .sw { width:28px; display:flex; justify-content:center; } .legend .sw .pin { flex:none; border-width:2px; }
+  details.regle { border:1px solid var(--line); border-radius:10px; margin-top:10px; background:#fff; }
+  details.regle > summary { display:flex; align-items:center; gap:8px; padding:8px 10px; cursor:pointer; list-style:none; }
+  details.regle > summary::-webkit-details-marker { display:none; }
+  details.regle > summary::before { content:"▸"; color:var(--muted); } details.regle[open] > summary::before { content:"▾"; }
+  .rg-nom { flex:1; font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rg-btns { display:flex; gap:4px; } .rg-corps-r { padding:0 12px 12px; }
+  .ref { color:#6b7785; text-decoration:none; border-bottom:1px dotted #9aa5b1; cursor:pointer; } .ref:hover { color:var(--accent); } .ref-ico { font-size:.8em; margin-left:2px; opacity:.75; }
+  .pulse { position:absolute; left:0; top:0; z-index:-1; border-radius:50%; background:var(--bc); opacity:.5; animation:pulse 1.6s ease-out infinite; pointer-events:none; }
+  @keyframes pulse { 0% { transform:scale(.8); opacity:.6; } 100% { transform:scale(2.3); opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .pulse { animation:none; opacity:.25; transform:scale(1.5); } }
+  .bul { position:absolute; pointer-events:none; font:700 11px/1 system-ui,sans-serif; border-radius:10px; padding:3px 7px; white-space:nowrap; box-shadow:0 1px 3px #0005; border:1px solid #fff; }
+  .bul.coin { right:-9px; top:-9px; min-width:16px; text-align:center; padding:3px 5px; }
+  .bul.txt::before { content:''; position:absolute; left:-5px; top:50%; margin-top:-5px; border:5px solid transparent; border-left:0; border-right-color:var(--bc); }
+  #iti-panel { position:absolute; top:0; right:0; bottom:0; width:min(420px,100%); z-index:1100; background:#fff; box-shadow:-4px 0 18px #0003; display:flex; flex-direction:column; transform:translateX(105%); visibility:hidden; transition:transform .2s ease, visibility .2s; }
+  #iti-panel.ouvert { transform:none; visibility:visible; }
+  .iti-ligne { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:8px; font-size:14px; }
+  .iti-actions { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+  .iti-actions button, .iti-btn2 { font:inherit; font-size:13px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; color:var(--ink); }
+  .iti-actions button.prim { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .iti-liste { list-style:none; margin:10px 0 0; padding:0; } .iti-liste li { display:grid; grid-template-columns:26px 1fr auto; gap:6px; align-items:start; padding:7px 0; border-bottom:1px solid #eef1f5; font-size:14px; }
+  .iti-liste .num { width:22px; height:22px; border-radius:50%; background:#1d2733; color:#fff; font:700 12px/22px system-ui; text-align:center; } .iti-liste small { display:block; color:var(--muted); }
+  .iti-liste button { font-size:12px; padding:2px 6px; border:1px solid var(--line); border-radius:5px; background:#fff; cursor:pointer; }
+  .iti-num { width:18px; height:18px; border-radius:50%; background:#1d2733; color:#fff; font:700 11px/14px system-ui; text-align:center; border:2px solid #fff; box-shadow:0 0 0 1px #0006; box-sizing:border-box; }
+  .iti-total { margin-top:10px; font-weight:600; }
+  @media print { body.imprime-iti #map, body.imprime-iti #fiche-panel, body.imprime-iti #reglages { display:none !important; } body.imprime-iti #iti-panel { position:static; transform:none; visibility:visible; width:auto; box-shadow:none; }
+    body.imprime-iti .iti-actions, body.imprime-iti .fp-pied, body.imprime-iti .fp-fermer, body.imprime-iti .iti-liste button, body.imprime-iti .iti-ligne, body.imprime-iti #iti-retour { display:none; } }
+  /* Police Marianne (réservée à l'État) : fournie localement (dossier lib/fonts) ou installée sur le poste */
+  @font-face { font-family:Marianne; font-weight:400; font-style:normal; font-display:swap; src:local('Marianne'), local('Marianne-Regular'), url('./lib/fonts/Marianne-Regular.woff2') format('woff2'); }
+  @font-face { font-family:Marianne; font-weight:400; font-style:italic; font-display:swap; src:local('Marianne Italic'), local('Marianne-Regular_Italic'), url('./lib/fonts/Marianne-Regular_Italic.woff2') format('woff2'); }
+  @font-face { font-family:Marianne; font-weight:700; font-style:normal; font-display:swap; src:local('Marianne Bold'), local('Marianne-Bold'), url('./lib/fonts/Marianne-Bold.woff2') format('woff2'); }
+  @font-face { font-family:Marianne; font-weight:700; font-style:italic; font-display:swap; src:local('Marianne Bold Italic'), local('Marianne-Bold_Italic'), url('./lib/fonts/Marianne-Bold_Italic.woff2') format('woff2'); }
+  body, .leaflet-container, .leaflet-popup-content-wrapper, .leaflet-tooltip, button, input, select { font-family:var(--police, system-ui, "Segoe UI", Roboto, sans-serif); }
+  .fiche .sous, .fp-tete .sous { font-size:12px; opacity:.85; margin:-2px 0 6px; }
+  .dans-panneau { box-shadow:none !important; border:0 !important; padding:0 !important; margin-bottom:8px; background:none !important; } .dans-panneau input { width:100%; }
+  #liste .sw { display:flex; justify-content:center; flex:none; width:26px; } #liste .pin { border-width:2px; }
+  .panel.gauche { display:flex; flex-direction:column; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .panel.gauche > * { flex:none; } .panel.gauche > button.link, .panel.gauche #b-liste > button.link { align-self:flex-start; margin-top:4px; }
+  #b-liste { margin-top:4px; } .panel.reduit > :not(#reduire) { display:none !important; }
+  .rg-ord { border-bottom:1px solid #eef1f5; }
+  .leaflet-top.leaflet-left, .leaflet-top.leaflet-right { display:flex; flex-direction:column; } .leaflet-top.leaflet-right { align-items:flex-end; } .leaflet-top .leaflet-control { flex:none; }
+  .leaflet-top.leaflet-left .panel.gauche { width:var(--larg-gauche, 300px); }
+  #barre { position:absolute; z-index:950; } #barre-btns { display:flex; gap:6px; }
+  #barre.pos-hc { top:10px; left:50%; transform:translateX(-50%); } #barre.pos-hg { top:10px; left:calc(var(--larg-gauche, 300px) + 24px); } #barre.pos-hd { top:10px; right:56px; }
+  #barre.pos-bc { bottom:30px; left:50%; transform:translateX(-50%); } #barre.pos-bg { bottom:30px; left:10px; } #barre.pos-bd { bottom:30px; right:10px; }
+  .bb { width:var(--bb-t, 36px); height:var(--bb-t, 36px); display:inline-flex; align-items:center; justify-content:center; padding:0; font:700 18px system-ui, sans-serif; cursor:pointer;
+    background:var(--bb-fond, #fff); color:var(--bb-coul, #1d2733); border:var(--bb-bw, 1px) solid var(--bb-bc, #d5dbe3); border-radius:var(--bb-r, 10px); box-shadow:var(--bb-sh, 0 1px 4px #0004); }
+  .bb:hover { filter:brightness(.94); } .bb[aria-pressed=true] { outline:2px solid var(--accent); }
+  #barre .pop { position:absolute; display:none; min-width:210px; max-width:320px; max-height:60vh; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 2px 10px #0003; padding:8px; }
+  #barre .pop.ouvert { display:block; } #barre.haut .pop { top:calc(100% + 8px); } #barre.bas .pop { bottom:calc(100% + 8px); }
+  #barre.ga .pop { left:0; } #barre.dr .pop { right:0; } #barre.ce .pop { left:50%; transform:translateX(-50%); }
+  .hote { position:absolute; left:50%; transform:translateX(-50%); z-index:900; } #hote-hc { top:10px; } #hote-bc { bottom:30px; }
+  #filtres label.flt { font-size:13px; color:var(--ink); margin-top:8px; }
+  #prog-panel { position:absolute; top:0; right:0; bottom:0; width:min(420px,100%); z-index:1100; background:#fff; box-shadow:-4px 0 18px #0003; display:flex; flex-direction:column; transform:translateX(105%); visibility:hidden; transition:transform .2s ease, visibility .2s; }
+  #prog-panel.ouvert { transform:none; visibility:visible; }
+  .prog-l { margin:12px 0; } .prog-l:not(.ens) { cursor:pointer; } .prog-t { display:flex; justify-content:space-between; gap:8px; font-size:13px; }
+  .prog-b { height:10px; background:#e8edf3; border-radius:6px; overflow:hidden; margin-top:4px; } .prog-b i { display:block; height:100%; border-radius:6px; }
+  .prog-l.ens { padding-bottom:12px; border-bottom:1px solid var(--line); font-weight:700; }
 </style>
 </head>
 <body>
@@ -158,18 +223,28 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '15';
+const VERSION = '25';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
-const swatch = (f, c) => f === 'goutte' ? `<span class="sw"><i class="gt" style="background:${c}"></i></span>` : `<span class="sw" style="color:${c}">${SYMBOLES[f] || '●'}</span>`;
+const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
+const swatch = (f, c, t, bc, be) => pastille(f, c, t, bc, be, 22);
+function etiquetteHtml(st, e, vals) {   // pastille devant un nom : identique au point ou entièrement personnalisée
+  if (e.forme === 'aucune') return '';
+  const f = e.forme === 'point' ? st.forme : e.forme, c = e.couleur === 'point' ? st.couleur : e.coul, bc = e.bord === 'point' ? st.bordc : e.bordc, be = e.bord === 'point' ? st.borde : e.borde;
+  let t = st.contenu; if (e.contenu === 'rien') t = ''; else if (e.contenu === 'texte') t = e.texte; else if (e.contenu === 'colonne' && vals && e.col) t = String(fmt(e.col, vals[e.col]) ?? '').slice(0, 6);
+  return pastille(f, c, t, bc, be, e.taille);
+}
 const STYLES = { '':'Valeur normale', 'b':'Valeur en gras', 'i':'Valeur en italique', 'badge':'Valeur en pastille' };
 const OPS = [['=','est égal à'],['≠','est différent de'],['contient','contient'],['>','est supérieur à'],['<','est inférieur à'],['vide','est vide'],['rempli','n’est pas vide']];
-const DEFAUT = { couleur:'#1f4e8c', forme:'rond' };
+const DEFAUT = { couleur:'#1f4e8c', forme:'rond', bordc:'#ffffff', borde:3 };
+const POLICES = { 'Système (par défaut)':'system-ui,"Segoe UI",Roboto,sans-serif', 'Marianne':'Marianne,Arial,sans-serif', 'Arial':'Arial,Helvetica,sans-serif', 'Verdana':'Verdana,Geneva,sans-serif', 'Georgia':'Georgia,serif', 'Trebuchet MS':'"Trebuchet MS",Helvetica,sans-serif' };
+const LISTE_MODES = ['Forme et couleur du point', 'Pastille de couleur', 'Emoji ou texte du point', 'Valeur d’une colonne', 'Rien'];
+const POS_COMMUNE = ['Haut à droite', 'Haut au centre', 'Haut à gauche', 'Bas à droite', 'Bas au centre', 'Bas à gauche', 'Dans le panneau de gauche'];
 
 const geopf = (l, f) => `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=${f}&LAYER=${l}&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
 const fonds = {
-  'Plan IGN': L.tileLayer(geopf('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2','image/png'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
-  'Photographies aériennes': L.tileLayer(geopf('ORTHOIMAGERY.ORTHOPHOTOS','image/jpeg'), { maxZoom:19, attribution:'© IGN – Géoplateforme' }),
+  'Plan IGN': L.tileLayer(geopf('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2','image/png'), { maxNativeZoom:19, maxZoom:21, attribution:'© IGN – Géoplateforme' }),
+  'Photographies aériennes': L.tileLayer(geopf('ORTHOIMAGERY.ORTHOPHOTOS','image/jpeg'), { maxNativeZoom:19, maxZoom:21, attribution:'© IGN – Géoplateforme' }),
 };
 
 /* ================= OUTILS ================= */
@@ -188,20 +263,57 @@ function sombre(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) retur
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
 
 /* ================= ÉTAT ================= */
-const nEntree = x => ({ c:x.c, nom:x.nom || '', gn:x.gn ?? !!x.gras, vs:x.vs || '' });
-const nRegle = r => ({ nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '',
-  contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' } });
-const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(s => ({ nom:s.nom || '', cols:(s.cols || []).map(nEntree) })), regles:(c.regles || []).map(nRegle), defaut:{ ...DEFAUT, ...(c.defaut || {}) } }; };
-let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false;
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigFiltres = '', listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
+const nEntree = x => ({ c:x.c, nom:x.nom || '', gn:x.gn ?? !!x.gras, gi:!!x.gi, vg:x.vg ?? x.vs === 'b', vi:x.vi ?? x.vs === 'i', vb:x.vb ?? x.vs === 'badge', ta:x.ta || '', cn:x.cn || '', cw:x.cw || '' });
+const nRegle = r => ({ o:r.o === true, nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '', bordc:hex(r.bordc), borde:Math.max(0, Math.min(8, +r.borde || 0)),
+  contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' },
+  bulle:{ t:(r.bulle && r.bulle.t) || '', src:(r.bulle && r.bulle.src) || '', e:(r.bulle && r.bulle.e) || '', c:(r.bulle && r.bulle.c) || '', couleur:/^#[0-9a-f]{6}$/i.test((r.bulle && r.bulle.couleur) || '') ? r.bulle.couleur : '#c1121f', pulse:!!(r.bulle && r.bulle.pulse) } });
+const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
+const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
+const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', '🧭 Préparer un itinéraire'], prog:['lib_prog', '📊 Voir la progression'], legende:['lib_legende', 'Légende'] };
+const hex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
+const nEnt = h => { h = h || {}; return { titre:h.titre || '', sous:h.sous || '', etiq:h.etiq !== false, fond:['neutre', 'point', 'perso'].includes(h.fond) ? h.fond : 'neutre', fondc:hex(h.fondc) || '#f6f8fb', txtc:hex(h.txtc), taille:+h.taille || 0 }; };
+const nDef = d => { d = d || {}; return { couleur:hex(d.couleur) || DEFAUT.couleur, forme:FORMES.includes(d.forme) ? d.forme : DEFAUT.forme, bordc:hex(d.bordc) || DEFAUT.bordc, borde:(d.borde === undefined || d.borde === null || isNaN(+d.borde)) ? DEFAUT.borde : Math.max(0, Math.min(8, +d.borde)) }; };
+const BARRE_POS = { 'Haut au centre':'hc', 'Haut à gauche':'hg', 'Haut à droite':'hd', 'Bas au centre':'bc', 'Bas à gauche':'bg', 'Bas à droite':'bd' };
+const BOUTONS_DEF = [{ id:'zoomin', on:true, txt:'', ti:'Zoomer' }, { id:'zoomout', on:true, txt:'', ti:'Dézoomer' }, { id:'tout', on:false, txt:'', ti:'Voir tous les points' }, { id:'legende', on:false, txt:'', ti:'Légende' }, { id:'iti', on:false, txt:'', ti:'Préparer un itinéraire' }, { id:'prog', on:false, txt:'', ti:'Voir la progression' }];
+const ICONES_BARRE = { zoomin:'+', zoomout:'−', tout:'⤢', iti:'🧭', prog:'📊', legende:'<svg viewBox="0 0 24 24" width="60%" height="60%" fill="currentColor" aria-hidden="true"><path d="M12 2 1 8l11 6 11-6-11-6zm0 13.2L3.7 10.7 1 12.2l11 6 11-6-2.7-1.5L12 15.2zm0 4L3.7 14.7 1 16.2l11 6 11-6-2.7-1.5L12 19.2z"/></svg>' };
+const nBarre = b => {
+  b = b || {}; const sv = Array.isArray(b.boutons) ? b.boutons : [], out = [];
+  sv.forEach(x => { const d = BOUTONS_DEF.find(y => y.id === x.id); if (d && !out.some(o => o.id === d.id)) out.push({ id:d.id, on: x.on === undefined ? d.on : x.on === true, txt:String(x.txt || ''), ti:String(x.ti || d.ti) }); });
+  BOUTONS_DEF.forEach(d => { if (!out.some(o => o.id === d.id)) out.push({ ...d }); });
+  return { pos:Object.keys(BARRE_POS).includes(b.pos) ? b.pos : 'Haut au centre', taille:Math.max(26, Math.min(60, +b.taille || 36)), forme:['carre', 'arrondi', 'rond'].includes(b.forme) ? b.forme : 'arrondi',
+    fond:hex(b.fond) || '#ffffff', coul:hex(b.coul) || '#1d2733', bordc:hex(b.bordc) || '#d5dbe3', borde:Math.max(0, Math.min(4, b.borde === undefined ? 1 : (+b.borde || 0))), ombre:b.ombre !== false, boutons:out };
+};
+const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#1f4e8c',
+  contenu:['point', 'rien', 'texte', 'colonne'].includes(e.contenu) ? e.contenu : 'point', texte:String(e.texte || ''), col:String(e.col || ''), taille:Math.max(12, Math.min(44, +e.taille || 22)), bord:e.bord === 'perso' ? 'perso' : 'point', bordc:hex(e.bordc) || '#ffffff', borde:Math.max(0, Math.min(8, e.borde === undefined ? 2 : (+e.borde || 0))) }; };
+const IGN_COUCHES = { 'Limites administratives':['LIMITES_ADMINISTRATIVES_EXPRESS.LATEST', 'image/png'], 'Parcelles cadastrales':['CADASTRALPARCELS.PARCELLAIRE_EXPRESS', 'image/png'], 'Cartes IGN (classique)':['GEOGRAPHICALGRIDSYSTEMS.MAPS', 'image/jpeg'] };
+const nFiltre = f => { f = f || {}; return { c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui') }; };
+const nInd = i => { i = i || {}; return { nom:String(i.nom || ''), grp:String(i.grp || ''), fait:String(i.fait || ''), att:String(i.att || ''), orange:Math.max(0, Math.min(200, +i.orange || 50)), vert:Math.max(0, Math.min(200, +i.vert || 80)) }; };
+const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
+const nCalque = q => { q = q || {}; return { nom:String(q.nom || ''), type:q.type === 'geojson' ? 'geojson' : 'ign', src:String(q.src || ''), fmt:q.fmt === 'jpeg' ? 'jpeg' : 'png', opac:Math.max(0, Math.min(100, q.opac === undefined ? 70 : (+q.opac || 0))), on:q.on === true, coul:hex(q.coul) || '#e63946', fill:hex(q.fill) || '#e63946', ep:Math.max(0, Math.min(8, q.ep === undefined ? 2 : (+q.ep || 0))) }; };
+const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(s => ({ nom:s.nom || '', cols:(s.cols || []).map(nEntree) })), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), calques:(c.calques || []).map(nCalque), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
+let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigFiltres = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
 const libel = c => labels[c] || joli(c);
-function fmt(c, v) {
-  const t = types[c] || '';
+const refDe = t => { const m = /^Ref(List)?:(.+)$/.exec(t || ''); return m ? { table:m[2] } : null; };
+function nomRef(tn, c, id) {
+  const rf = refDe((typesT[tn] || {})[c]), row = rf && refTabs[rf.table] && refTabs[rf.table].get(id), vc = (visT[tn] || {})[c];
+  if (!row) return String(id);
+  return (vc ? fmtG(rf.table, vc, row[vc]) : null) ?? String(id);
+}
+function fmtG(tn, c, v) {   // formatage selon le type réel de la colonne ; les colonnes « Référence » affichent la valeur de la fiche liée
+  const t = (typesT[tn] || {})[c] || '';
+  if (refDe(t)) { const ids = (Array.isArray(v) ? v.filter(x => x !== 'L') : [v]).filter(x => x > 0); return ids.length ? ids.map(i => nomRef(tn, c, i)).join(', ') : null; }
   if (typeof v === 'number' && t === 'Date') return new Date(v * 1000).toLocaleDateString('fr-FR', { timeZone:'UTC' });
   if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
   return formater(c, v);
+}
+const fmt = (c, v) => fmtG(tid, c, v);
+function refInfo(c, v) {
+  const rf = refDe(types[c]); if (!rf) return null;
+  const ids = (Array.isArray(v) ? v.filter(x => x !== 'L') : [v]).filter(x => x > 0); if (!ids.length) return null;
+  return { t:rf.table, ids, noms:ids.map(i => nomRef(tid, c, i)) };
 }
 
 /* ================= RÈGLES D'AFFICHAGE DES POINTS ================= */
@@ -223,38 +335,141 @@ function test(k, vals) {
 const regleActive = r => r.si.length && r.si.every(k => k.c);
 const nomRegle = r => r.nom.trim() || (r.si[0] && r.si[0].c ? `${libel(r.si[0].c)} ${(OPS.find(o => o[0] === r.si[0].op) || [])[0] || ''} ${r.si[0].v || ''}`.trim() : 'Règle');
 function styleDe(vals) {
-  let couleur = null, forme = null, contenu = null, cat = -1;
+  let couleur = null, forme = null, contenu = null, bulle = null, bordc = null, borde = null, cat = -1; const regles = [];
   cfg.regles.forEach((r, i) => {
     if (!regleActive(r) || !r.si.every(k => test(k, vals))) return;
-    if (cat < 0) cat = i;
+    regles.push(i); if (cat < 0) cat = i;
     if (couleur === null && r.couleur) couleur = r.couleur;
     if (forme === null && r.forme) forme = r.forme;
+    if (bordc === null && r.bordc) { bordc = r.bordc; borde = r.borde; }
+    if (bulle === null && r.bulle.t) bulle = { t:r.bulle.t, couleur:r.bulle.couleur, pulse:r.bulle.t === 'signal' || r.bulle.pulse, txt: r.bulle.t === 'signal' ? '' : r.bulle.src === 'col' ? String(fmt(r.bulle.c, vals[r.bulle.c]) ?? '').slice(0, 24) : r.bulle.e };
     if (contenu === null && r.contenu.t) contenu = r.contenu.t === 'emoji' ? r.contenu.e : (r.contenu.c ? String(fmt(r.contenu.c, vals[r.contenu.c]) ?? '').slice(0, 6) : '');
   });
-  return { couleur: couleur || cfg.defaut.couleur, forme: forme || cfg.defaut.forme, contenu: contenu || '', cat };
+  return { couleur: couleur || cfg.defaut.couleur, forme: forme || cfg.defaut.forme, contenu: contenu || '', bulle, bordc: bordc || cfg.defaut.bordc, borde: bordc ? borde : cfg.defaut.borde, cat, regles };
 }
 
 /* ================= CARTE ET PANNEAU DE GAUCHE ================= */
-const map = L.map('map', { center:[46.6,2.5], zoom:6, layers:[fonds['Plan IGN']] });
-L.control.layers(fonds, null, { position:'topright' }).addTo(map);
+const map = L.map('map', { center:[46.6,2.5], zoom:6, minZoom:4, maxZoom:21, zoomSnap:0.5, zoomDelta:0.5, wheelPxPerZoomLevel:90, zoomControl:false, layers:[fonds['Plan IGN']] });
+const barre = document.createElement('div'); barre.id = 'barre'; barre.innerHTML = '<div id="barre-btns"></div><div class="pop" id="pop-legende"></div>'; document.body.appendChild(barre);
+['hc', 'bc'].forEach(k => { const h = document.createElement('div'); h.id = 'hote-' + k; h.className = 'hote'; document.body.appendChild(h); });
+const barreOn = id => cfg.barre.boutons.some(x => x.id === id && x.on);
+function dessinerBarre() {
+  const b = cfg.barre, cl = BARRE_POS[b.pos] || 'hc'; barre.className = `pos-${cl} ${cl[0] === 'b' ? 'bas' : 'haut'} ${cl[1] === 'd' ? 'dr' : cl[1] === 'c' ? 'ce' : 'ga'}`;
+  const st = barre.style, rayon = { carre:'3px', arrondi:'10px', rond:'50%' }[b.forme];
+  st.setProperty('--bb-t', b.taille + 'px'); st.setProperty('--bb-fond', b.fond); st.setProperty('--bb-coul', b.coul); st.setProperty('--bb-bc', b.bordc); st.setProperty('--bb-bw', b.borde + 'px'); st.setProperty('--bb-r', rayon); st.setProperty('--bb-sh', b.ombre ? '0 1px 4px #0004' : 'none');
+  const pop = barre.querySelector('#pop-legende'), leg = document.getElementById('legende'), pan = document.querySelector('.panel.gauche');
+  barre.querySelector('#barre-btns').innerHTML = b.boutons.filter(x => x.on).map(x => `<button type="button" class="bb" data-b="${x.id}" title="${esc(x.ti)}" aria-label="${esc(x.ti)}"${x.id === 'legende' ? ` aria-pressed="${pop.classList.contains('ouvert')}"` : ''}>${x.txt ? esc(x.txt) : ICONES_BARRE[x.id]}</button>`).join('');
+  if (leg && pop && pan) { if (barreOn('legende')) { if (leg.parentNode !== pop) pop.appendChild(leg); } else { if (leg.parentNode !== pan) pan.appendChild(leg); pop.classList.remove('ouvert'); } }
+  const hc = document.getElementById('hote-hc'), bc = document.getElementById('hote-bc');   // la recherche de commune se décale si la barre occupe le même emplacement
+  if (hc) hc.style.top = (b.pos === 'Haut au centre' ? b.taille + 20 : 10) + 'px'; if (bc) bc.style.bottom = (b.pos === 'Bas au centre' ? b.taille + 40 : 30) + 'px';
+}
+barre.addEventListener('click', e => {
+  const x = e.target.closest('button[data-b]'); if (!x) return; const id = x.dataset.b;
+  if (id === 'zoomin') map.zoomIn(); else if (id === 'zoomout') map.zoomOut(); else if (id === 'tout') recentrer(); else if (id === 'iti') ouvrirIti(); else if (id === 'prog') ouvrirProg();
+  else if (id === 'legende') { const o = barre.querySelector('#pop-legende').classList.toggle('ouvert'); x.setAttribute('aria-pressed', String(o)); }
+});
+const communeCtl = L.control({ position:'topright' });
+const creerCommune = () => {
+  const d = L.DomUtil.create('div', 'panel commune'); d.id = 'commune-ctl';
+  d.innerHTML = '<input type="search" id="commune" placeholder="Aller à une commune…" aria-label="Rechercher une commune" autocomplete="off"><div id="commune-res"></div>';
+  L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+  const res = d.querySelector('#commune-res'); let liste = [], tm, contour = null;
+  const effacer = () => { if (contour) { map.removeLayer(contour); contour = null; } };
+  d.querySelector('#commune').addEventListener('input', e => {
+    clearTimeout(tm); const q = e.target.value.trim();
+    if (q.length < 2) { res.innerHTML = ''; return; }
+    tm = setTimeout(() => {
+      const url = 'https://geo.api.gouv.fr/communes?' + (/^\d{5}$/.test(q) ? 'codePostal=' + q : 'nom=' + encodeURIComponent(q)) + '&fields=nom,codesPostaux,departement,centre,contour&boost=population&limit=6';
+      fetch(url).then(r => r.json()).then(l => {
+        liste = Array.isArray(l) ? l : [];
+        res.innerHTML = liste.length ? liste.map((c, i) => `<button type="button" data-i="${i}">${esc(c.nom)} <small>${esc((c.departement && c.departement.nom) || '')} ${esc((c.codesPostaux || [])[0] || '')}</small></button>`).join('') : '<p class="vide" style="margin:6px">Aucune commune trouvée.</p>';
+      }).catch(() => { res.innerHTML = '<p class="vide" style="margin:6px">Recherche indisponible.</p>'; });
+    }, 300);
+  });
+  res.addEventListener('click', e => {
+    if (e.target.closest('[data-x]')) { effacer(); res.innerHTML = ''; d.querySelector('#commune').value = ''; return; }
+    const b = e.target.closest('button[data-i]'); if (!b) return; const c = liste[+b.dataset.i]; if (!c) return;
+    effacer();
+    if (c.contour) { contour = L.geoJSON(c.contour, { style:{ color:'#1f4e8c', weight:2, dashArray:'6 4', fillOpacity:0.06 }, interactive:false }).addTo(map); map.fitBounds(contour.getBounds(), { padding:[30,30] }); }
+    else if (c.centre) map.setView([c.centre.coordinates[1], c.centre.coordinates[0]], 13);
+    res.innerHTML = '<button type="button" data-x="1">✕ Effacer le contour de la commune</button>';
+  });
+  return d;
+};
+communeCtl.onAdd = creerCommune;
+communeCtl.addTo(map);
+let posCommune = '', communeSurCarte = true;
+function placerCommune() {
+  const pos = opt('pos_commune', POS_COMMUNE[0]); if (pos === posCommune) return; posCommune = pos;
+  const coins = { 'Haut à droite':'topright', 'Haut à gauche':'topleft', 'Bas à droite':'bottomright', 'Bas à gauche':'bottomleft' }, zone = document.getElementById('commune-zone'), hc = document.getElementById('hote-hc'), bc = document.getElementById('hote-bc');
+  if (zone) zone.innerHTML = ''; if (hc) hc.innerHTML = ''; if (bc) bc.innerHTML = '';
+  if (!coins[pos] && communeSurCarte) { map.removeControl(communeCtl); communeSurCarte = false; }
+  if (pos === POS_COMMUNE[6]) { if (zone) { const el = creerCommune(); el.classList.add('dans-panneau'); zone.appendChild(el); } }
+  else if (pos === POS_COMMUNE[1]) { if (hc) hc.appendChild(creerCommune()); }
+  else if (pos === POS_COMMUNE[4]) { if (bc) bc.appendChild(creerCommune()); }
+  else {
+    if (communeSurCarte) communeCtl.setPosition(coins[pos]); else { communeCtl.options.position = coins[pos]; communeCtl.addTo(map); communeSurCarte = true; }
+    const c = communeCtl.getContainer(); if (c) c.style.order = pos.startsWith('Haut') ? '-1' : '0';
+  }
+}
+const ctlCouches = L.control.layers(fonds, null, { position:'topright' }).addTo(map);
+let calquesCouches = [], sigCalques = '';
+function majCalques() {   // calques superposables : couches IGN (opacité réglable) ou fichiers GeoJSON locaux
+  const sig = JSON.stringify(cfg.calques); if (sig === sigCalques) return; sigCalques = sig;
+  calquesCouches.forEach(l => { ctlCouches.removeLayer(l); map.removeLayer(l); }); calquesCouches = [];
+  cfg.calques.forEach((q, i) => {
+    if (!q.nom && !q.src) return; let l;
+    if (q.type === 'geojson') {
+      if (!/^[\w\-.]+$/.test(q.src)) return;
+      l = L.geoJSON(null, { style:{ color:q.coul, weight:q.ep, opacity:q.opac / 100, fillColor:q.fill, fillOpacity:q.opac / 100 * 0.35 }, onEachFeature:(f, ly) => { const p = f.properties || {}, t = p.nom || p.name || p.NOM || p.libelle; if (t) ly.bindPopup(esc(t)); } });
+      fetch(`./lib/calques/${q.src}.geojson`).then(r => r.json()).then(g => l.addData(g)).catch(() => {});
+    } else {
+      const pre = IGN_COUCHES[q.src], id = pre ? pre[0] : q.src, fm = pre ? pre[1] : (q.fmt === 'jpeg' ? 'image/jpeg' : 'image/png');
+      if (!/^[\w.\-]+$/.test(id || '')) return;
+      l = L.tileLayer(geopf(id, fm), { maxNativeZoom:19, maxZoom:21, opacity:q.opac / 100, zIndex:5 + i, attribution:'© IGN – Géoplateforme' });
+    }
+    ctlCouches.addOverlay(l, q.nom || q.src); calquesCouches.push(l); if (q.on) l.addTo(map);
+  });
+}
 L.control.scale({ metric:true, imperial:false }).addTo(map);
-const cluster = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius: () => opt('regrouper', true) === false ? 0 : 45 });
+const MODE_CLASSIQUE = 'Regroupement classique (selon le zoom)', MODE_PROCHES = 'Seulement les points très proches', MODE_AUCUN = 'Aucun regroupement';
+let sigCluster = '';
+function nouveauCluster(mode, dist) {
+  if (mode === MODE_AUCUN) return L.layerGroup();
+  const classique = mode === MODE_CLASSIQUE;
+  // en mode « très proches », le rayon (en pixels) correspond à une distance réelle fixe en mètres, quel que soit le zoom
+  const rayon = classique ? () => 45 : z => Math.max(0.05, dist / (156543.03392 * Math.cos(map.getCenter().lat * Math.PI / 180) / Math.pow(2, z)));
+  const g = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius:rayon, zoomToBoundsOnClick:classique, spiderfyOnMaxZoom:classique });
+  if (!classique) g.on('clusterclick', a => a.layer.spiderfy());
+  return g;
+}
+let cluster = nouveauCluster(MODE_PROCHES, 100);
 map.addLayer(cluster);
+function majCluster() {
+  const mode = opt('regroupement', MODE_PROCHES), dist = +opt('distance_m', 100) || 100, sig = mode + '|' + dist;
+  if (sig === sigCluster) return; sigCluster = sig;
+  map.removeLayer(cluster); cluster = nouveauCluster(mode, dist); map.addLayer(cluster);
+}
+function montrer(m, cb) { if (cluster.zoomToShowLayer) montrer(m, cb); else { map.setView(m.getLatLng(), Math.max(map.getZoom(), 16)); cb(); } }
 
 const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
-  const d = L.DomUtil.create('div', 'panel');
-  d.innerHTML = `<input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">
+  const d = L.DomUtil.create('div', 'panel gauche');
+  d.innerHTML = `<button class="link" id="reduire" type="button" aria-expanded="true" style="order:-1">▴ Réduire le panneau</button><div id="commune-zone"></div><input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement">
     <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div>
-    <button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des établissements</button><div id="liste" style="display:none"></div><br>
-    <button class="link" id="tout" type="button">Voir tous les points</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
+    <div id="b-liste"><button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des établissements</button><div id="liste" style="display:none"></div></div>
+    <button class="link" id="tout" type="button">Voir tous les points</button><button class="link" id="iti-btn" type="button">🧭 Préparer un itinéraire</button><button class="link" id="prog-btn" type="button">📊 Voir la progression</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
+  d.querySelector('#reduire').addEventListener('click', e => { const r = d.classList.toggle('reduit'); e.target.setAttribute('aria-expanded', String(!r)); e.target.textContent = r ? '▾ Déplier le panneau' : '▴ Réduire le panneau'; });
+  d.querySelector('#iti-btn').addEventListener('click', () => ouvrirIti());
+  d.querySelector('#prog-btn').addEventListener('click', () => ouvrirProg());
   d.querySelector('#filtres').addEventListener('change', e => {
-    const c = e.target.dataset.c; if (!c) return; const det = e.target.closest('details');
-    filtreSel[c] = [...det.querySelectorAll('input:checked')].map(x => x.value);
-    det.querySelector('summary').textContent = libel(c) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : '');
+    const c = e.target.dataset.c; if (!c) return; const t = e.target.dataset.t;
+    if (t === 'unique') filtreSel[c] = e.target.value ? [e.target.value] : [];
+    else if (t === 'oui') filtreSel[c] = e.target.checked ? ['__oui__'] : [];
+    else { const det = e.target.closest('details'); filtreSel[c] = [...det.querySelectorAll('input:checked')].map(x => x.value); const df = filtresDefs.find(f => f.c === c); det.querySelector('summary').textContent = ((df && df.nom) || libel(c)) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : ''); }
     appliquerFiltres();
   });
   d.querySelector('#liste-btn').addEventListener('click', () => { listeOuverte = !listeOuverte; setListe(listeOuverte); });
@@ -272,58 +487,92 @@ haut.addTo(map);
 function allerA(id) {
   const m = marqueurs.get(id); if (!m || !cluster.hasLayer(m)) return;
   grist.setSelectedRows([id]);
-  cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
+  montrer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 }
-function recentrer() { const p = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng()); if (p.length) map.fitBounds(p, { padding:[40,40], maxZoom:15 }); }
+function recentrer() { const p = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m.getLatLng()); if (p.length) map.fitBounds(p, { padding:[40,40], maxZoom:17 }); }
 function majLegende() {
   const z = document.getElementById('legende'); if (!z) return;
-  z.innerHTML = legCats.length ? `<hr><button type="button" id="leg-toggle" class="titre" aria-expanded="${legOuverte}"><strong>Légende</strong> <span>${legOuverte ? '▾' : '▸'}</span></button>` +
-    (legOuverte ? legCats.map(c => `<button type="button" data-k="${esc(c.k)}" aria-pressed="${!masques.has(c.k)}">${swatch(c.forme, c.couleur)}${c.emoji ? esc(c.emoji) + ' ' : ''}${esc(c.label)}</button>`).join('') : '') : '';
+  const dansBarre = barreOn('legende'), ouvert = dansBarre || legOuverte, titre = esc(opt('lib_legende', 'Légende'));
+  z.innerHTML = legCats.length ? (dansBarre ? `<strong>${titre}</strong>` : `<hr><button type="button" id="leg-toggle" class="titre" aria-expanded="${legOuverte}"><strong>${titre}</strong> <span>${legOuverte ? '▾' : '▸'}</span></button>`) +
+    (ouvert ? legCats.map(c => `<button type="button" data-k="${esc(c.k)}" aria-pressed="${!masques.has(c.k)}">${etiquetteHtml({ forme:c.forme, couleur:c.couleur, contenu:c.emoji, bordc:c.bordc, borde:c.borde }, cfg.etiquettes.legende, null)}${esc(c.label)}</button>`).join('') : '') : '';
 }
 function setListe(ouvert) {
   const b = document.getElementById('liste-btn'), l = document.getElementById('liste'); if (!b || !l) return;
   listeOuverte = ouvert; b.setAttribute('aria-expanded', String(ouvert));
-  b.textContent = ouvert ? 'Masquer la liste des établissements' : 'Afficher la liste des établissements';
+  b.textContent = ouvert ? opt('lib_liste2', 'Masquer la liste des établissements') : opt('lib_liste', LIB.liste[1]);
   l.style.display = ouvert ? 'block' : 'none'; majListe();
 }
 function appliquerAffichage() {   // éléments du panneau de gauche affichés ou masqués, selon la configuration générale
   const A = k => opt('aff_' + k, true) !== false, show = (id, on) => { const e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; };
-  show('q', A('q')); show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout')); show('legende', A('legende')); show('liste-btn', A('liste'));
+  const ids = { commune:'commune-zone', q:'q', filtres:'filtres', compteurs:'compteurs', count:'count', liste:'b-liste', tout:'tout', iti:'iti-btn', prog:'prog-btn', legende:'legende' };
+  cfg.ordre.forEach((k, i) => { const e = document.getElementById(ids[k]); if (e) e.style.order = i; });
+  const qq = document.getElementById('q'); if (qq) qq.placeholder = opt('lib_q', LIB.q[1]);
+  const tt = document.getElementById('tout'); if (tt) tt.textContent = opt('lib_tout', LIB.tout[1]);
+  const ib = document.getElementById('iti-btn'); if (ib) ib.textContent = opt('lib_iti', LIB.iti[1]);
+  show('q', A('q')); show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = opt('lib_prog', LIB.prog[1]); } placerCommune(); dessinerBarre(); majCalques();
+  const racine = document.documentElement;
+  if (racine && racine.style) { racine.style.setProperty('--larg-gauche', (+opt('largeur_gauche', 300) || 300) + 'px'); racine.style.setProperty('--police', POLICES[opt('police', 'Système (par défaut)')] || POLICES['Système (par défaut)']); racine.style.setProperty('--fs-popup', (+opt('taille_popup', 13) || 13) + 'px'); racine.style.setProperty('--fs-fiche', (+opt('taille_fiche', 14) || 14) + 'px'); } show('liste-btn', A('liste'));
   const sig = JSON.stringify([opt('ouv_liste', false), opt('ouv_legende', true)]);
   if (sig !== sigAff) { sigAff = sig; listeOuverte = opt('ouv_liste', false) === true; legOuverte = opt('ouv_legende', true) !== false; }
   setListe(listeOuverte && A('liste')); majLegende();
 }
+function devant(d) { return etiquetteHtml(d.style, cfg.etiquettes.liste, d.vals); }
 function majListe() {
   if (!listeOuverte) return;
   const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 500);
-  document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}"><i style="background:${m._cifi.style.couleur}"></i>${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
+  document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
+}
+function filtreHtml(f) {
+  const c = f.c, nom = f.nom || libel(c), sl = new Set(filtreSel[c] || []);
+  if (f.type === 'oui') return `<label class="flt"><input type="checkbox" data-c="${esc(c)}" data-t="oui"${sl.size ? ' checked' : ''}> ${esc(nom)}</label>`;
+  const vals = [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
+  if (f.type === 'unique') return `<label class="flt">${esc(nom)}<select data-c="${esc(c)}" data-t="unique"><option value="">Tous</option>${vals.map(v => `<option${sl.has(v) ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`;
+  return `<details${sl.size ? ' open' : ''}><summary>${esc(nom)}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${vals.map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`;
 }
 function appliquerFiltres() {
   let n = 0; const cnt = cptCols.map(c => [c, new Map()]);
   for (const m of marqueurs.values()) {
     const d = m._cifi;
-    const ok = !masques.has('r' + d.style.cat) && (!recherche || sansAccent(d.nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => !v || !v.length || v.includes(d.fv[c]));
+    const ok = !(d.style.regles.length ? d.style.regles.some(i => masques.has('r' + i)) : masques.has('r-1')) && (!recherche || sansAccent(d.nom).includes(recherche)) && Object.entries(filtreSel).every(([c, v]) => { if (!v || !v.length) return true; const df = filtresDefs.find(f => f.c === c); return df && df.type === 'oui' ? sansAccent(d.fv[c]).trim() === sansAccent(df.oui || 'Oui').trim() : v.includes(d.fv[c]); });
     if (ok) { n++; cnt.forEach(([c, mp]) => mp.set(d.fv[c], (mp.get(d.fv[c]) || 0) + 1)); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
   document.getElementById('compteurs').innerHTML = cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
     [...mp].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
   document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + `<br><small>version ${VERSION}</small>`;
-  majListe();
+  majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
-  const t = +opt('taille', 30) || 30, s = d.style, c = s.contenu, g = s.forme === 'goutte';
+  const t = +opt('taille', 30) || 30, s = d.style, c = s.contenu, g = s.forme === 'goutte', b = s.bulle;
+  let avant = '', apres = '';
+  if (b) {
+    const k = sombre(b.couleur) ? '#1d2733' : '#fff';
+    if (b.pulse) avant = `<span class="pulse" style="--bc:${b.couleur};width:${t}px;height:${t}px"></span>`;
+    if (b.t === 'coin') apres = `<span class="bul coin" style="background:${b.couleur};color:${k}">${esc(b.txt)}</span>`;
+    if (b.t === 'texte') apres = `<span class="bul txt" style="background:${b.couleur};color:${k};--bc:${b.couleur};left:${t + 9}px;top:${Math.round(t / 2 - 11)}px">${esc(b.txt)}</span>`;
+  }
   return L.divIcon({ className:'', iconSize:[t,t], iconAnchor: g ? [t/2, Math.round(t * 1.2)] : [t/2, t/2], popupAnchor: g ? [0, -Math.round(t * 1.25)] : [0, -t/2],
-    html:`<div class="pin f-${s.forme}${sel ? ' sel' : ''}${sombre(s.couleur) ? ' sombre' : ''}" style="background:${s.couleur};width:${t}px;height:${t}px;font-size:${c.length > 2 ? 10 : Math.round(t * 0.5)}px"><span>${esc(c)}</span></div>` });
+    html: avant + `<div class="pin f-${s.forme}${sel ? ' sel' : ''}${sombre(s.couleur) ? ' sombre' : ''}" style="background:${s.couleur};${s.forme !== 'triangle' ? `border:${s.borde}px solid ${s.bordc};` : ''}width:${t}px;height:${t}px;font-size:${c.length > 2 ? 10 : Math.round(t * 0.5)}px"><span>${esc(c)}</span></div>` + apres });
 }
 
 /* ================= FICHES ================= */
-const lignes = l => `<dl>${l.map(([k, v, x]) => `<dt${x && x.gn ? ' class="b"' : ''}>${esc(k)}</dt><dd${x && x.vs === 'i' ? ' class="i"' : x && x.vs === 'b' ? ' class="b"' : ''}>${x && x.vs === 'badge' ? `<span class="badge">${esc(v)}</span>` : esc(v)}</dd>`).join('')}</dl>`;
-const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, vals[x.c]), x]).filter(a => a[1] !== null);
+const TAILLES = { p:'88%', g:'118%', tg:'140%' }, coul = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
+const lignes = l => `<dl>${l.map(([k, v, x]) => { x = x || {};
+  const tl = TAILLES[x.ta] ? `font-size:${TAILLES[x.ta]};` : '', sd = tl + (coul(x.cn) ? `color:${coul(x.cn)};` : ''), sv = tl + (coul(x.cw) ? `color:${coul(x.cw)};` : ''),
+    cn = [x.gn && 'b', x.gi && 'i'].filter(Boolean).join(' '), cv = [x.vg && 'b', x.vi && 'i'].filter(Boolean).join(' ');
+  const val = x.ref ? x.ref.ids.map((id, i) => `<a class="ref" href="#" data-t="${esc(x.ref.t)}" data-id="${id}" data-n="${esc(x.ref.noms[i])}">${esc(x.ref.noms[i])}<span class="ref-ico" aria-hidden="true">↗</span></a>`).join(', ') : x.vb ? `<span class="badge">${esc(v)}</span>` : esc(v);
+  return `<dt${cn ? ` class="${cn}"` : ''}${sd ? ` style="${sd}"` : ''}>${esc(k)}</dt><dd${cv ? ` class="${cv}"` : ''}${sv ? ` style="${sv}"` : ''}>${val}</dd>`; }).join('')}</dl>`;
+const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, vals[x.c]), { ...x, ref:refInfo(x.c, vals[x.c]) }]).filter(a => a[1] !== null);
 const etiquette = d => d.style.cat >= 0 ? `<span class="niv" style="background:${d.style.couleur};color:${sombre(d.style.couleur) ? '#1d2733' : '#fff'}">${esc(nomRegle(cfg.regles[d.style.cat]))}</span>` : '';
+function enteteDe(d, k) {
+  const h = cfg.entetes[k], tc = h.titre ? fmt(h.titre, d.vals[h.titre]) : null, sous = h.sous ? fmt(h.sous, d.vals[h.sous]) : null;
+  const fond = h.fond === 'point' ? d.style.couleur : h.fond === 'perso' ? h.fondc : '', txt = h.txtc || (fond ? (sombre(fond) ? '#1d2733' : '#fff') : '');
+  return { titre: tc || d.nom || 'Sans nom', sous, etiq: h.etiq ? etiquette(d) : '', st: (fond ? `background:${fond};` : '') + (txt ? `color:${txt};` : ''), ts: h.taille ? `font-size:${h.taille}px;` : '' };
+}
 function fichier(d) {
-  return `<div class="fiche" style="--niv:${d.style.couleur}"><header><h3>${esc(d.nom || 'Sans nom')}</h3>${etiquette(d)}</header>
+  const e = enteteDe(d, 'popup');
+  return `<div class="fiche" style="--niv:${d.style.couleur}"><header style="${e.st}"><h3 style="${e.ts}">${esc(e.titre)}</h3>${e.sous ? `<div class="sous">${esc(e.sous)}</div>` : ''}${e.etiq}</header>
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
-    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button></div></div>`;
+    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> <button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button></div></div>`;
 }
 function corpsFiche(d) {
   const secs = cfg.sections.map((sec, i) => ({ sec, i, l: champsDe(sec.cols, d.vals) })).filter(x => x.l.length);
@@ -334,28 +583,43 @@ function corpsFiche(d) {
 }
 const panneau = document.getElementById('fiche-panel');
 function ouvrirFiche(id, focus = true) {
-  const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id;
+  const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id; lieeOuverte = false; fermerIti(); fermerProg(); const eh = enteteDe(d, 'fiche');
   panneau.style.setProperty('--niv', d.style.couleur);
-  panneau.innerHTML = `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2>${esc(d.nom || 'Sans nom')}</h2>${etiquette(d)}</div>
-    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button></div>`;
+  panneau.innerHTML = `<div class="fp-tete" style="${eh.st}"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2 style="${eh.ts}">${esc(eh.titre)}</h2>${eh.sous ? `<div class="sous">${esc(eh.sous)}</div>` : ''}${eh.etiq}</div>
+    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button> <button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>`;
   panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
   if (focus) panneau.querySelector('.fp-fermer').focus();
 }
-function fermerFiche() { ficheId = null; panneau.classList.remove('ouvert'); panneau.setAttribute('aria-hidden', 'true'); }
+function ouvrirLiee(t, id, nom) {   // fiche liée (colonne « Référence ») : lecture seule, dans le même volet
+  const row = refTabs[t] && refTabs[t].get(id); if (!row) return;
+  const cols = Object.keys(row).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_'));
+  const l = cols.map(c => [(labelsT[t] || {})[c] || joli(c), fmtG(t, c, row[c]), {}]).filter(a => a[1] !== null);
+  lieeOuverte = true; fermerIti(); fermerProg(); panneau.style.setProperty('--niv', '#6b7785');
+  panneau.innerHTML = `<div class="fp-tete"><button type="button" class="fp-fermer" aria-label="Fermer">✕</button><h2>${esc(nom || 'Fiche liée')}</h2><span class="niv" style="background:#6b7785;color:#fff">${esc(joli(t))}</span></div>
+    <div class="fp-corps">${l.length ? lignes(l) : '<p class="vide">Aucune information renseignée.</p>'}</div><div class="fp-pied"><button type="button" class="fp-retour">← Retour</button></div>`;
+  panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
+}
+function fermerFiche() { ficheId = null; lieeOuverte = false; panneau.classList.remove('ouvert'); panneau.setAttribute('aria-hidden', 'true'); }
 panneau.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details.theme')) etatSections.set(e.target.dataset.t, e.target.open); }, true);
 panneau.addEventListener('click', e => {
   if (e.target.closest('.fp-fermer')) fermerFiche();
+  if (e.target.closest('.fp-retour')) { if (ficheId !== null) ouvrirFiche(ficheId, false); else fermerFiche(); return; }
+  const a = e.target.closest('a.ref'); if (a) { e.preventDefault(); ouvrirLiee(a.dataset.t, +a.dataset.id, a.dataset.n); return; }
   if (e.target.closest('.fp-tout')) { const t = [...panneau.querySelectorAll('details.theme')], o = t.some(x => !x.open); t.forEach(x => { x.open = o; }); }
   const sl = e.target.closest('.fp-select');
   if (sl && ficheId !== null) { grist.setSelectedRows([ficheId]); if (grist.setCursorPos) grist.setCursorPos({ rowId:ficheId }); sl.textContent = '✓ Ligne sélectionnée dans Grist'; }
+  const it = e.target.closest('.fp-iti'); if (it && ficheId !== null) { const id = ficheId; itiAjouter([id]); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && ficheId !== null) fermerFiche(); });
 map.on('popupopen', e => {
-  const el = e.popup.getElement(), b = el && el.querySelector('.btn-fiche'); if (!b) return;
-  L.DomEvent.disableClickPropagation(b);
-  b.addEventListener('click', () => { ouvrirFiche(Number(b.dataset.id)); map.closePopup(); });
+  const el = e.popup.getElement(); if (!el || el._lie) return; el._lie = true;
+  el.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-id]');
+    if (b) { const id = Number(b.dataset.id); if (b.classList.contains('btn-fiche')) { ouvrirFiche(id); map.closePopup(); } else if (b.classList.contains('btn-iti')) { itiAjouter([id]); } return; }
+    const a = ev.target.closest('a.ref'); if (a) { ev.preventDefault(); ouvrirLiee(a.dataset.t, +a.dataset.id, a.dataset.n); map.closePopup(); }
+  });
 });
-function rafraichir() { if (ficheId !== null) ouvrirFiche(ficheId, false); marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); }); }
+function rafraichir() { if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheId, false); marqueurs.forEach(m => { if (m.isPopupOpen()) m.getPopup().update(); }); }
 
 /* ================= GRIST ================= */
 grist.ready({
@@ -382,8 +646,14 @@ async function chargerLibelles() {
   labelsCharges = true;
   try {
     tid = await grist.selectedTable.getTableId();
-    const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column'), ref = T.id[T.tableId.indexOf(tid)];
-    C.id.forEach((_, k) => { if (C.parentId[k] === ref) { labels[C.colId[k]] = C.label[k]; types[C.colId[k]] = C.type[k]; } });
+    const T = await grist.docApi.fetchTable('_grist_Tables'), C = await grist.docApi.fetchTable('_grist_Tables_column'), tDe = {}, cDe = {};
+    T.id.forEach((id, k) => { tDe[id] = T.tableId[k]; }); C.id.forEach((id, k) => { cDe[id] = C.colId[k]; });
+    C.id.forEach((_, k) => {
+      const tn = tDe[C.parentId[k]]; if (!tn) return; const cn = C.colId[k];
+      (labelsT[tn] = labelsT[tn] || {})[cn] = C.label[k]; (typesT[tn] = typesT[tn] || {})[cn] = C.type[k];
+      if (C.visibleCol && C.visibleCol[k] && cDe[C.visibleCol[k]]) (visT[tn] = visT[tn] || {})[cn] = cDe[C.visibleCol[k]];
+    });
+    labels = labelsT[tid] || {}; types = typesT[tid] || {};
   } catch (e) { console.warn('Libellés indisponibles', e); }
   await chargerTable();
 }
@@ -393,6 +663,10 @@ async function chargerTable() {
     const t = await grist.docApi.fetchTable(tid), cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_')), m = new Map();
     t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
     allCols = cols; donnees = m; erreurAcces = '';
+    const liees = new Set(Object.values(types).map(refDe).filter(Boolean).map(r => r.table));   // tables des colonnes « Référence »
+    for (const x of liees) {
+      try { const rt = await grist.docApi.fetchTable(x), mm = new Map(); rt.id.forEach((id, k) => { const o = { id }; Object.keys(rt).forEach(c => { if (c !== 'id') o[c] = rt[c][k]; }); mm.set(id, o); }); refTabs[x] = mm; } catch (e) { /* table liée illisible */ }
+    }
   } catch (e) { erreurAcces = String((e && e.message) || e); }
 }
 
@@ -401,7 +675,8 @@ function construire() {
   const mapped = grist.mapColumnNames(lastRec), m = lastMap;
   if (!mapped || !m) { afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>'); return; }
   afficherMsg('');
-  const cFil = [].concat(m.filtres || []).filter(Boolean); cptCols = [].concat(m.compteurs || []).filter(Boolean);
+  const cFil0 = [].concat(m.filtres || []).filter(Boolean); cptCols = [].concat(m.compteurs || []).filter(Boolean);
+  filtresDefs = cfg.filtres.length ? cfg.filtres.filter(f => f.c) : cFil0.map(c => ({ c, nom:'', type:'multi', oui:'Oui' })); const cFil = filtresDefs.map(f => f.c);
   const cTous = [...new Set([...cFil, ...cptCols])];
   const vus = new Set(), presents = new Set(); sansGps = 0;
   lastRec.forEach((raw, i) => {
@@ -410,7 +685,7 @@ function construire() {
     const vals = donnees.get(raw.id) || raw, fv = {};
     cTous.forEach(c => { fv[c] = fmt(c, vals[c]) ?? '(vide)'; });
     const d = { id:raw.id, nom:r.nom, vals, fv, style:styleDe(vals) };
-    vus.add(raw.id); presents.add(d.style.cat);
+    vus.add(raw.id); if (d.style.regles.length) d.style.regles.forEach(i => presents.add(i)); else presents.add(-1);
     let mk = marqueurs.get(raw.id);
     if (mk) mk.setLatLng([lat, lng]);
     else {
@@ -424,21 +699,17 @@ function construire() {
   });
   for (const [id, x] of [...marqueurs]) if (!vus.has(id)) { cluster.removeLayer(x); marqueurs.delete(id); }
 
-  legCats = cfg.regles.map((r, i) => ({ i, r })).filter(x => regleActive(x.r) && presents.has(x.i)).map(x => ({ k:'r' + x.i, label:nomRegle(x.r), couleur:x.r.couleur || cfg.defaut.couleur, forme:x.r.forme || cfg.defaut.forme, emoji:x.r.contenu.t === 'emoji' ? x.r.contenu.e : '' }));
-  if (legCats.length && presents.has(-1)) legCats.push({ k:'r-1', label:'Autres', couleur:cfg.defaut.couleur, forme:cfg.defaut.forme, emoji:'' });
+  legCats = cfg.regles.map((r, i) => ({ i, r })).filter(x => regleActive(x.r) && presents.has(x.i)).map(x => ({ k:'r' + x.i, label:nomRegle(x.r), couleur:x.r.couleur || cfg.defaut.couleur, forme:x.r.forme || cfg.defaut.forme, emoji:x.r.contenu.t === 'emoji' ? x.r.contenu.e : '', bordc:x.r.bordc || cfg.defaut.bordc, borde:x.r.bordc ? x.r.borde : cfg.defaut.borde }));
+  if (legCats.length && presents.has(-1)) legCats.push({ k:'r-1', label:'Autres', couleur:cfg.defaut.couleur, forme:cfg.defaut.forme, emoji:'', bordc:cfg.defaut.bordc, borde:cfg.defaut.borde });
   majLegende();
 
   const valsDe = c => [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 200);
-  const sig = JSON.stringify(cFil.map(c => [c, valsDe(c)]));
-  Object.keys(filtreSel).forEach(c => { if (!cFil.includes(c)) delete filtreSel[c]; else filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
-  if (sig !== sigFiltres) {
-    sigFiltres = sig;
-    document.getElementById('filtres').innerHTML = cFil.map(c => { const sl = new Set(filtreSel[c] || []);
-      return `<details${sl.size ? ' open' : ''}><summary>${esc(libel(c))}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${valsDe(c).map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`; }).join('');
-  }
-  const reg = opt('regrouper', true) !== false; if (reg !== regroupPrec) { cluster.clearLayers(); regroupPrec = reg; }
+  const sig = JSON.stringify(filtresDefs.map(f => [f.c, f.nom, f.type, f.oui, f.type === 'oui' ? 0 : valsDe(f.c)]));
+  Object.keys(filtreSel).forEach(c => { const df = filtresDefs.find(f => f.c === c); if (!df) delete filtreSel[c]; else if (df.type !== 'oui') filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
+  if (sig !== sigFiltres) { sigFiltres = sig; document.getElementById('filtres').innerHTML = filtresDefs.map(f => filtreHtml(f)).join(''); }
+  majCluster();
   appliquerFiltres(); appliquerAffichage();
-  if (ficheId !== null) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
+  if (ficheId !== null && !lieeOuverte) { marqueurs.has(ficheId) ? ouvrirFiche(ficheId, false) : fermerFiche(); }
   if (premierChargement && marqueurs.size) { recentrer(); premierChargement = false; }
 }
 
@@ -447,10 +718,142 @@ grist.onRecord(rec => {
   if (a) a.setIcon(icone(a._cifi, false));
   const m = marqueurs.get(idSelectionne); if (!m) return;
   const ouverte = m.isPopupOpen(); m.setIcon(icone(m._cifi, true));
-  if (!ouverte && cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
+  if (!ouverte && cluster.hasLayer(m)) montrer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 });
 
-/* ================= FENÊTRE « CONFIGURER LE WIDGET » ================= */
+/* ================= PROGRESSION ================= */
+const progPanel = document.createElement('aside'); progPanel.id = 'prog-panel'; progPanel.setAttribute('aria-label', 'Progression'); progPanel.setAttribute('aria-hidden', 'true'); document.body.appendChild(progPanel);
+let progOuvert = false, progInd = 0;
+const nbVal = v => { const n = Number(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+function ouvrirProg() { fermerFiche(); fermerIti(); progOuvert = true; progDessiner(); progPanel.classList.add('ouvert'); progPanel.setAttribute('aria-hidden', 'false'); }
+function fermerProg() { progOuvert = false; progPanel.classList.remove('ouvert'); progPanel.setAttribute('aria-hidden', 'true'); }
+function progDessiner() {
+  const P = cfg.prog, I = P.inds[progInd] || P.inds[0];
+  const tete = '<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-p="fermer" aria-label="Fermer">✕</button><h2>Progression</h2></div>';
+  if (!I || !I.grp || !I.fait || !I.att) { progPanel.innerHTML = tete + '<div class="fp-corps"><p class="vide">Aucun indicateur configuré. Ouvrez « Configurer le widget », onglet Progression : choisissez la colonne de regroupement, les contrôles réalisés et les contrôles attendus.</p></div>'; return; }
+  const lignes = P.suivre ? [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m._cifi.vals) : (donnees.size ? [...donnees.values()] : [...marqueurs.values()].map(m => m._cifi.vals));
+  const g = new Map(); let tf = 0, ta = 0;
+  lignes.forEach(v => { const k = fmt(I.grp, v[I.grp]) ?? '(vide)', o = g.get(k) || { nom:k, f:0, a:0 }, f = nbVal(v[I.fait]), a = nbVal(v[I.att]); o.f += f; o.a += a; g.set(k, o); tf += f; ta += a; });
+  const pct = (f, a) => a > 0 ? f / a * 100 : null, coul = p => p === null ? '#9aa5b1' : p >= I.vert ? '#2a9d8f' : p >= I.orange ? '#f4821f' : '#c1121f';
+  const ligne = (nom, f, a, cls) => { const p = pct(f, a); return `<div class="prog-l${cls || ''}" data-g="${esc(nom)}"><div class="prog-t"><span>${esc(nom)}</span><span>${f} / ${a} · ${p === null ? '—' : Math.round(p) + ' %'}</span></div><div class="prog-b"><i style="width:${p === null ? 0 : Math.min(100, p)}%;background:${coul(p)}"></i></div></div>`; };
+  const rows = [...g.values()].sort((x, y) => P.tri === 'nom' ? String(x.nom).localeCompare(String(y.nom), 'fr') : ((pct(x.f, x.a) ?? -1) - (pct(y.f, y.a) ?? -1)) * (P.tri === 'asc' ? 1 : -1));
+  progPanel.innerHTML = tete + `<div class="fp-corps">${P.inds.length > 1 ? `<label style="font-size:13px">Indicateur <select id="prog-ind">${P.inds.map((x, i) => `<option value="${i}"${x === I ? ' selected' : ''}>${esc(x.nom || 'Indicateur ' + (i + 1))}</option>`).join('')}</select></label>` : ''}
+    <p class="vide" style="font-size:12px">${esc(libel(I.fait))} sur ${esc(libel(I.att))}, par ${esc(libel(I.grp))}${P.suivre ? ' · selon les filtres en cours' : ''}. Orange dès ${I.orange} %, vert dès ${I.vert} %.</p>
+    ${ligne('Ensemble', tf, ta, ' ens')}${rows.map(r => ligne(r.nom, r.f, r.a)).join('') || '<p class="vide">Aucune donnée.</p>'}</div>`;
+}
+progPanel.addEventListener('click', e => {
+  if (e.target.closest('[data-p="fermer"]')) { fermerProg(); return; }
+  const l = e.target.closest('.prog-l[data-g]'), I = cfg.prog.inds[progInd] || cfg.prog.inds[0];
+  if (l && !l.classList.contains('ens') && cfg.prog.clic && I && filtresDefs.some(f => f.c === I.grp && f.type !== 'oui')) { filtreSel[I.grp] = [l.dataset.g]; sigFiltres = ''; construire(); }
+});
+progPanel.addEventListener('change', e => { if (e.target.id === 'prog-ind') { progInd = +e.target.value || 0; progDessiner(); } });
+
+/* ================= ITINÉRAIRE DE CONTRÔLE ================= */
+const itiPanel = document.createElement('aside'); itiPanel.id = 'iti-panel'; itiPanel.setAttribute('aria-label', 'Préparation d’un itinéraire'); itiPanel.setAttribute('aria-hidden', 'true'); document.body.appendChild(itiPanel);
+const iti = { ids:[], mode:'car', retour:false, depart:null, legs:[], total:null, msg:'' };
+const itiRoute = L.featureGroup().addTo(map), itiPts = L.layerGroup().addTo(map);
+let attendDepart = false;
+const hav = (a, b) => { const t = Math.PI / 180, dl = (b.lat - a.lat) * t, dn = (b.lng - a.lng) * t, x = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dn / 2) ** 2; return 12742000 * Math.asin(Math.sqrt(x)); };
+const ptDe = id => { const m = marqueurs.get(id); return m ? m.getLatLng() : null; };
+const nomDe = id => { const m = marqueurs.get(id); return m ? (m._cifi.nom || 'Sans nom') : '(supprimé)'; };
+const fmtDist = m => m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(m) + ' m';
+const fmtDuree = s => { const m = Math.round(s / 60); return m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') : m + ' min'; };
+function itiReset() { iti.legs = []; iti.total = null; iti.msg = ''; itiRoute.clearLayers(); }
+function itiAjouter(ids) { ids.forEach(id => { if (!iti.ids.includes(id) && marqueurs.has(id)) iti.ids.push(id); }); itiReset(); ouvrirIti(); }
+function ouvrirIti() { fermerFiche(); fermerProg(); itiDessiner(); itiPanel.classList.add('ouvert'); itiPanel.setAttribute('aria-hidden', 'false'); }
+function fermerIti() { attendDepart = false; itiPanel.classList.remove('ouvert'); itiPanel.setAttribute('aria-hidden', 'true'); }
+function itiMarques() {
+  itiPts.clearLayers();
+  iti.ids.forEach((id, k) => { const p = ptDe(id); if (p) L.marker(p, { icon:L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[26,26], html:`<div class="iti-num">${k + 1}</div>` }), interactive:false, zIndexOffset:1000 }).addTo(itiPts); });
+  if (iti.depart) L.marker(iti.depart, { icon:L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[4,22], html:'<div style="font-size:22px;line-height:24px">🏁</div>' }), interactive:false, zIndexOffset:1000 }).addTo(itiPts);
+}
+function itiDessiner() {
+  const legDe = k => iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined;
+  const info = l => l === undefined ? '' : l === null ? '<small>Trajet non calculé</small>' : `<small>${fmtDist(l.d)} · ${fmtDuree(l.t)}</small>`;
+  const retourLeg = iti.retour && iti.legs.length ? iti.legs[iti.legs.length - 1] : undefined;
+  itiPanel.innerHTML = `<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-i="fermer" aria-label="Fermer">✕</button><h2>Itinéraire de contrôle</h2></div>
+    <div class="fp-corps">
+      <div class="iti-ligne"><label><input type="radio" name="itimode" value="car"${iti.mode === 'car' ? ' checked' : ''}> 🚗 Voiture</label><label><input type="radio" name="itimode" value="pedestrian"${iti.mode === 'pedestrian' ? ' checked' : ''}> 🚶 À pied</label></div>
+      <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> Revenir au point de départ</label>
+      <div style="margin-top:8px;font-size:14px">Départ : ${iti.depart ? '🏁 point choisi sur la carte <button type="button" data-i="deldep" class="iti-btn2">✕</button>' : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier établissement de la liste'} <button type="button" data-i="dep" class="iti-btn2">Choisir sur la carte</button></div>
+      <div class="iti-actions"><button type="button" data-i="tous">＋ Tous les points visibles</button><button type="button" data-i="opt">Optimiser l’ordre</button><button type="button" data-i="calc" class="prim">Calculer l’itinéraire</button><button type="button" data-i="vider">Vider</button></div>
+      ${iti.msg ? `<p class="vide" style="font-size:13px">${esc(iti.msg)}</p>` : ''}
+      ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : '<p class="vide">Ajoutez des établissements : bouton « ＋ Itinéraire » dans le popup, ou « Tous les points visibles » (après vos filtres).</p>'}
+      ${iti.total ? `<div class="iti-total">Total : ${fmtDist(iti.total.d)} · ${fmtDuree(iti.total.t)}</div>` : ''}
+    </div><div class="fp-pied"><button type="button" class="iti-btn2" data-i="copier">Copier la feuille de route</button> <button type="button" class="iti-btn2" data-i="imprimer">Imprimer</button></div>`;
+  itiMarques();
+}
+function itiOptimiser() {
+  if (iti.ids.length < 2) return;
+  const dep = iti.depart; let reste = iti.ids.slice(), ordre = [], cur = dep || ptDe(reste[0]);
+  if (!dep) ordre.push(reste.shift());
+  while (reste.length) { let bi = 0, bd = Infinity; reste.forEach((id, i) => { const d = hav(cur, ptDe(id)); if (d < bd) { bd = d; bi = i; } }); const id = reste.splice(bi, 1)[0]; ordre.push(id); cur = ptDe(id); }
+  const longueur = o => { const a = (dep ? [dep] : []).concat(o.map(ptDe)); if (iti.retour) a.push(a[0]); let t = 0; for (let i = 1; i < a.length; i++) t += hav(a[i - 1], a[i]); return t; };
+  let mieux = true, tours = 0;   // amélioration locale (2-opt)
+  while (mieux && tours++ < 40) { mieux = false;
+    for (let i = dep ? 0 : 1; i < ordre.length - 1; i++) for (let j = i + 1; j < ordre.length; j++) {
+      const n = ordre.slice(0, i).concat(ordre.slice(i, j + 1).reverse(), ordre.slice(j + 1));
+      if (longueur(n) < longueur(ordre) - 1) { ordre = n; mieux = true; }
+    } }
+  iti.ids = ordre; itiReset();
+}
+async function itiCalculer() {
+  if (iti.ids.length < (iti.depart ? 1 : 2)) { iti.msg = 'Ajoutez au moins 2 établissements (ou 1 établissement et un départ).'; itiDessiner(); return; }
+  iti.msg = 'Calcul en cours…'; itiDessiner(); itiRoute.clearLayers();
+  const url = String(opt('iti_url', 'https://data.geopf.fr/navigation/itineraire')), res = String(opt('iti_resource', 'bdtopo-osrm'));
+  const pts = (iti.depart ? [iti.depart] : []).concat(iti.ids.map(ptDe)); if (iti.retour) pts.push(pts[0]);
+  const legs = []; let td = 0, tt = 0, ko = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    try {
+      const r = await fetch(`${url}?resource=${encodeURIComponent(res)}&start=${a.lng},${a.lat}&end=${b.lng},${b.lat}&profile=${iti.mode}&optimization=fastest&geometryFormat=geojson&getSteps=false&distanceUnit=meter&timeUnit=second`);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(), d = (+j.distance || 0) * (j.distanceUnit === 'kilometer' ? 1000 : 1), t = (+j.duration || 0) * (j.timeUnit === 'hour' ? 3600 : j.timeUnit === 'minute' ? 60 : 1);
+      legs.push({ d, t }); td += d; tt += t;
+      if (j.geometry) L.geoJSON(j.geometry, { style:{ color: iti.mode === 'car' ? '#1f4e8c' : '#2a9d8f', weight:5, opacity:.85, dashArray: iti.mode === 'car' ? null : '2 8', lineCap:'round' }, interactive:false }).addTo(itiRoute);
+    } catch (e) { legs.push(null); ko++; }
+    await new Promise(ok => setTimeout(ok, 230));   // le service accepte 5 requêtes par seconde
+  }
+  iti.legs = legs; iti.total = { d:td, t:tt };
+  iti.msg = ko ? `${ko} trajet(s) non calculé(s) : service injoignable ou point hors du réseau routier.` : '';
+  itiDessiner(); if (itiRoute.getLayers().length) map.fitBounds(itiRoute.getBounds(), { padding:[50,50] });
+}
+function itiTexte() {
+  const l = [`Itinéraire de contrôle – ${iti.mode === 'car' ? 'voiture' : 'à pied'}`];
+  iti.ids.forEach((id, k) => { const g = iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined; l.push(`${k + 1}. ${nomDe(id)}${g ? ` (${fmtDist(g.d)}, ${fmtDuree(g.t)})` : ''}`); });
+  if (iti.total) l.push(`Total : ${fmtDist(iti.total.d)}, ${fmtDuree(iti.total.t)}`);
+  return l.join('\n');
+}
+function itiCopier(b) {
+  const txt = itiTexte(), ok = () => { b.textContent = '✓ Copié'; };
+  const secours = () => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) { alert(txt); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, secours); else secours();
+}
+function itiImprimer() { document.body.classList.add('imprime-iti'); try { window.print(); } finally { document.body.classList.remove('imprime-iti'); } }
+itiPanel.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return; const a = b.dataset.i, k = +b.dataset.k;
+  switch (a) {
+    case 'fermer': fermerIti(); return;
+    case 'tous': itiAjouter([...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((x, y) => String(x._cifi.nom).localeCompare(String(y._cifi.nom), 'fr')).map(m => m._cifi.id)); return;
+    case 'vider': iti.ids = []; itiReset(); break;
+    case 'up': case 'down': { const j = k + (a === 'up' ? -1 : 1); if (j >= 0 && j < iti.ids.length) { [iti.ids[k], iti.ids[j]] = [iti.ids[j], iti.ids[k]]; itiReset(); } break; }
+    case 'del': iti.ids.splice(k, 1); itiReset(); break;
+    case 'opt': itiOptimiser(); break;
+    case 'calc': itiCalculer(); return;
+    case 'dep': attendDepart = true; map.once('click', e2 => { if (!attendDepart) return; attendDepart = false; iti.depart = e2.latlng; itiReset(); itiDessiner(); }); break;
+    case 'deldep': iti.depart = null; itiReset(); break;
+    case 'copier': itiCopier(b); return;
+    case 'imprimer': itiImprimer(); return;
+    default: return;
+  }
+  itiDessiner();
+});
+itiPanel.addEventListener('change', e => {
+  const t = e.target;
+  if (t.name === 'itimode') { iti.mode = t.value; itiReset(); itiDessiner(); }
+  if (t.id === 'iti-retour') { iti.retour = t.checked; itiReset(); itiDessiner(); }
+});
+
 const modal = document.createElement('div'); modal.id = 'reglages'; document.body.appendChild(modal);
 let onglet = 'points', minuteur, etatSauv = '';
 const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
@@ -461,42 +864,135 @@ const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab
 
 function blocListe(g) {
   const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
+  const cb = (a, at, v, t) => `<label><input type="checkbox" data-a="${a}" ${at}${v ? ' checked' : ''}> ${t}</label>`;
   return `<ul>${l.map((x, i) => { const at = `data-g="${g}" data-i="${i}"`; return `<li><div class="rg-l1"><span class="nomcol">${esc(libel(x.c))}</span>${btn('up', at, '▲', 'Monter')}${btn('down', at, '▼', 'Descendre')}${btn('del', at, '✕', 'Retirer')}</div>
-    <div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché">
-    <label><input type="checkbox" data-a="gn" ${at}${x.gn ? ' checked' : ''}> nom en gras</label>
-    <select data-a="vs" ${at} aria-label="Forme de la valeur">${Object.entries(STYLES).map(([v, t]) => `<option value="${v}"${x.vs === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></li>`; }).join('')}</ul>
+    <div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché"></div>
+    <div class="rg-l2"><b class="rg-lab">Nom</b>${cb('gn', at, x.gn, 'gras')}${cb('gi', at, x.gi, 'italique')}<b class="rg-lab">Valeur</b>${cb('vg', at, x.vg, 'gras')}${cb('vi', at, x.vi, 'italique')}${cb('vb', at, x.vb, 'pastille')}
+    <select data-a="ta" ${at} aria-label="Taille du texte">${[['', 'Taille normale'], ['p', 'Petite'], ['g', 'Grande'], ['tg', 'Très grande']].map(([v, t]) => `<option value="${v}"${(x.ta || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+    <div class="rg-l2"><label><input type="checkbox" data-a="cn-on" ${at}${x.cn ? ' checked' : ''}> Couleur du nom</label><input type="color" data-a="cn" ${at} value="${x.cn || '#1d2733'}"${x.cn ? '' : ' disabled'} aria-label="Couleur du nom">
+      <label><input type="checkbox" data-a="cw-on" ${at}${x.cw ? ' checked' : ''}> Couleur de la valeur</label><input type="color" data-a="cw" ${at} value="${x.cw || '#1d2733'}"${x.cw ? '' : ' disabled'} aria-label="Couleur de la valeur"></div></li>`; }).join('')}</ul>
     <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
 }
 function carteRegle(r, i) {
   const R = `data-r="${i}"`;
-  return `<section><div class="rg-sec"><input type="text" value="${esc(r.nom)}" placeholder="Nom dans la légende (facultatif)" data-a="rnom" ${R}>${btn('rup', R, '▲', 'Monter')}${btn('rdown', R, '▼', 'Descendre')}${btn('rdel', R, 'Supprimer')}</div>
+  return `<details class="regle" ${R}${r.o ? ' open' : ''}><summary>${swatch(r.forme || cfg.defaut.forme, r.couleur || cfg.defaut.couleur, r.contenu.t === 'emoji' ? r.contenu.e : '', r.bordc || cfg.defaut.bordc, r.bordc ? r.borde : cfg.defaut.borde)}<span class="rg-nom">${esc(nomRegle(r))}</span><span class="rg-btns">${btn('rup', R, '▲', 'Monter')}${btn('rdown', R, '▼', 'Descendre')}${btn('rdel', R, '✕', 'Supprimer la règle')}</span></summary>
+    <div class="rg-corps-r"><div class="rg-sous">Nom dans la légende</div><div class="rg-l2"><input type="text" value="${esc(r.nom)}" placeholder="facultatif" data-a="rnom" ${R} aria-label="Nom dans la légende"></div>
     <div class="rg-sous">Si</div>
     ${r.si.map((k, j) => { const K = `${R} data-k="${j}"`; return `<div class="rg-l2">${selCol(`data-a="cc" ${K}`, k.c)}<select data-a="co" ${K} aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" data-a="cv" ${K} value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}${btn('cdel', K, '✕', 'Retirer la condition')}</div>`; }).join('')}
     ${btn('cadd', R, '+ condition (ET)')}
     <div class="rg-sous">Alors</div>
     <div class="rg-l2"><label><input type="checkbox" data-a="rc-on" ${R}${r.couleur ? ' checked' : ''}> Couleur</label><input type="color" data-a="rc" ${R} value="${r.couleur || '#c1121f'}"${r.couleur ? '' : ' disabled'} aria-label="Couleur">
       <label><input type="checkbox" data-a="rf-on" ${R}${r.forme ? ' checked' : ''}> Forme</label>${selForme(`data-a="rf" ${R}`, r.forme || 'rond', !r.forme)}</div>
+    <div class="rg-l2"><label><input type="checkbox" data-a="rd-on" ${R}${r.bordc ? ' checked' : ''}> Bordure</label><input type="color" data-a="rdc" ${R} value="${r.bordc || '#1d2733'}"${r.bordc ? '' : ' disabled'} aria-label="Couleur de la bordure"><input type="number" min="0" max="8" data-a="rde" ${R} value="${r.borde}"${r.bordc ? '' : ' disabled'} style="width:56px" aria-label="Épaisseur de la bordure"> px</div>
     <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
-      ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div></section>`;
+      ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c)     : ''}</div>
+    <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option><option value="signal"${r.bulle.t === 'signal' ? ' selected' : ''}>Signal pulsé seul</option></select>
+      ${r.bulle.t && r.bulle.t !== 'signal' ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À contrôler" style="max-width:150px" aria-label="Texte de la bulle">`) : ''}
+      ${r.bulle.t ? `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` + (r.bulle.t !== 'signal' ? `<label><input type="checkbox" data-a="rbp" ${R}${r.bulle.pulse ? ' checked' : ''}> pulsé</label>` : '') : ''}</div></div></details>`;
+}
+function blocFiltres() {
+  const selC = (at, v) => `<select ${at} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
+  return `<p class="vide" style="font-size:12px">Créez ici les filtres proposés dans le panneau de gauche. Si cette liste est vide, ce sont les colonnes « Filtres » du panneau de droite de Grist qui sont utilisées (choix multiples).</p>
+    ${cfg.filtres.map((f, i) => { const A = `data-a="fl" data-i="${i}"`, I = `data-i="${i}"`; return `<section><div class="rg-sec">${selC(`${A} data-f="c"`, f.c)}${btn('fl-up', I, '▲', 'Monter')}${btn('fl-down', I, '▼', 'Descendre')}${btn('fl-del', I, '✕', 'Supprimer')}</div>
+      <div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(f.nom)}" placeholder="Nom affiché (par défaut : ${esc(f.c ? libel(f.c) : 'nom de la colonne')})" aria-label="Nom affiché"></div>
+      <div class="rg-l2"><select ${A} data-f="type" aria-label="Type de filtre"><option value="multi"${f.type === 'multi' ? ' selected' : ''}>Choix multiples (cases à cocher)</option><option value="unique"${f.type === 'unique' ? ' selected' : ''}>Choix unique (liste déroulante)</option><option value="oui"${f.type === 'oui' ? ' selected' : ''}>Oui / non : seulement les « oui »</option></select>
+      ${f.type === 'oui' ? `<label>Valeur « oui » <input type="text" ${A} data-f="oui" value="${esc(f.oui)}" style="max-width:110px"></label>` : ''}</div></section>`; }).join('')}
+    <button type="button" class="rg-ajout" data-a="fl-add">+ Ajouter un filtre</button>`;
+}
+function blocProg() {
+  const P = cfg.prog;
+  return `<section><h3>Options</h3>
+    <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Tenir compte des filtres en cours</label>
+    <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre filtre la carte (si la colonne de regroupement est un filtre)</label>
+    <label>Tri <select data-a="pg" data-f="tri">${[['nom', 'Par nom'], ['asc', 'Avancement croissant'], ['desc', 'Avancement décroissant']].map(([v, t]) => `<option value="${v}"${P.tri === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></section>
+    ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`; return `<section><div class="rg-sec"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur (ex. Contrôles 2026)">${btn('pi-del', `data-i="${i}"`, 'Supprimer')}</div>
+      <label>Regrouper par ${selCol(`${A} data-f="grp"`, x.grp)}</label>
+      <label>Contrôles réalisés (colonne numérique) ${selCol(`${A} data-f="fait"`, x.fait)}</label>
+      <label>Contrôles attendus (colonne numérique) ${selCol(`${A} data-f="att"`, x.att)}</label>
+      <label>Orange à partir de <input type="number" min="0" max="200" ${A} data-f="orange" value="${x.orange}" style="width:64px"> % · vert à partir de <input type="number" min="0" max="200" ${A} data-f="vert" value="${x.vert}" style="width:64px"> %</label></section>`; }).join('')}
+    <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
+}
+function blocCalques() {
+  return `<p class="vide" style="font-size:12px">Les calques s’ajoutent au sélecteur de fonds de carte (en haut à droite). L’ordre de la liste est l’ordre de superposition : le dernier est au-dessus.</p>
+    <datalist id="ign-liste">${Object.keys(IGN_COUCHES).map(k => `<option value="${esc(k)}">`).join('')}</datalist>
+    ${cfg.calques.map((q, i) => { const A = `data-a="cq" data-i="${i}"`, I = `data-i="${i}"`; return `<section><div class="rg-sec"><input type="text" ${A} data-f="nom" value="${esc(q.nom)}" placeholder="Nom du calque">${btn('cq-up', I, '▲', 'Monter')}${btn('cq-down', I, '▼', 'Descendre')}${btn('cq-del', I, '✕', 'Supprimer')}</div>
+      <div class="rg-l2"><select ${A} data-f="type" aria-label="Type de calque"><option value="ign"${q.type === 'ign' ? ' selected' : ''}>Couche de la Géoplateforme IGN</option><option value="geojson"${q.type === 'geojson' ? ' selected' : ''}>Fichier GeoJSON local</option></select></div>
+      ${q.type === 'ign' ? `<div class="rg-l2"><input type="text" list="ign-liste" ${A} data-f="src" value="${esc(q.src)}" placeholder="Choisir ou saisir un identifiant de couche IGN" style="min-width:230px" aria-label="Couche IGN"><select ${A} data-f="fmt" aria-label="Format"><option value="png"${q.fmt === 'png' ? ' selected' : ''}>PNG (transparent)</option><option value="jpeg"${q.fmt === 'jpeg' ? ' selected' : ''}>JPEG</option></select></div>`
+        : `<div class="rg-l2"><input type="text" ${A} data-f="src" value="${esc(q.src)}" placeholder="nom du fichier, sans .geojson (dossier lib/calques)" style="min-width:230px" aria-label="Fichier GeoJSON"></div>
+      <div class="rg-l2"><label>Contour <input type="color" ${A} data-f="coul" value="${q.coul}"></label><label>Remplissage <input type="color" ${A} data-f="fill" value="${q.fill}"></label><label>Épaisseur <input type="number" min="0" max="8" ${A} data-f="ep" value="${q.ep}" style="width:56px"> px</label></div>`}
+      <div class="rg-l2"><label>Opacité <input type="number" min="0" max="100" ${A} data-f="opac" value="${q.opac}" style="width:64px"> %</label><label><input type="checkbox" ${A} data-f="on"${q.on ? ' checked' : ''}> Affiché par défaut</label></div></section>`; }).join('')}
+    <button type="button" class="rg-ajout" data-a="cq-add">+ Ajouter un calque</button>`;
+}
+function blocEtiquette(k, titre) {
+  const e = cfg.etiquettes[k], D = `data-a="et" data-ek="${k}"`, S = (f, ch, v) => `<select ${D} data-f="${f}">${ch.map(([val, t]) => `<option value="${val}"${val === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  return `<section><h3>${titre}</h3>
+    <label>Forme ${S('forme', [['point', 'Identique au point'], ['rond', 'Rond'], ['goutte', 'Goutte'], ['carre', 'Carré'], ['losange', 'Losange'], ['triangle', 'Triangle'], ['aucune', 'Aucune étiquette']], e.forme)}</label>
+    <label>Couleur ${S('couleur', [['point', 'Identique au point'], ['fixe', 'Couleur fixe']], e.couleur)} ${e.couleur === 'fixe' ? `<input type="color" ${D} data-f="coul" value="${e.coul}" aria-label="Couleur">` : ''}</label>
+    <label>Contenu ${S('contenu', [['point', 'Identique au point'], ['rien', 'Rien'], ['texte', 'Texte ou emoji fixe']].concat(k === 'liste' ? [['colonne', 'Valeur d’une colonne']] : []), e.contenu)}
+      ${e.contenu === 'texte' ? `<input type="text" ${D} data-f="texte" value="${esc(e.texte)}" placeholder="ex. ● ou AF" style="max-width:110px" aria-label="Texte">` : e.contenu === 'colonne' ? `<select ${D} data-f="col"><option value="">Choisir…</option>${allCols.map(c => `<option value="${esc(c)}"${c === e.col ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>` : ''}</label>
+    <label>Bordure ${S('bord', [['point', 'Identique au point'], ['perso', 'Personnalisée']], e.bord)} ${e.bord === 'perso' ? `<input type="color" ${D} data-f="bordc" value="${e.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" ${D} data-f="borde" value="${e.borde}" style="width:56px" aria-label="Épaisseur"> px` : ''}</label>
+    <label>Taille <input type="number" min="12" max="44" ${D} data-f="taille" value="${e.taille}"> px</label></section>`;
+}
+function blocBarre() {
+  const b = cfg.barre, D = 'data-a="bb"', noms = { zoomin:'Zoom avant (+)', zoomout:'Zoom arrière (−)', tout:'Voir tous les points', legende:'Légende', iti:'Préparer un itinéraire', prog:'Voir la progression' };
+  return `<section><h3>Apparence de la barre</h3>
+    <label>Emplacement <select ${D} data-f="pos">${Object.keys(BARRE_POS).map(p => `<option${p === b.pos ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
+    <label>Taille des boutons <input type="number" min="26" max="60" ${D} data-f="taille" value="${b.taille}"> px</label>
+    <label>Forme <select ${D} data-f="forme">${[['carre', 'Carré'], ['arrondi', 'Coins arrondis'], ['rond', 'Rond']].map(([v, t]) => `<option value="${v}"${v === b.forme ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label>Fond <input type="color" ${D} data-f="fond" value="${b.fond}"> Icône <input type="color" ${D} data-f="coul" value="${b.coul}"></label>
+    <label>Bordure <input type="color" ${D} data-f="bordc" value="${b.bordc}"> <input type="number" min="0" max="4" ${D} data-f="borde" value="${b.borde}" style="width:56px"> px</label>
+    <label><input type="checkbox" ${D} data-f="ombre"${b.ombre ? ' checked' : ''}> Ombre</label></section>
+    <section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche. Le symbole peut être un caractère ou un emoji (vide = icône par défaut).</p>
+    <ul>${b.boutons.map(x => { const E = `data-e="${x.id}"`; return `<li class="rg-ord"><div class="rg-l1"><label><input type="checkbox" data-a="bb-b" ${E} data-f="on"${x.on ? ' checked' : ''}> <b>${noms[x.id]}</b></label>${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}</div>
+      <div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Infobulle" aria-label="Infobulle"></div></li>`; }).join('')}</ul></section>`;
+}
+function blocEntete(k) {
+  const h = cfg.entetes[k], D = `data-a="eh" data-h="${k}"`, opts_ = (val, vide) => `<option value="">${vide}</option>` + allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('');
+  return `<section><h3>En-tête ${k === 'popup' ? 'du popup' : 'de la fiche'}</h3>
+    <label>Titre <select ${D} data-f="titre">${opts_(h.titre, 'Nom de l’établissement')}</select></label>
+    <label>Sous-titre <select ${D} data-f="sous">${opts_(h.sous, 'Aucun')}</select></label>
+    <label><input type="checkbox" ${D} data-f="etiq"${h.etiq ? ' checked' : ''}> Afficher l’étiquette de la règle (ex. « Critique »)</label>
+    <label>Fond <select ${D} data-f="fond"><option value="neutre"${h.fond === 'neutre' ? ' selected' : ''}>Gris clair</option><option value="point"${h.fond === 'point' ? ' selected' : ''}>Couleur du point</option><option value="perso"${h.fond === 'perso' ? ' selected' : ''}>Couleur personnalisée</option></select>
+      ${h.fond === 'perso' ? `<input type="color" ${D} data-f="fondc" value="${h.fondc}" aria-label="Couleur du fond">` : ''}</label>
+    <label><input type="checkbox" data-a="eh-txt-on" data-h="${k}"${h.txtc ? ' checked' : ''}> Couleur du titre <input type="color" ${D} data-f="txtc" value="${h.txtc || '#1d2733'}"${h.txtc ? '' : ' disabled'} aria-label="Couleur du titre"></label>
+    <label>Taille du titre (0 = automatique) <input type="number" min="0" max="30" ${D} data-f="taille" value="${h.taille}"> px</label></section>`;
 }
 function contenuOnglet() {
-  if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label></div></section>
+  if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label><label>Bordure <input type="color" data-a="defbc" value="${cfg.defaut.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" data-a="defbe" value="${cfg.defaut.borde}" style="width:56px" aria-label="Épaisseur de la bordure"> px</label></div></section>
     <p class="vide" style="font-size:12px">Chaque règle s’applique aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
     ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button>`;
-  if (onglet === 'popup') return `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
-  if (onglet === 'fiche') return cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section" placeholder="Nom de la section">${btn('sup', `data-g="${i}"`, '▲', 'Monter')}${btn('sdown', `data-g="${i}"`, '▼', 'Descendre')}${btn('sdel', `data-g="${i}"`, 'Supprimer')}</div>${blocListe(String(i))}</section>`).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
+  if (onglet === 'popup') return blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
+  if (onglet === 'fiche') return blocEntete('fiche') + cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section" placeholder="Nom de la section">${btn('sup', `data-g="${i}"`, '▲', 'Monter')}${btn('sdown', `data-g="${i}"`, '▼', 'Descendre')}${btn('sdel', `data-g="${i}"`, 'Supprimer')}</div>${blocListe(String(i))}</section>`).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
+  if (onglet === 'barre') return blocBarre();
+  if (onglet === 'filtres') return blocFiltres();
+  if (onglet === 'prog') return blocProg();
+  if (onglet === 'calques') return blocCalques();
   const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende']];
-  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Cochez les éléments à proposer à vos utilisateurs. La liste et la légende peuvent aussi être dépliées ou repliées par défaut.</p>
-    ${elts.map(([k, t]) => `<label><input type="checkbox" data-o="aff_${k}"${opt('aff_' + k, true) !== false ? ' checked' : ''}> ${t} affiché${k === 'liste' || k === 'legende' ? `<span style="margin-left:18px"><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</span>` : ''}</label>`).join('')}</section>
+  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
+  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Cochez les éléments à proposer, changez leur ordre avec ▲ ▼ et modifiez leurs textes. Le panneau défile si les éléments dépassent la hauteur du widget.</p>
+    <ul>${cfg.ordre.map(k => { const E = `data-e="${k}"`, L_ = LIB[k]; return `<li class="rg-ord"><div class="rg-l1"><label><input type="checkbox" data-o="aff_${k}"${opt('aff_' + k, true) !== false ? ' checked' : ''}> <b>${ELTS_GAUCHE[k]}</b></label>${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}</div>
+      ${L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(opt(L_[0], L_[1]))}" placeholder="Texte affiché" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : ''}
+      ${k === 'liste' || k === 'legende' ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : ''}</li>`; }).join('')}</ul></section>
+    <section><h3>Apparence</h3>
+    <label>Police d’écriture ${sl('police', Object.keys(POLICES))}</label>
+    <p class="vide" style="font-size:12px;margin:0 0 4px">La police Marianne s’affiche si elle est installée sur le poste, ou si ses fichiers sont placés dans le dossier lib/fonts du widget.</p>
+    <label>Emplacement de la recherche de commune ${sl('pos_commune', POS_COMMUNE)}</label>
+    <label>Largeur du panneau de gauche <input type="number" min="220" max="520" data-o="largeur_gauche" value="${+opt('largeur_gauche', 300)}"> px</label></section>
+    ${blocEtiquette('liste', 'Étiquette devant le nom (liste des établissements)')}
+    ${blocEtiquette('legende', 'Étiquette de la légende')}
+    <section><h3>Itinéraire</h3><label>Adresse du service de calcul d’itinéraire <input type="text" data-o="iti_url" value="${esc(opt('iti_url', 'https://data.geopf.fr/navigation/itineraire'))}"></label>
+    <label>Ressource <input type="text" data-o="iti_resource" value="${esc(opt('iti_resource', 'bdtopo-osrm'))}"></label></section>
     <section><h3>Fiche et points</h3><label>Sections dépliées à l’ouverture ${sl('ouverture', ['Première section', 'Toutes', 'Aucune'])}</label>
-    <label><input type="checkbox" data-o="regrouper"${opt('regrouper', true) !== false ? ' checked' : ''}> Regrouper les points proches</label>
-    <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label></section>`;
+    <label>Regroupement des points ${sl('regroupement', [MODE_PROCHES, MODE_AUCUN, MODE_CLASSIQUE])}</label>
+    <label>Distance de regroupement (points plus proches que cette distance) <input type="number" min="5" max="5000" step="5" data-o="distance_m" value="${+opt('distance_m', 100)}"> m</label>
+    <label>Taille des points <input type="number" min="16" max="48" data-o="taille" value="${+opt('taille', 30)}"> px</label>
+    <label>Taille du texte du popup <input type="number" min="10" max="22" data-o="taille_popup" value="${+opt('taille_popup', 13)}"> px</label>
+    <label>Taille du texte de la fiche <input type="number" min="10" max="24" data-o="taille_fiche" value="${+opt('taille_fiche', 14)}"> px</label></section>`;
 }
 function dessiner() {
   const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
   modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><span id="rg-etat" class="rg-etat">${esc(etatSauv)}</span>${btn('fermer', '', 'Fermer')}</div>
-    <div class="rg-onglets">${[['points', 'Affichage des points'], ['popup', 'Popup'], ['fiche', 'Fiche'], ['general', 'Général']].map(([k, t]) => `<button type="button" data-a="onglet" data-t="${k}" aria-pressed="${onglet === k}">${t}</button>`).join('')}</div>
+    <div class="rg-onglets">${[['points', 'Affichage des points'], ['popup', 'Popup'], ['fiche', 'Fiche'], ['filtres', 'Filtres'], ['prog', 'Progression'], ['calques', 'Calques'], ['barre', 'Barre de boutons'], ['general', 'Général']].map(([k, t]) => `<button type="button" data-a="onglet" data-t="${k}" aria-pressed="${onglet === k}">${t}</button>`).join('')}</div>
     <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est en « Accès complet » dans le panneau de droite de Grist.</p>` : ''}${contenuOnglet()}</div></div>`;
   modal.querySelector('.rg-corps').scrollTop = y;
 }
@@ -523,11 +1019,21 @@ modal.addEventListener('click', e => {
     case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
     case 'sdel': if (!confirm('Supprimer cette section ?')) return; cfg.sections.splice(+g, 1); break;
     case 'sadd': cfg.sections.push({ nom:'Nouvelle section', cols:[] }); break;
-    case 'radd': cfg.regles.push(nRegle({ si:[{ c:'', op:'=', v:'' }], couleur:'#c1121f' })); break;
+    case 'radd': cfg.regles.push(nRegle({ o:true, si:[{ c:'', op:'=', v:'' }], couleur:'#c1121f' })); break;
     case 'rup': case 'rdown': deplacer(cfg.regles, r, a === 'rup' ? -1 : 1); break;
     case 'rdel': cfg.regles.splice(r, 1); break;
     case 'cadd': cfg.regles[r].si.push({ c:'', op:'=', v:'' }); break;
     case 'cdel': cfg.regles[r].si.splice(k, 1); break;
+    case 'fl-add': cfg.filtres.push(nFiltre({})); break;
+    case 'fl-up': case 'fl-down': deplacer(cfg.filtres, i, a === 'fl-up' ? -1 : 1); break;
+    case 'fl-del': cfg.filtres.splice(i, 1); break;
+    case 'pi-add': { const ia = allCols.find(c => /attendu/i.test(libel(c))), ifa = allCols.find(c => /contr.le.*2026/i.test(libel(c))); cfg.prog.inds.push(nInd({ nom:'Contrôles réalisés / attendus', fait:ifa || '', att:ia || '' })); break; }
+    case 'pi-del': cfg.prog.inds.splice(i, 1); break;
+    case 'cq-add': cfg.calques.push(nCalque({})); break;
+    case 'cq-up': case 'cq-down': deplacer(cfg.calques, i, a === 'cq-up' ? -1 : 1); break;
+    case 'cq-del': cfg.calques.splice(i, 1); break;
+    case 'bb-up': case 'bb-down': { const l = cfg.barre.boutons, i = l.findIndex(x => x.id === b.dataset.e), j = i + (a === 'bb-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; break; }
+    case 'ord-up': case 'ord-down': { const i = cfg.ordre.indexOf(b.dataset.e), j = i + (a === 'ord-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < cfg.ordre.length) [cfg.ordre[i], cfg.ordre[j]] = [cfg.ordre[j], cfg.ordre[i]]; break; }
     default: return;
   }
   sauver();
@@ -535,16 +1041,40 @@ modal.addEventListener('click', e => {
 modal.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.o) {
-    const n = t.dataset.o, v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.min(48, Math.max(16, +t.value || 30)) : t.value;
-    opts[n] = v; construire(); enregistrer(); return;
+    const n = t.dataset.o, v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.min(+t.max || 48, Math.max(+t.min || 1, +t.value || +t.defaultValue || 1)) : t.value;
+    opts[n] = v; construire(); enregistrer(); if (n === 'liste_devant') dessiner(); return;
   }
   const a = t.dataset.a; if (!a) return;
   const g = t.dataset.g, i = +t.dataset.i, r = +t.dataset.r, k = +t.dataset.k, R = cfg.regles[r];
   switch (a) {
-    case 'add': if (t.value) listeDe(g).push({ c:t.value, nom:'', gn:false, vs:'' }); break;
+    case 'add': if (t.value) listeDe(g).push({ c:t.value, nom:'', gn:false, gi:false, vg:false, vi:false, vb:false, ta:'' }); break;
     case 'lib': listeDe(g)[i].nom = t.value; break;
-    case 'gn': listeDe(g)[i].gn = t.checked; break;
-    case 'vs': listeDe(g)[i].vs = t.value; break;
+    case 'gn': case 'gi': case 'vg': case 'vi': case 'vb': listeDe(g)[i][a] = t.checked; break;
+    case 'ta': listeDe(g)[i].ta = t.value; break;
+    case 'cn-on': listeDe(g)[i].cn = t.checked ? '#1d2733' : ''; break;
+    case 'cn': listeDe(g)[i].cn = t.value; break;
+    case 'cw-on': listeDe(g)[i].cw = t.checked ? '#1d2733' : ''; break;
+    case 'cw': listeDe(g)[i].cw = t.value; break;
+    case 'rbt': R.bulle.t = t.value; break;
+    case 'rbs': R.bulle.src = t.value; break;
+    case 'rbc': R.bulle.c = t.value; break;
+    case 'rbe': R.bulle.e = t.value; break;
+    case 'rbk': R.bulle.couleur = t.value; break;
+    case 'rbp': R.bulle.pulse = t.checked; break;
+    case 'defbc': cfg.defaut.bordc = t.value; break;
+    case 'defbe': cfg.defaut.borde = Math.max(0, Math.min(8, t.value === '' ? 3 : +t.value || 0)); break;
+    case 'rd-on': R.bordc = t.checked ? '#1d2733' : ''; if (t.checked && !R.borde) R.borde = 3; break;
+    case 'rdc': R.bordc = t.value; break;
+    case 'rde': R.borde = Math.max(0, Math.min(8, t.value === '' ? 3 : +t.value || 0)); break;
+    case 'eh': { const H = cfg.entetes[t.dataset.h]; H[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (+t.value || 0) : t.value; break; }
+    case 'eh-txt-on': cfg.entetes[t.dataset.h].txtc = t.checked ? '#1d2733' : ''; break;
+    case 'fl': { const F = cfg.filtres[+t.dataset.i]; if (F) F[t.dataset.f] = t.value; break; }
+    case 'pg': { cfg.prog[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
+    case 'pi': { const X = cfg.prog.inds[+t.dataset.i]; if (X) X[t.dataset.f] = t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
+    case 'cq': { const Q = cfg.calques[+t.dataset.i]; if (Q) Q[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, t.value === '' ? +t.defaultValue : +t.value)) : t.value; break; }
+    case 'bb': { cfg.barre[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, t.value === '' ? +t.defaultValue : +t.value)) : t.value; break; }
+    case 'bb-b': { const x = cfg.barre.boutons.find(y => y.id === t.dataset.e); if (x) x[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
+    case 'et': { const E = cfg.etiquettes[t.dataset.ek], f = t.dataset.f; if (t.type === 'number') { const n = t.value === '' ? +t.defaultValue : +t.value; E[f] = Math.max(+t.min, Math.min(+t.max, isNaN(n) ? +t.min : n)); } else E[f] = t.value; break; }
     case 'nom': cfg.sections[+g].nom = t.value; break;
     case 'defc': cfg.defaut.couleur = t.value; break;
     case 'deff': cfg.defaut.forme = t.value; break;
@@ -561,8 +1091,9 @@ modal.addEventListener('change', e => {
     case 'cv': R.si[k].v = t.value; break;
     default: return;
   }
-  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co'].includes(a));
+  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || ((a === 'fl' || a === 'cq') && t.dataset.f === 'type'));
 });
+modal.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details.regle') && cfg.regles[+d.dataset.r]) cfg.regles[+d.dataset.r].o = d.open; }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('ouvert'); });
 function boutonSecours() {
   const z = document.getElementById('cfg-secours'); if (!z || !peutModifier) return;
