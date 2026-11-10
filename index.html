@@ -259,6 +259,7 @@
   .flt-btn:hover { background:#f1f4f8; } .flt-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; outline:2px solid var(--accent); outline-offset:1px; }
   details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
+  .cpt-main { font-weight:700; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -267,7 +268,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '37';
+const VERSION = '41';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -320,7 +321,7 @@ const nRegle = r => {
 };
 const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', version:'Numéro de version', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
 const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
-const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'] };
+const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'], filtres:['filtres_titre', 'Filtres'], compteurs:['lib_compteurs', ''], count:['lib_count', '{n} sur {total} établissement{s}'], commune:['lib_commune', 'Aller à une commune…'] };
 const hex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
 const nEnt = h => { h = h || {}; return { titre:h.titre || '', sous:h.sous || '', etiq:h.etiq !== false, fond:['neutre', 'point', 'perso'].includes(h.fond) ? h.fond : 'neutre', fondc:hex(h.fondc) || '#f6f8fb', txtc:hex(h.txtc), taille:+h.taille || 0 }; };
 const nDef = d => { d = d || {}; return { couleur:hex(d.couleur) || DEFAUT.couleur, forme:FORMES.includes(d.forme) ? d.forme : DEFAUT.forme, bordc:hex(d.bordc) || DEFAUT.bordc, borde:(d.borde === undefined || d.borde === null || isNaN(+d.borde)) ? DEFAUT.borde : Math.max(0, Math.min(8, +d.borde)) }; };
@@ -339,14 +340,16 @@ const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'car
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
 const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
   bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
-const ELT_STYLES = { filtres:['titre', 'filtre', 'valeurs'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
+const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
 const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
-const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && s.type === 'tableau') ? 'tableau' : 'liste', tab:nTab(s && s.tab) });
+const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'courante', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
+  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, videTxt:String(l.videTxt || '') }; };
+const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
 const nSt = x => { x = x || {}; return { coul:hex(x.coul), fond:hex(x.fond), taille:Math.max(0, Math.min(40, +x.taille || 0)), gras:!!x.gras, ital:!!x.ital }; };
 const ICO_DEF = { iti:'🧭', prog:'📊' };
-const nFiltre = f => { f = f || {}; return { tous:f.tous !== false, tousTxt:String(f.tousTxt || ''), bouton:f.bouton === true, aide:String(f.aide || ''), o:f.o === true, fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
+const nFiltre = f => { f = f || {}; return { tous:f.tous !== false, tousTxt:String(f.tousTxt || ''), bouton:f.bouton === true, aide:String(f.aide || ''), o:f.o === true, fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, ital:f.ital === true, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
 const nCond = c => ({ c:String((c && c.c) || ''), op:(c && c.op) || '=', v:String((c && c.v) ?? ''), on:!!(c && c.on) });
 const nInd = i => {
   i = i || {};
@@ -359,8 +362,9 @@ const nInd = i => {
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
 const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k] || (k.startsWith('bt_') ? (c.styles || {}).boutons : null))])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, attente = null, optionsChargees = false, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
+const optBrut = (n, d) => (opts[n] === undefined || opts[n] === null) ? d : opts[n];   // une valeur vide enregistrée est conservée (titre ou texte volontairement vide)
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
 const libel = c => labels[c] || joli(c);
 const refDe = t => { const m = /^Ref(List)?:(.+)$/.exec(t || ''); return m ? { table:m[2] } : null; };
@@ -608,7 +612,7 @@ function appliquerAffichage() {   // éléments du panneau de gauche affichés o
   const qq = document.getElementById('q'); if (qq) qq.placeholder = opt('lib_q', LIB.q[1]);
   const tt = document.getElementById('tout'); if (tt) tt.textContent = avecIco('tout', opt('lib_tout', LIB.tout[1]));
   const ib = document.getElementById('iti-btn'); if (ib) ib.textContent = avecIco('iti', opt('lib_iti', LIB.iti[1]));
-  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('b-version', A('version')); { const vv = document.querySelector('#b-version .ver'); if (vv) vv.textContent = opt('lib_version', 'version') + ' ' + VERSION; } show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); dessinerBarre();
+  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('b-version', A('version')); { const vv = document.querySelector('#b-version .ver'); if (vv) vv.textContent = (optBrut('lib_version', 'version') ? optBrut('lib_version', 'version') + ' ' : '') + VERSION; } show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); { const ci = document.getElementById('commune'); if (ci) ci.placeholder = opt('lib_commune', 'Aller à une commune…'); } dessinerBarre();
   const racine = document.documentElement;
   if (racine && racine.style) { [['--larg-popup', 'larg_popup', 300], ['--haut-popup', 'haut_popup', 260], ['--larg-fiche', 'larg_fiche', 400], ['--fs-legende', 'taille_legende', 13], ['--larg-pop-leg', 'larg_pop_leg', 260], ['--haut-pop-leg', 'haut_pop_leg', 360]].forEach(([v, o, d]) => racine.style.setProperty(v, (+opt(o, d) || d) + 'px')); racine.style.setProperty('--liste-max', +opt('liste_max', 0) > 0 ? (+opt('liste_max', 0) + 'px') : 'none'); racine.style.setProperty('--larg-gauche', (+opt('largeur_gauche', 300) || 300) + 'px'); racine.style.setProperty('--police', POLICES[opt('police', 'Système (par défaut)')] || POLICES['Système (par défaut)']); racine.style.setProperty('--fs-popup', (+opt('taille_popup', 13) || 13) + 'px'); racine.style.setProperty('--fs-fiche', (+opt('taille_fiche', 14) || 14) + 'px'); } show('liste-btn', A('liste'));
   const sig = JSON.stringify([opt('ouv_liste', false), opt('ouv_legende', true)]);
@@ -621,7 +625,7 @@ function majListe() {
   const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 5000);
   document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
 }
-const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
+const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : '') + (f.ital ? 'font-style:italic;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
 function filtreHtml(f) {
   const c = f.c, nom = f.nom || libel(c), sl = new Set(filtreSel[c] || []);
   if (f.type === 'oui' && f.bouton) { const on = sl.size > 0; return `<button type="button" class="flt-btn${on ? ' on' : ''}" data-c="${esc(c)}" data-nom="${esc(nom)}" aria-pressed="${on}"${fs(f)}>${on ? '✓ ' : ''}${esc(nom)}</button>`; }
@@ -635,8 +639,8 @@ function filtreHtml(f) {
 function filtresBloc() {   // titre « Filtres » pliable, qui contient les filtres comme sous-éléments
   const corps = filtresDefs.map(f => filtreHtml(f)).join('');
   if (!corps || opt('filtres_titre_on', true) === false) return corps;
-  const ico = opt('filtres_ico', ''), tt = opt('filtres_titre', 'Filtres');
-  return `<details id="filtres-sec"${filtresSecOuvert ? ' open' : ''}><summary id="filtres-titre" data-aide="${esc(opt('aide_filtres', ''))}">${ico ? esc(ico) + ' ' : ''}${esc(tt)}</summary><div class="filtres-in">${corps}</div></details>`;
+  const ico = opt('ico_filtres', opt('filtres_ico', '')), tt = optBrut('filtres_titre', 'Filtres');
+  return `<details id="filtres-sec"${filtresSecOuvert ? ' open' : ''}><summary id="filtres-titre" data-aide="${esc(opt('aide_filtres', ''))}">${(ico || tt) ? (ico ? esc(ico) + (tt ? ' ' : '') : '') + esc(tt) : 'Filtres'}</summary><div class="filtres-in">${corps}</div></details>`;
 }
 function appliquerFiltres() {
   let n = 0; const cnt = cptCols.map(c => [c, new Map()]);
@@ -649,9 +653,9 @@ function appliquerFiltres() {
       return v.includes(d.fv[c]); });
     if (ok) { n++; cnt.forEach(([c, mp]) => mp.set(d.fv[c], (mp.get(d.fv[c]) || 0) + 1)); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
-  document.getElementById('compteurs').innerHTML = cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
+  document.getElementById('compteurs').innerHTML = (opt('lib_compteurs', '') ? `<div class="cpt-main">${esc(opt('lib_compteurs', ''))}</div>` : '') + cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
     [...mp].sort((a, b) => b[1] - a[1]).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
-  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
+  document.getElementById('count').innerHTML = esc(opt('lib_count', '{n} sur {total} établissement{s}')).replace(/\{n\}/g, `<strong>${n}</strong>`).replace(/\{total\}/g, marqueurs.size).replace(/\{s\}/g, marqueurs.size > 1 ? 's' : '') + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
   majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
@@ -687,14 +691,42 @@ function fichier(d) {
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> <button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button></div></div>`;
 }
-function sectionDonnees(sec, vals) {   // section « liste de colonnes » ou « mini tableau »
+const tablesLiees = () => [...new Set(cfg.sections.filter(x => x.type === 'lie' && x.lie.table).map(x => x.lie.table))];
+const libelT = (tn, c) => (labelsT[tn] || {})[c] || joli(c);
+const colsDe = tn => Object.keys(labelsT[tn] || {}).filter(c => c !== 'id' && c !== 'manualSort' && !c.startsWith('gristHelper_'));
+const tablesDispo = () => Object.keys(labelsT).filter(t => t !== tid && !t.startsWith('_') && !t.includes('_summary_'));
+function anneeDe(tn, c, v) {
+  const t = (typesT[tn] || {})[c] || '';
+  if (typeof v === 'number' && (t === 'Date' || t.startsWith('DateTime'))) return new Date(v * 1000).getUTCFullYear();
+  if (v instanceof Date) return v.getUTCFullYear();
+  const m = /\b(19|20)\d{2}\b/.exec(String(v ?? '')); return m ? +m[0] : null;
+}
+function cleLiee(tn, L, row, M) { if (refDe((typesT[tn] || {})[L])) return M ? String(fmtG(tn, L, row[L]) ?? '').trim() : String(row[L]); return String(row[L] ?? '').trim(); }
+const anneeCible = L => L.mode === 'courante' ? new Date().getFullYear() : L.mode === 'precedente' ? new Date().getFullYear() - 1 : L.mode === 'fixe' ? (L.annee || new Date().getFullYear()) : null;
+const periodeTxt = L => { const a = anneeCible(L); return a ? (L.mode === 'courante' ? 'l’année en cours (' + a + ')' : L.mode === 'precedente' ? 'l’année précédente (' + a + ')' : String(a)) : ''; };
+function ligneLiees(sec, d) {   // lignes de l'autre table qui concernent cet établissement, sur la période choisie
+  const L = sec.lie, tab = refTabs[L.table]; if (!tab || !L.cle) return [];
+  const cleP = L.cle2 ? String(d.vals[L.cle2] ?? '').trim() : String(d.id); if (!cleP) return [];
+  const an = anneeCible(L), rows = [];
+  tab.forEach(row => { if (cleLiee(L.table, L.cle, row, L.cle2) !== cleP) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; rows.push(row); });
+  const tc = L.triCol || L.dateCol; if (tc) { const sg = L.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
+  return L.max ? rows.slice(0, L.max) : rows;
+}
+function sectionDonnees(sec, vals, d) {   // section « liste de colonnes », « mini tableau » ou « tableau lié »
+  if (sec.type === 'lie') {
+    const L = sec.lie, cols = L.cols.filter(x => x.c); if (!L.table || !L.cle || !cols.length) return { n:0, html:'' };
+    if (!refTabs[L.table]) return { n:0, force:true, html:'<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">Chargement…</p>' };
+    const rows = d ? ligneLiees(sec, d) : [], per = periodeTxt(L);
+    if (!rows.length) return L.afficherVide ? { n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : '')))}</p>` } : { n:0, html:'' };
+    return { n:rows.length, html:`${per ? `<p class="vide" style="padding:0 12px;margin:0 0 4px;font-size:12px">Période : ${esc(per)}</p>` : ''}<div class="mini-wrap"><table class="mini"><thead><tr>${cols.map(x => `<th>${esc(x.nom || libelT(L.table, x.c))}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(x => `<td>${esc(fmtG(L.table, x.c, r[x.c]) ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
+  }
   if (sec.type !== 'tableau') { const l = champsDe(sec.cols, vals); return { n:l.length, html:lignes(l) }; }
   const T = sec.tab, rows = T.rows.map(r => r.cells.map(x => x.c ? { v:fmt(x.c, vals[x.c]), col:true } : { v:x.v, col:false })).filter(r => !T.vides || !r.some(x => x.col) || r.some(x => x.col && x.v !== null && x.v !== ''));
   if (!rows.length || !T.heads.length) return { n:0, html:'' };
   return { n:rows.length, html:`<div class="mini-wrap"><table class="mini"><thead><tr>${T.heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
 }
 function corpsFiche(d) {
-  const secs = cfg.sections.map((sec, i) => ({ sec, i, r:sectionDonnees(sec, d.vals) })).filter(x => x.r.n);
+  const secs = cfg.sections.map((sec, i) => ({ sec, i, r:sectionDonnees(sec, d.vals, d) })).filter(x => x.r.n || x.r.force);
   if (!secs.length) return '<p class="vide">Aucune section à afficher. Créez vos sections dans « Configurer le widget », onglet Fiche.</p>';
   const o = opt('ouverture', 'Première section'), ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (o === 'Toutes' || (o !== 'Aucune' && i === 0));
   return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
@@ -702,7 +734,7 @@ function corpsFiche(d) {
 }
 const panneau = document.getElementById('fiche-panel');
 function ouvrirFiche(id, focus = true) {
-  const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id; lieeOuverte = false; fermerIti(); fermerProg(); const eh = enteteDe(d, 'fiche');
+  const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id; lieeOuverte = false; fermerIti(); fermerProg(); rafraichirLiees(); const eh = enteteDe(d, 'fiche');
   panneau.style.setProperty('--niv', d.style.couleur);
   panneau.innerHTML = `<div class="fp-tete" style="${eh.st}"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2 style="${eh.ts}">${esc(eh.titre)}</h2>${eh.sous ? `<div class="sous">${esc(eh.sous)}</div>` : ''}${eh.etiq}</div>
     <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button> <button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>`;
@@ -744,7 +776,7 @@ function rafraichir() { if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheI
 grist.ready({
   requiredAccess: 'full',   // nécessaire pour lister toutes les colonnes : à n'utiliser qu'avec un widget hébergé sur un serveur de confiance
   allowSelectBy: true,
-  onEditOptions: () => ouvrirReglages(),   // fait apparaître le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
+  onEditOptions: () => demanderConfig(),   // fait apparaître le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
   columns: [
     { name:'nom',     title:'Nom de l’établissement', type:'Text' },
     { name:'lat',     title:'Latitude', type:'Numeric' },
@@ -752,7 +784,7 @@ grist.ready({
     { name:'compteurs', title:'Compteurs : colonnes à compter (choix multiples)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
-grist.onOptions(o => { if (modal.classList.contains('ouvert')) return; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); });
+grist.onOptions(o => { optionsChargees = true; if (attente && o && o._maj === attente.ts) attente.ok(); if (modal.classList.contains('ouvert')) return; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); chargerLieesManquantes(); });
 grist.onRecords((records, mappings) => {
   lastRec = records; lastMap = mappings;
   if (!allCols.length) allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
@@ -775,16 +807,18 @@ async function chargerLibelles() {
   } catch (e) { console.warn('Libellés indisponibles', e); }
   await chargerTable();
 }
+async function chargerTabLiee(x) { try { const rt = await grist.docApi.fetchTable(x), mm = new Map(); rt.id.forEach((id, k) => { const o = { id }; Object.keys(rt).forEach(c => { if (c !== 'id') o[c] = rt[c][k]; }); mm.set(id, o); }); refTabs[x] = mm; } catch (e) { /* table liée illisible */ } }
+async function chargerLieesManquantes() { const need = tablesLiees().filter(x => !refTabs[x]); if (!need.length) return; await Promise.all(need.map(chargerTabLiee)); if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheId, false); if (modal.classList.contains('ouvert')) dessiner(); }
+let derLiees = 0;
+function rafraichirLiees() { const need = tablesLiees(); if (!need.length || Date.now() - derLiees < 4000) return; derLiees = Date.now(); Promise.all(need.map(chargerTabLiee)).then(() => { if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheId, false); }); }
 async function chargerTable() {
   try {
     if (!tid) tid = await grist.selectedTable.getTableId();
     const t = await grist.docApi.fetchTable(tid), cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_')), m = new Map();
     t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
     allCols = cols; donnees = m; erreurAcces = '';
-    const liees = new Set(Object.values(types).map(refDe).filter(Boolean).map(r => r.table));   // tables des colonnes « Référence »
-    for (const x of liees) {
-      try { const rt = await grist.docApi.fetchTable(x), mm = new Map(); rt.id.forEach((id, k) => { const o = { id }; Object.keys(rt).forEach(c => { if (c !== 'id') o[c] = rt[c][k]; }); mm.set(id, o); }); refTabs[x] = mm; } catch (e) { /* table liée illisible */ }
-    }
+    const liees = new Set(Object.values(types).map(refDe).filter(Boolean).map(r => r.table)); tablesLiees().forEach(x => liees.add(x));   // tables des colonnes « Référence » et des tableaux liés
+    for (const x of liees) await chargerTabLiee(x);
   } catch (e) { erreurAcces = String((e && e.message) || e); }
 }
 
@@ -822,9 +856,9 @@ function construire() {
   majLegende();
 
   const valsDe = c => [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 1000);
-  const defSig = JSON.stringify([opt('filtres_titre_on', true), opt('filtres_titre', 'Filtres'), opt('filtres_ico', ''), opt('filtres_ouvert', true), opt('filtres_sous_ouvert', false)]);
+  const defSig = JSON.stringify([opt('filtres_titre_on', true), optBrut('filtres_titre', 'Filtres'), opt('ico_filtres', opt('filtres_ico', '')), opt('filtres_ouvert', true), opt('filtres_sous_ouvert', false)]);
   if (defSig !== sigFiltresDef) { sigFiltresDef = defSig; etatFiltres.clear(); filtresSecOuvert = opt('filtres_ouvert', true) !== false; sigFiltres = ''; }
-  const sig = JSON.stringify(filtresDefs.map(f => [f.c, f.nom, f.type, f.oui, f.non, f.fond, f.coul, f.gras, f.bouton, f.aide, f.tous, f.tousTxt, (f.type === 'oui' || f.type === 'curseur') ? 0 : valsDe(f.c)]));
+  const sig = JSON.stringify(filtresDefs.map(f => [f.c, f.nom, f.type, f.oui, f.non, f.fond, f.coul, f.gras, f.bouton, f.aide, f.ital, f.tous, f.tousTxt, (f.type === 'oui' || f.type === 'curseur') ? 0 : valsDe(f.c)]));
   Object.keys(filtreSel).forEach(c => { const df = filtresDefs.find(f => f.c === c); if (!df) delete filtreSel[c]; else if (df.type !== 'oui' && df.type !== 'curseur') filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
   filtresDefs.forEach(f => { if (f.type === 'unique' && f.tous === false) { const v = valsDe(f.c); if (v.length && !(filtreSel[f.c] && filtreSel[f.c].length)) filtreSel[f.c] = [v[0]]; } });   // sans « Tous », la première valeur est sélectionnée
   if (sig !== sigFiltres) { sigFiltres = sig; document.getElementById('filtres').innerHTML = filtresBloc(); }
@@ -1071,13 +1105,43 @@ const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''}
 const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}" data-aide="${lab}"` : ''}>${t}</button>`;
 
 function blocFicheSections() {
-  return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
-    return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
-      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button> <button type="button" class="rg-ajout" data-a="sadd-t">+ Ajouter une section « tableau »</button>';
+  return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'lie' ? (!sec.lie.table || !sec.lie.cle || !sec.lie.cols.some(x => x.c)) : sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
+    return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'lie' ? 'tableau lié · ' + sec.lie.cols.length + ' colonne(s)' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
+      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button> <button type="button" class="rg-ajout" data-a="sadd-t">+ Ajouter une section « tableau »</button> <button type="button" class="rg-ajout" data-a="sadd-l">+ Ajouter une section « contrôles liés »</button>';
+}
+function autoLie(table) {   // propose un réglage de départ : table, colonne de lien, date et colonnes usuelles
+  const tabs = tablesDispo(), pref = table || tabs.find(t => /compte|contr[oô]le|^cr/i.test(t)) || tabs[0] || '', cc = colsDe(pref);
+  const f1 = (re, l, lib) => l.find(c => re.test(lib(c)) || re.test(c)) || '';
+  const sir = f1(/^siret$/i, cc, c => libelT(pref, c)) || cc.find(c => /siret/i.test(libelT(pref, c)) && !/lat|lon/i.test(libelT(pref, c))) || '';
+  const mainSir = f1(/^siret$/i, allCols, libel) || allCols.find(c => /siret/i.test(libel(c)) && !/lat|lon/i.test(libel(c))) || '';
+  const date = cc.find(c => ((typesT[pref] || {})[c] || '').startsWith('Date')) || f1(/date/i, cc, c => libelT(pref, c));
+  const cols = [date, f1(/unit/i, cc, c => libelT(pref, c)), f1(/remarque|commentaire/i, cc, c => libelT(pref, c)), f1(/infraction/i, cc, c => libelT(pref, c)), f1(/suite/i, cc, c => libelT(pref, c))].filter(Boolean);
+  return nLie({ table:pref, cle:sir, cle2:mainSir, dateCol:date, mode:'courante', cols:cols.map(c => ({ c, nom:'' })) });
+}
+function blocLie(sec, i) {
+  const L = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(L.table);
+  const selT = (f, v, vide) => `<select ${A(f)}><option value="">${vide}</option>${cT.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select>`;
+  return `<div class="rg-sous">Table des contrôles</div>
+    <div class="rg-l2"><select ${A('table')} aria-label="Table liée"><option value="">Choisir une table…</option>${tablesDispo().map(t => `<option value="${esc(t)}"${t === L.table ? ' selected' : ''}>${esc(joli(t))}</option>`).join('')}</select></div>
+    ${L.table ? `<div class="rg-sous">Lien avec l’établissement</div>
+    <label>Colonne de la table liée ${selT('cle', L.cle, 'Choisir…')}</label>
+    <label>correspond à la colonne de l’établissement <select ${A('cle2')}><option value="">(identifiant de la ligne)</option>${allCols.map(c => `<option value="${esc(c)}"${c === L.cle2 ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select></label>
+    <div class="rg-sous">Période</div>
+    <label>Colonne de date ${selT('dateCol', L.dateCol, 'Aucune')}</label>
+    <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${L.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${L.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${L.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
+    <div class="rg-sous">Colonnes du tableau</div>
+    ${L.cols.map((x, j) => { const B = `${G} data-j="${j}"`; return `<div class="rg-l2"><select data-a="lc" ${B} data-f="c" aria-label="Colonne"><option value="">Colonne…</option>${cT.map(c => `<option value="${esc(c)}"${c === x.c ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select><input type="text" data-a="lc" ${B} data-f="nom" value="${esc(x.nom)}" placeholder="Titre (par défaut : nom de la colonne)" style="flex:1;min-width:120px" aria-label="Titre">${btn('lc-up', B, '▲', 'Monter')}${btn('lc-down', B, '▼', 'Descendre')}${btn('lc-del', B, '✕', 'Retirer la colonne')}</div>`; }).join('')}
+    ${btn('lc-add', G, '+ colonne')}
+    <div class="rg-sous">Tri et limite</div>
+    <label>Trier par ${selT('triCol', L.triCol, 'La date (par défaut)')} <select ${A('triDir')}><option value="desc"${L.triDir === 'desc' ? ' selected' : ''}>Du plus récent au plus ancien</option><option value="asc"${L.triDir === 'asc' ? ' selected' : ''}>Du plus ancien au plus récent</option></select></label>
+    <label>Nombre maximal de lignes <input type="number" min="0" max="200" ${A('max')} value="${L.max || ''}" placeholder="toutes" style="width:90px"></label>
+    <label><input type="checkbox" ${A('afficherVide')}${L.afficherVide ? ' checked' : ''}> Afficher la section quand il n’y a aucun résultat</label>
+    ${L.afficherVide ? `<label>Texte affiché <input type="text" ${A('videTxt')} value="${esc(L.videTxt)}" placeholder="Aucun résultat pour l’année en cours"></label>` : ''}` : ''}`;
 }
 function blocSection(sec, i) {
   const T = sec.tab, G = `data-g="${i}"`;
-  const type = `<div class="rg-l2"><label>Type de section <select data-a="sec-type" ${G}><option value="liste"${sec.type === 'liste' ? ' selected' : ''}>Liste de colonnes</option><option value="tableau"${sec.type === 'tableau' ? ' selected' : ''}>Mini tableau (lignes × colonnes)</option></select></label></div>`;
+  const type = `<div class="rg-l2"><label>Type de section <select data-a="sec-type" ${G}><option value="liste"${sec.type === 'liste' ? ' selected' : ''}>Liste de colonnes</option><option value="tableau"${sec.type === 'tableau' ? ' selected' : ''}>Mini tableau (lignes × colonnes)</option><option value="lie"${sec.type === 'lie' ? ' selected' : ''}>Tableau lié (lignes d’une autre table)</option></select></label></div>`;
+  if (sec.type === 'lie') return type + blocLie(sec, i);
   if (sec.type !== 'tableau') return type + blocListe(String(i));
   return type + `<div class="rg-sous">Colonnes du tableau</div>
     <div class="rg-l2">${T.heads.map((h, j) => `<input type="text" data-a="tb-h" ${G} data-j="${j}" value="${esc(h)}" aria-label="Titre de la colonne ${j + 1}" style="max-width:130px">${btn('tb-hdel', `${G} data-j="${j}"`, '✕', 'Retirer la colonne')}`).join('')}${btn('tb-hadd', G, '+ colonne')}</div>
@@ -1093,7 +1157,7 @@ function blocListe(g) {
   const l = listeDe(g), cb = (a, at, v, t) => `<label><input type="checkbox" data-a="${a}" ${at}${v ? ' checked' : ''}> ${t}</label>`;
   return `<ul>${l.map((x, i) => { const at = `data-g="${g}" data-i="${i}"`; return `<li>${rgd('col', i, `data-g="${g}"`, x.o, `<span class="rg-nom">${esc(libel(x.c))}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span><small class="res">${esc(resumeEntree(x))}</small><span class="rg-btns">${btn('up', at, '▲', 'Monter')}${btn('down', at, '▼', 'Descendre')}${btn('del', at, '✕', 'Retirer')}</span>`,
     `<div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché"></div>
-    <div class="rg-l2"><b class="rg-lab">Nom</b>${cb('gn', at, x.gn, 'gras')}${cb('gi', at, x.gi, 'italique')}<b class="rg-lab">Valeur</b>${cb('vg', at, x.vg, 'gras')}${cb('vi', at, x.vi, 'italique')}${cb('vb', at, x.vb, 'pastille')}
+    <div class="rg-l2"><b class="rg-lab">Nom</b>${selFonte(`data-a="fn" ${at}`, x.gn, x.gi)}<b class="rg-lab">Valeur</b>${selFonte(`data-a="fv" ${at}`, x.vg, x.vi)}${cb('vb', at, x.vb, 'pastille')}
     <select data-a="ta" ${at} aria-label="Taille du texte">${[['', 'Taille normale'], ['p', 'Petite'], ['g', 'Grande'], ['tg', 'Très grande']].map(([v, t]) => `<option value="${v}"${(x.ta || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
     <div class="rg-l2"><label><input type="checkbox" data-a="cn-on" ${at}${x.cn ? ' checked' : ''}> Couleur du nom</label><input type="color" data-a="cn" ${at} value="${x.cn || '#1d2733'}"${x.cn ? '' : ' disabled'} aria-label="Couleur du nom">
       <label><input type="checkbox" data-a="cw-on" ${at}${x.cw ? ' checked' : ''}> Couleur de la valeur</label><input type="color" data-a="cw" ${at} value="${x.cw || '#1d2733'}"${x.cw ? '' : ' disabled'} aria-label="Couleur de la valeur"></div>`)}</li>`; }).join('')}</ul>
@@ -1110,15 +1174,19 @@ function blocStyleTexte(k) {
   return `<div class="rg-sous">Style : ${esc(STYLES_TXT[k][0])}</div><div class="rg-l2"><label><input type="checkbox" ${D} data-f="coul-on"${x.coul ? ' checked' : ''}> Couleur</label><input type="color" ${D} data-f="coul" value="${x.coul || '#1d2733'}"${x.coul ? '' : ' disabled'} aria-label="Couleur du texte">
     <label><input type="checkbox" ${D} data-f="fond-on"${x.fond ? ' checked' : ''}> Fond</label><input type="color" ${D} data-f="fond" value="${x.fond || '#e8eef7'}"${x.fond ? '' : ' disabled'} aria-label="Couleur du fond">
     <label>Taille <input type="number" min="0" max="40" ${D} data-f="taille" value="${x.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
-    <label><input type="checkbox" ${D} data-f="gras"${x.gras ? ' checked' : ''}> Gras</label><label><input type="checkbox" ${D} data-f="ital"${x.ital ? ' checked' : ''}> Italique</label></div>`;
+    <label>Style ${selFonte(`${D} data-f="fonte"`, x.gras, x.ital)}</label></div>`;
 }
+const FONTES = [['n', 'Normal'], ['g', 'Gras'], ['i', 'Italique'], ['gi', 'Gras italique']];
+const fonteDe = (g, i) => g ? (i ? 'gi' : 'g') : (i ? 'i' : 'n');
+const selFonte = (attrs, g, i) => `<select ${attrs} aria-label="Style de texte">${FONTES.map(([v, t]) => `<option value="${v}"${v === fonteDe(g, i) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
 const GEAR = '<span class="gear" aria-hidden="true">⚙</span>';
 function blocElementsGauche() {
   const vis = cfg.ordre.filter(k => opt('aff_' + k, true) !== false), cache = cfg.ordre.filter(k => opt('aff_' + k, true) === false);
-  const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['liste', 'tout', 'iti', 'prog', 'legende'];
+  const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], BLANC_OK = ['filtres_titre', 'lib_compteurs', 'lib_version'],
+    HINTS = { count:'Texte affiché · variables : {n} visibles, {total} au total, {s} pluriel', compteurs:'Titre au-dessus des compteurs (facultatif)', commune:'Texte de la barre de recherche de commune', filtres:'Titre (laissez vide pour n’afficher que l’icône)', version:'Texte avant le numéro (facultatif)' };
   const lignes = vis.map(k => {
     const E = `data-e="${k}"`, L_ = LIB[k], btns = `<span class="rg-btns">${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}${btn('el-del', E, '✕', 'Retirer du panneau')}</span>`;
-    const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(opt(L_[0], L_[1]))}" placeholder="Texte affiché" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
+    const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(BLANC_OK.includes(L_[0]) ? optBrut(L_[0], L_[1]) : opt(L_[0], L_[1]))}" placeholder="${esc(HINTS[k] || 'Texte affiché')}" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
       + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
       + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
       + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '')
@@ -1201,12 +1269,10 @@ function blocRecherche() {
 }
 function blocFiltres() {
   const selC = (at, v) => `<select ${at} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
-  return blocRecherche() + `<section><h3>Titre de la section « Filtres »</h3>
+  return blocRecherche() + `<section><h3>Présentation des filtres</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Le texte et l’icône du titre « Filtres » se règlent dans Général, « Éléments du panneau de gauche ».</p>
     <label><input type="checkbox" data-o="filtres_titre_on"${opt('filtres_titre_on', true) !== false ? ' checked' : ''}> Afficher un titre pliable au-dessus des filtres</label>
-    <label>Texte du titre <input type="text" data-o="filtres_titre" value="${esc(opt('filtres_titre', 'Filtres'))}"></label>
-    <label>Symbole ou emoji devant le titre (facultatif) <input type="text" data-o="filtres_ico" value="${esc(opt('filtres_ico', ''))}" style="max-width:120px"></label>
     <label><input type="checkbox" data-o="filtres_ouvert"${opt('filtres_ouvert', true) !== false ? ' checked' : ''}> Section dépliée par défaut</label>
-    <label><input type="checkbox" data-o="filtres_sous_ouvert"${opt('filtres_sous_ouvert', false) === true ? ' checked' : ''}> Sous-sections (chaque filtre à cases) dépliées par défaut</label></section>
+    <label><input type="checkbox" data-o="filtres_sous_ouvert"${opt('filtres_sous_ouvert', false) === true ? ' checked' : ''}> Sous-sections (chaque filtre à cases) dépliées par défaut</label>${blocStyleTexte('filtre')}${blocStyleTexte('valeurs')}</section>
     <p class="vide" style="font-size:12px">Créez ici tous les filtres proposés dans le panneau de gauche : le panneau de droite de Grist n’en propose plus.</p>
     ${cfg.filtres.map((f, i) => { const A = `data-a="fl" data-i="${i}"`, I = `data-i="${i}"`, TL = { multi:'choix multiples', unique:'choix unique', oui:'case oui/non', curseur:'curseur oui/non' };
       return rgd('fl', i, '', f.o, `<span class="rg-nom">${esc(f.nom || (f.c ? libel(f.c) : 'Nouveau filtre'))}</span>${f.c ? `<small class="res">${TL[f.type]}</small>` : '<small class="res warn">⚠ choisissez une colonne</small>'}<span class="rg-btns">${btn('fl-up', I, '▲', 'Monter')}${btn('fl-down', I, '▼', 'Descendre')}${btn('fl-del', I, '✕', 'Supprimer')}</span>`,
@@ -1217,7 +1283,7 @@ function blocFiltres() {
       ${f.type === 'oui' ? `<div class="rg-l2"><label>Apparence <select ${A} data-f="bouton"><option value=""${f.bouton ? '' : ' selected'}>Case à cocher</option><option value="1"${f.bouton ? ' selected' : ''}>Bouton cliquable</option></select></label></div>` : ''}
       ${f.type === 'unique' ? `<div class="rg-l2"><label><input type="checkbox" ${A} data-f="tous"${f.tous ? ' checked' : ''}> Proposer une entrée « Tous »</label>${f.tous ? `<input type="text" ${A} data-f="tousTxt" value="${esc(f.tousTxt)}" placeholder="Tous" style="max-width:120px" aria-label="Texte de l’entrée Tous">` : '<span class="vide" style="font-size:12px">La première valeur est alors sélectionnée.</span>'}</div>` : ''}
       <div class="rg-l2"><input type="text" ${A} data-f="aide" value="${esc(f.aide)}" placeholder="Aide au survol (facultatif)" aria-label="Aide au survol"></div>
-      <div class="rg-l2"><label><input type="checkbox" ${A} data-f="fond-on"${f.fond ? ' checked' : ''}> Fond</label><input type="color" ${A} data-f="fond" value="${f.fond || '#fff3bf'}"${f.fond ? '' : ' disabled'} aria-label="Couleur du fond"><label><input type="checkbox" ${A} data-f="coul-on"${f.coul ? ' checked' : ''}> Couleur du texte</label><input type="color" ${A} data-f="coul" value="${f.coul || '#1d2733'}"${f.coul ? '' : ' disabled'} aria-label="Couleur du texte"><label><input type="checkbox" ${A} data-f="gras"${f.gras ? ' checked' : ''}> Gras</label></div>`); }).join('')}
+      <div class="rg-l2"><label><input type="checkbox" ${A} data-f="fond-on"${f.fond ? ' checked' : ''}> Fond</label><input type="color" ${A} data-f="fond" value="${f.fond || '#fff3bf'}"${f.fond ? '' : ' disabled'} aria-label="Couleur du fond"><label><input type="checkbox" ${A} data-f="coul-on"${f.coul ? ' checked' : ''}> Couleur du texte</label><input type="color" ${A} data-f="coul" value="${f.coul || '#1d2733'}"${f.coul ? '' : ' disabled'} aria-label="Couleur du texte"><label>Style ${selFonte(`${A} data-f="fonte"`, f.gras, f.ital)}</label></div>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="fl-add">+ Ajouter un filtre</button>`;
 }
 function blocProg() {
@@ -1328,7 +1394,7 @@ const AIDES_ONGLET = {
   prog:'Barres d’avancement par administration ou unité. Exemple : contrôles réalisés sur contrôles attendus, regroupés par Administration.',
   barre:'Les boutons de la barre sur la carte. Un bouton placé ici disparaît du panneau de gauche.',
   general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' };
-const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
+const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'lie' ? (!x.lie.table || !x.lie.cle || !x.lie.cols.some(c => c.c)) : x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
 function majCfgClasses() { const b = document.body; if (b && b.classList) b.classList.toggle('cfg-large', modal.classList.contains('ouvert') && !modal.classList.contains('reduit')); }
 function dessiner() {
   const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0, av = avertOnglet();
@@ -1338,17 +1404,34 @@ function dessiner() {
   modal.querySelector('.rg-corps').scrollTop = y;
 }
 function fermerReglages() { modal.classList.remove('ouvert'); picker = null; majCfgClasses(); msgSig = ''; planifierMessages(); }
+function bandeau(texte, duree) {   // petit message d'information sur la carte (refus d'accès, etc.)
+  fermerMessage(true); msgEl.style.background = '#c1121f'; msgEl.style.color = '#fff'; msgEl.className = 'ouvert haut'; msgEl.querySelector('.txt').textContent = texte;
+  clearTimeout(msgFin); msgFin = setTimeout(() => fermerMessage(true), duree || 7000);
+}
+function ecrireEtConfirmer(delai) {   // écrit les réglages, puis attend que Grist les renvoie : preuve que l'enregistrement a vraiment eu lieu
+  const ts = Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  opts._maj = ts; opts.cfg = cfg;
+  return new Promise(res => {
+    let t = null; const fin = ok => { clearTimeout(t); if (attente && attente.ts === ts) attente = null; res(ok); };
+    t = setTimeout(() => fin(false), delai || 4000); attente = { ts, ok: () => fin(true) };
+    Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg)).catch(() => fin(false));
+  });
+}
+async function demanderConfig() {   // c'est Grist qui décide : le volet ne s'ouvre que si l'enregistrement est confirmé
+  if (modal.classList.contains('ouvert')) { modal.classList.remove('reduit'); majCfgClasses(); return; }
+  if (!optionsChargees) { bandeau('Les réglages se chargent : réessayez dans un instant.', 4000); return; }
+  if (!/[?&]config=force/.test(location.search) && !(await ecrireEtConfirmer())) {
+    bandeau('La configuration est réservée aux personnes autorisées à modifier la structure du document : Grist n’a pas confirmé l’enregistrement.', 9000); return;
+  }
+  ouvrirReglages();
+}
 function ouvrirReglages() { dessiner(); modal.classList.add('ouvert'); majCfgClasses(); }
 function etat(t) { etatSauv = t; const e = document.getElementById('rg-etat'); if (e) e.textContent = t; }
 function enregistrer() {
   clearTimeout(minuteur); etat('Enregistrement…');
-  minuteur = setTimeout(() => {
-    opts.cfg = cfg;
-    Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg))
-      .then(() => etat('✓ Enregistré')).catch(e => etat('⚠ Non enregistré : ' + ((e && e.message) || e)));
-  }, 300);
+  minuteur = setTimeout(() => { ecrireEtConfirmer().then(ok => etat(ok ? '✓ Enregistré' : '⚠ Non enregistré : Grist n’a pas confirmé (droits insuffisants ?)')); }, 300);
 }
-function sauver(redessiner = true) { enregistrer(); construire(); if (redessiner) dessiner(); }
+function sauver(redessiner = true) { enregistrer(); construire(); if (redessiner) dessiner(); chargerLieesManquantes(); }
 modal.addEventListener('click', e => {
   if (e.target === modal) { fermerReglages(); return; }
   const b = e.target.closest('button[data-a]'); if (!b) return;
@@ -1366,7 +1449,7 @@ modal.addEventListener('click', e => {
     case 'pk-add': { const l = listeDe(picker.g); picker.sel.forEach(c => { if (!l.some(x => x.c === c)) l.push({ c, nom:'', gn:false, gi:false, vg:false, vi:false, vb:false, ta:'', cn:'', cw:'', o:false }); }); picker = null; break; }
     case 'pk-all': { const it = [...modal.querySelectorAll('.pk-item')].filter(x => x.style.display !== 'none'), tout = it.length && it.every(x => x.querySelector('input').checked); it.forEach(x => { const c = x.querySelector('input'); c.checked = !tout; if (tout) picker.sel.delete(c.dataset.c); else picker.sel.add(c.dataset.c); }); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
     case 'rdup': cfg.regles.splice(r + 1, 0, JSON.parse(JSON.stringify(cfg.regles[r]))); break;
-    case 'exp': { const o = {}; Object.keys(opts).forEach(x => { if (x !== 'cfg') o[x] = opts[x]; }); const ta = modal.querySelector('#rg-exp'); ta.value = JSON.stringify({ cifi:'configuration', version:VERSION, cfg, options:o }); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* copie manuelle */ } etat(ok ? '✓ Configuration exportée et copiée' : 'Configuration exportée : copiez le texte'); return; }
+    case 'exp': { const o = {}; Object.keys(opts).forEach(x => { if (x !== 'cfg' && x !== '_maj') o[x] = opts[x]; }); const ta = modal.querySelector('#rg-exp'); ta.value = JSON.stringify({ cifi:'configuration', version:VERSION, cfg, options:o }); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* copie manuelle */ } etat(ok ? '✓ Configuration exportée et copiée' : 'Configuration exportée : copiez le texte'); return; }
     case 'imp': { let o; try { o = JSON.parse(modal.querySelector('#rg-imp').value); } catch (e) { etat('⚠ Texte non reconnu'); return; } if (!o || o.cifi !== 'configuration' || !o.cfg) { etat('⚠ Ce texte n’est pas une configuration CIFI'); return; } if (!sure()) return; cfg = norm(o.cfg); Object.keys(opts).filter(x => x !== 'cfg').forEach(x => { delete opts[x]; }); Object.assign(opts, o.options || {}); break; }
     case 'reset': { if (!sure()) return; const o = onglet;
       if (o === 'points') { cfg.regles = []; cfg.defaut = nDef({}); } else if (o === 'popup') { cfg.popup = []; cfg.entetes.popup = nEnt({}); } else if (o === 'fiche') { cfg.sections = []; cfg.entetes.fiche = nEnt({}); }
@@ -1379,6 +1462,10 @@ modal.addEventListener('click', e => {
     case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
     case 'sdel': if (!sure()) return; cfg.sections.splice(+g, 1); break;
     case 'sadd': cfg.sections.push(nSec({ nom:'Nouvelle section' })); break;
+    case 'sadd-l': cfg.sections.push(nSec({ nom:'Contrôles de l’année', type:'lie', lie:autoLie() })); break;
+    case 'lc-add': cfg.sections[+g].lie.cols.push({ c:'', nom:'' }); break;
+    case 'lc-del': cfg.sections[+g].lie.cols.splice(+b.dataset.j, 1); break;
+    case 'lc-up': case 'lc-down': deplacer(cfg.sections[+g].lie.cols, +b.dataset.j, a === 'lc-up' ? -1 : 1); break;
     case 'sadd-t': { const rows = [2025, 2024, 2023, 2022].map(y => ({ cells:[{ c:'', v:String(y) }, { c:allCols.find(x => new RegExp('contr.les?.*' + y, 'i').test(libel(x))) || '', v:'' }, { c:'', v:'' }] })); cfg.sections.push(nSec({ nom:'Historique des contrôles', type:'tableau', tab:{ heads:['Année', 'Contrôles', 'Remarques'], vides:true, rows } })); break; }
     case 'tb-hadd': { const T = cfg.sections[+g].tab; T.heads.push('Colonne ' + (T.heads.length + 1)); T.rows.forEach(r => r.cells.push({ c:'', v:'' })); break; }
     case 'tb-hdel': { const T = cfg.sections[+g].tab, j = +b.dataset.j; T.heads.splice(j, 1); T.rows.forEach(r => r.cells.splice(j, 1)); break; }
@@ -1428,6 +1515,8 @@ modal.addEventListener('change', e => {
     case 'add': if (t.value) listeDe(g).push({ c:t.value, nom:'', gn:false, gi:false, vg:false, vi:false, vb:false, ta:'' }); break;
     case 'lib': listeDe(g)[i].nom = t.value; break;
     case 'gn': case 'gi': case 'vg': case 'vi': case 'vb': listeDe(g)[i][a] = t.checked; break;
+    case 'fn': { const E = listeDe(g)[i]; E.gn = t.value.includes('g'); E.gi = t.value.includes('i'); break; }
+    case 'fv': { const E = listeDe(g)[i]; E.vg = t.value.includes('g'); E.vi = t.value.includes('i'); break; }
     case 'ta': listeDe(g)[i].ta = t.value; break;
     case 'cn-on': listeDe(g)[i].cn = t.checked ? '#1d2733' : ''; break;
     case 'cn': listeDe(g)[i].cn = t.value; break;
@@ -1450,14 +1539,18 @@ modal.addEventListener('change', e => {
     case 'eh-txt-on': cfg.entetes[t.dataset.h].txtc = t.checked ? '#1d2733' : ''; break;
     case 'ms': { const M = cfg.messages[+t.dataset.i], f = t.dataset.f; if (M) M[f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
     case 'pk-chk': { if (t.checked) picker.sel.add(t.dataset.c); else picker.sel.delete(t.dataset.c); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
+    case 'lie': { const L = cfg.sections[+t.dataset.g].lie, f = t.dataset.f;
+      if (f === 'afficherVide') L.afficherVide = t.checked; else if (f === 'annee' || f === 'max') L[f] = Math.max(0, +t.value || 0);
+      else { L[f] = t.value; if (f === 'table') { const a = autoLie(t.value); L.cle = a.cle; L.cle2 = a.cle2; L.dateCol = a.dateCol; L.cols = a.cols; L.triCol = ''; } } break; }
+    case 'lc': { const X = cfg.sections[+t.dataset.g].lie.cols[+t.dataset.j]; if (X) X[t.dataset.f] = t.value; break; }
     case 'sec-type': cfg.sections[+t.dataset.g].type = t.value; break;
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
     case 'tb-c': { const C = cfg.sections[+t.dataset.g].tab.rows[+t.dataset.k].cells[+t.dataset.j]; C[t.dataset.f] = t.value; break; }
     case 'tb': cfg.sections[+t.dataset.g].tab[t.dataset.f] = t.checked; break;
     case 'rch': cfg.recherche[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break;
     case 'rc': { const X = cfg.recherche.cols[+t.dataset.i]; if (X) X[t.dataset.f] = t.value; break; }
-    case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (f === 'bouton') F.bouton = t.value === '1'; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
-    case 'st': { const X = cfg.styles[t.dataset.sk], f = t.dataset.f; if (f === 'coul-on') X.coul = t.checked ? '#1d2733' : ''; else if (f === 'fond-on') X.fond = t.checked ? '#e8eef7' : ''; else if (f === 'taille') X.taille = Math.max(0, Math.min(40, +t.value || 0)); else if (t.type === 'checkbox') X[f] = t.checked; else X[f] = t.value; break; }
+    case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (f === 'fonte') { F.gras = t.value.includes('g'); F.ital = t.value.includes('i'); } else if (f === 'bouton') F.bouton = t.value === '1'; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
+    case 'st': { const X = cfg.styles[t.dataset.sk], f = t.dataset.f; if (f === 'coul-on') X.coul = t.checked ? '#1d2733' : ''; else if (f === 'fond-on') X.fond = t.checked ? '#e8eef7' : ''; else if (f === 'taille') X.taille = Math.max(0, Math.min(40, +t.value || 0)); else if (f === 'fonte') { X.gras = t.value.includes('g'); X.ital = t.value.includes('i'); } else if (t.type === 'checkbox') X[f] = t.checked; else X[f] = t.value; break; }
     case 'pg': { cfg.prog[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
     case 'pi': { const X = cfg.prog.inds[+t.dataset.i], f = t.dataset.f; if (X) { if (f === 'baseon') X.base.on = t.checked; else X[f] = t.value; } break; }
     case 'pc': { const X = cfg.prog.inds[+t.dataset.i]; if (X) X[t.dataset.w][t.dataset.f] = t.value; break; }
@@ -1481,7 +1574,7 @@ modal.addEventListener('change', e => {
     case 'cv': R.si[k].v = t.value; break;
     default: return;
   }
-  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'pi' && ['mode', 'baseon'].includes(t.dataset.f)) || (a === 'pc' && t.dataset.f === 'op') || (a === 'fl' && ['type', 'tous', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
+  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'pi' && ['mode', 'baseon'].includes(t.dataset.f)) || (a === 'pc' && t.dataset.f === 'op') || (a === 'fl' && ['type', 'tous', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'lie' && ['table', 'mode', 'afficherVide'].includes(t.dataset.f)) || (a === 'tb-c' && t.dataset.f === 'c'));
 });
 modal.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.a === 'pk-q' && picker) { picker.q = t.value; const q = sansAccent(t.value); modal.querySelectorAll('.pk-item').forEach(x => { x.style.display = !q || x.dataset.lib.includes(q) ? '' : 'none'; }); } });
 modal.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.gen')) return; if (d.dataset.ok === 'el') { if (d.open) elOuverts.add(d.dataset.e); else elOuverts.delete(d.dataset.e); return; } const i = +d.dataset.i, k = d.dataset.ok, o = k === 'col' ? listeDe(d.dataset.g)[i] : k === 'sec' ? cfg.sections[i] : k === 'fl' ? cfg.filtres[i] : k === 'ms' ? cfg.messages[i] : k === 'pi' ? cfg.prog.inds[i] : null; if (o) o.o = d.open; }, true);
@@ -1489,9 +1582,9 @@ modal.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.m
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerReglages(); });
 function boutonSecours() {
   const z = document.getElementById('cfg-secours'); if (!z || !peutModifier) return;
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = '⚙ Configurer le widget'; b.addEventListener('click', ouvrirReglages); z.appendChild(b);
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'link'; b.textContent = '⚙ Configurer le widget'; b.addEventListener('click', demanderConfig); z.appendChild(b);
 }
-if (/[?&]config=1/.test(location.search)) boutonSecours();   // secours : ajouter ?config=1 à l'adresse du widget
+if (/[?&]config=(1|force)/.test(location.search)) boutonSecours();   // secours : ajouter ?config=1 à l'adresse du widget
 </script>
 </body>
 </html>
