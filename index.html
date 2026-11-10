@@ -269,7 +269,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '44';
+const VERSION = '45';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -1448,9 +1448,10 @@ function bandeau(texte, duree) {   // petit message d'information sur la carte (
 function ecrireEtConfirmer(delai) {   // écrit les réglages, puis attend que Grist les renvoie : preuve que l'enregistrement a vraiment eu lieu
   const ts = Date.now() + '-' + Math.random().toString(36).slice(2, 6);
   opts._maj = ts; opts.cfg = cfg;
+  const prec = attente;   // écriture précédente encore en attente : elle partage le résultat de celle-ci (évite un faux « non enregistré »)
   return new Promise(res => {
-    let t = null; const fin = ok => { clearTimeout(t); if (attente && attente.ts === ts) attente = null; res(ok); };
-    t = setTimeout(() => fin(false), delai || 4000); attente = { ts, ok: () => fin(true) };
+    let t = null; const fin = ok => { clearTimeout(t); if (attente && attente.ts === ts) attente = null; res(ok); if (prec && prec.fin) prec.fin(ok); };
+    t = setTimeout(() => fin(false), delai || 4000); attente = { ts, ok: () => fin(true), fin };
     Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg)).catch(() => fin(false));
   });
 }
