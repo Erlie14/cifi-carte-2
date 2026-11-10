@@ -257,6 +257,8 @@
   .prog-l.cl { cursor:pointer; border-radius:6px; } .prog-l.cl:hover { background:#f6f8fb; } .pal-lab { min-width:104px; font-size:13px; }
   .flt-btn { display:inline-block; margin-top:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
   .flt-btn:hover { background:#f1f4f8; } .flt-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; outline:2px solid var(--accent); outline-offset:1px; }
+  details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
+  details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
 </style>
 </head>
 <body>
@@ -265,7 +267,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '36';
+const VERSION = '37';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -316,9 +318,9 @@ const nRegle = r => {
     bulle:{ t:bt === 'signal' ? '' : bt, src:b.src || '', e:b.e || '', c:b.c || '', couleur:hc(b.couleur) },
     pulse:{ on:pu.on === true, couleur:hc(pu.couleur), rythme:['lent', 'normal', 'rapide'].includes(pu.rythme) ? pu.rythme : 'normal' } };
 };
-const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
+const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', version:'Numéro de version', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
 const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
-const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'] };
+const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'] };
 const hex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
 const nEnt = h => { h = h || {}; return { titre:h.titre || '', sous:h.sous || '', etiq:h.etiq !== false, fond:['neutre', 'point', 'perso'].includes(h.fond) ? h.fond : 'neutre', fondc:hex(h.fondc) || '#f6f8fb', txtc:hex(h.txtc), taille:+h.taille || 0 }; };
 const nDef = d => { d = d || {}; return { couleur:hex(d.couleur) || DEFAUT.couleur, forme:FORMES.includes(d.forme) ? d.forme : DEFAUT.forme, bordc:hex(d.bordc) || DEFAUT.bordc, borde:(d.borde === undefined || d.borde === null || isNaN(+d.borde)) ? DEFAUT.borde : Math.max(0, Math.min(8, +d.borde)) }; };
@@ -335,7 +337,9 @@ const nBarre = b => {
 const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#1f4e8c',
   contenu:['point', 'rien', 'texte', 'colonne'].includes(e.contenu) ? e.contenu : 'point', texte:String(e.texte || ''), col:String(e.col || ''), taille:Math.max(12, Math.min(44, +e.taille || 22)), bord:e.bord === 'perso' ? 'perso' : 'point', bordc:hex(e.bordc) || '#ffffff', borde:Math.max(0, Math.min(8, e.borde === undefined ? 2 : (+e.borde || 0))) }; };
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
-const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#count .ver'], boutons:['Boutons du panneau', '.panel.gauche button.link'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
+const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
+  bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
+const ELT_STYLES = { filtres:['titre', 'filtre', 'valeurs'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
 const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && s.type === 'tableau') ? 'tableau' : 'liste', tab:nTab(s && s.tab) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
@@ -353,7 +357,7 @@ const nInd = i => {
     cond:nCond(i.cond), base:nCond(i.base), libNum:String(i.libNum || ''), libDen:String(i.libDen || ''), unite:String(i.unite || ''), couleur:hex(i.couleur) || '#1f4e8c', paliers:pal };
 };
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
-const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k])])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
+const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k] || (k.startsWith('bt_') ? (c.styles || {}).boutons : null))])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
 let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
@@ -502,7 +506,7 @@ const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div', 'panel gauche');
   d.innerHTML = `<button class="link" id="reduire" type="button" aria-expanded="true" style="order:-1">▴ Réduire le panneau</button><div id="commune-zone"></div><div id="b-q" class="b-q"><input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><select id="q-champ" aria-label="Rechercher dans" style="display:none"></select><div id="q-sug" class="sug" role="listbox" style="display:none"></div></div>
-    <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div>
+    <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div><div id="b-version"><small class="ver"></small></div>
     <div id="b-liste"><button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des établissements</button><div id="liste" style="display:none"></div></div>
     <button class="link" id="tout" type="button">Voir tous les points</button><button class="link" id="iti-btn" type="button">🧭 Préparer un itinéraire</button><button class="link" id="prog-btn" type="button">📊 Voir la progression</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
@@ -599,12 +603,12 @@ function appliquerStyles() {   // couleur, fond (en pastille), taille, gras, ita
 const avecIco = (k, txt) => { const i = opt('ico_' + k, ICO_DEF[k] || ''); return (i ? i + ' ' : '') + txt; };
 function appliquerAffichage() {   // éléments du panneau de gauche affichés ou masqués, selon la configuration générale
   const A = k => opt('aff_' + k, true) !== false, show = (id, on) => { const e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; };
-  const ids = { commune:'commune-zone', q:'b-q', filtres:'filtres', compteurs:'compteurs', count:'count', liste:'b-liste', tout:'tout', iti:'iti-btn', prog:'prog-btn', legende:'legende' };
+  const ids = { commune:'commune-zone', q:'b-q', filtres:'filtres', compteurs:'compteurs', count:'count', version:'b-version', liste:'b-liste', tout:'tout', iti:'iti-btn', prog:'prog-btn', legende:'legende' };
   cfg.ordre.forEach((k, i) => { const e = document.getElementById(ids[k]); if (e) e.style.order = i; });
   const qq = document.getElementById('q'); if (qq) qq.placeholder = opt('lib_q', LIB.q[1]);
   const tt = document.getElementById('tout'); if (tt) tt.textContent = avecIco('tout', opt('lib_tout', LIB.tout[1]));
   const ib = document.getElementById('iti-btn'); if (ib) ib.textContent = avecIco('iti', opt('lib_iti', LIB.iti[1]));
-  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); dessinerBarre();
+  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('b-version', A('version')); { const vv = document.querySelector('#b-version .ver'); if (vv) vv.textContent = opt('lib_version', 'version') + ' ' + VERSION; } show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); dessinerBarre();
   const racine = document.documentElement;
   if (racine && racine.style) { [['--larg-popup', 'larg_popup', 300], ['--haut-popup', 'haut_popup', 260], ['--larg-fiche', 'larg_fiche', 400], ['--fs-legende', 'taille_legende', 13], ['--larg-pop-leg', 'larg_pop_leg', 260], ['--haut-pop-leg', 'haut_pop_leg', 360]].forEach(([v, o, d]) => racine.style.setProperty(v, (+opt(o, d) || d) + 'px')); racine.style.setProperty('--liste-max', +opt('liste_max', 0) > 0 ? (+opt('liste_max', 0) + 'px') : 'none'); racine.style.setProperty('--larg-gauche', (+opt('largeur_gauche', 300) || 300) + 'px'); racine.style.setProperty('--police', POLICES[opt('police', 'Système (par défaut)')] || POLICES['Système (par défaut)']); racine.style.setProperty('--fs-popup', (+opt('taille_popup', 13) || 13) + 'px'); racine.style.setProperty('--fs-fiche', (+opt('taille_fiche', 14) || 14) + 'px'); } show('liste-btn', A('liste'));
   const sig = JSON.stringify([opt('ouv_liste', false), opt('ouv_legende', true)]);
@@ -647,7 +651,7 @@ function appliquerFiltres() {
   }
   document.getElementById('compteurs').innerHTML = cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
     [...mp].sort((a, b) => b[1] - a[1]).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
-  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') + (opt('aff_version', true) !== false ? `<br><small class="ver">version ${VERSION}</small>` : '');
+  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
   majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
@@ -1101,6 +1105,14 @@ function menuAjout(cle, items, action, libelle) {   // bouton « + Ajouter … �
   if (!items.length) return '';
   return `<div class="rg-ajout-zone"><button type="button" class="rg-ajout" data-a="menu" data-m="${cle}" aria-expanded="${menuOuvert === cle}">+ ${libelle}</button>${menuOuvert === cle ? `<div class="rg-menu">${items.map(([k, nom]) => btn(action, `data-e="${k}"`, esc(nom))).join('')}</div>` : ''}</div>`;
 }
+function blocStyleTexte(k) {
+  const x = cfg.styles[k], D = `data-a="st" data-sk="${k}"`;
+  return `<div class="rg-sous">Style : ${esc(STYLES_TXT[k][0])}</div><div class="rg-l2"><label><input type="checkbox" ${D} data-f="coul-on"${x.coul ? ' checked' : ''}> Couleur</label><input type="color" ${D} data-f="coul" value="${x.coul || '#1d2733'}"${x.coul ? '' : ' disabled'} aria-label="Couleur du texte">
+    <label><input type="checkbox" ${D} data-f="fond-on"${x.fond ? ' checked' : ''}> Fond</label><input type="color" ${D} data-f="fond" value="${x.fond || '#e8eef7'}"${x.fond ? '' : ' disabled'} aria-label="Couleur du fond">
+    <label>Taille <input type="number" min="0" max="40" ${D} data-f="taille" value="${x.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
+    <label><input type="checkbox" ${D} data-f="gras"${x.gras ? ' checked' : ''}> Gras</label><label><input type="checkbox" ${D} data-f="ital"${x.ital ? ' checked' : ''}> Italique</label></div>`;
+}
+const GEAR = '<span class="gear" aria-hidden="true">⚙</span>';
 function blocElementsGauche() {
   const vis = cfg.ordre.filter(k => opt('aff_' + k, true) !== false), cache = cfg.ordre.filter(k => opt('aff_' + k, true) === false);
   const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['liste', 'tout', 'iti', 'prog', 'legende'];
@@ -1109,9 +1121,9 @@ function blocElementsGauche() {
     const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(opt(L_[0], L_[1]))}" placeholder="Texte affiché" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
       + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
       + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
-      + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '');
-    const res = L_ ? `<small class="res">${esc(opt(L_[0], L_[1]))}</small>` : '';
-    return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${res}${btns}`, corps)}</li>`
+      + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '')
+      + (ELT_STYLES[k] || []).map(blocStyleTexte).join('');
+    return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${GEAR}${btns}`, corps)}</li>`
       : `<li><div class="rg-simple"><span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${btns}</div></li>`;
   }).join('');
   return `${menuAjout('elts', cache.map(k => [k, ELTS_GAUCHE[k]]), 'el-add', 'Ajouter un élément')}<ul>${lignes}</ul>`;
@@ -1119,7 +1131,7 @@ function blocElementsGauche() {
 function blocBoutonsBarre() {
   const b = cfg.barre, vis = b.boutons.filter(x => x.on), cache = b.boutons.filter(x => !x.on);
   return `<section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche.</p>
-    ${menuAjout('barre', cache.map(x => [x.id, NOMS_BARRE[x.id]]), 'bb-add', 'Ajouter un bouton')}<ul>${vis.map(x => { const E = `data-e="${x.id}"`; return `<li>${rgd('el', '', `data-e="b:${x.id}"`, elOuverts.has('b:' + x.id), `<span class="rg-nom">${esc(NOMS_BARRE[x.id])}</span><small class="res">${esc(x.txt || 'icône par défaut')}</small><span class="rg-btns">${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}${btn('bb-del', E, '✕', 'Retirer de la barre')}</span>`,
+    ${menuAjout('barre', cache.map(x => [x.id, NOMS_BARRE[x.id]]), 'bb-add', 'Ajouter un bouton')}<ul>${vis.map(x => { const E = `data-e="${x.id}"`; return `<li>${rgd('el', '', `data-e="b:${x.id}"`, elOuverts.has('b:' + x.id), `<span class="rg-nom">${esc(NOMS_BARRE[x.id])}</span>${GEAR}<span class="rg-btns">${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}${btn('bb-del', E, '✕', 'Retirer de la barre')}</span>`,
       `<div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Aide au survol (infobulle)" style="flex:1;min-width:150px" aria-label="Aide au survol"></div>`)}</li>`; }).join('')}</ul></section>`;
 }
 function blocPicker() {   // sélecteur de colonnes : recherche et ajout de plusieurs colonnes d'un coup
@@ -1139,7 +1151,7 @@ function carteRegle(r, i) {
     <div class="rg-sous">Alors</div>
     <div class="rg-l2"><label><input type="checkbox" data-a="rc-on" ${R}${r.couleur ? ' checked' : ''}> Couleur</label><input type="color" data-a="rc" ${R} value="${r.couleur || '#c1121f'}"${r.couleur ? '' : ' disabled'} aria-label="Couleur">
       <label><input type="checkbox" data-a="rf-on" ${R}${r.forme ? ' checked' : ''}> Forme</label>${selForme(`data-a="rf" ${R}`, r.forme || 'rond', !r.forme)}</div>
-    <div class="rg-l2"><label><input type="checkbox" data-a="rd-on" ${R}${r.bordc ? ' checked' : ''}> Bordure</label><input type="color" data-a="rdc" ${R} value="${r.bordc || '#1d2733'}"${r.bordc ? '' : ' disabled'} aria-label="Couleur de la bordure"><input type="number" min="0" max="8" data-a="rde" ${R} value="${r.borde}"${r.bordc ? '' : ' disabled'} style="width:56px" aria-label="Épaisseur de la bordure"> px</div>
+    <div class="rg-l2"><label><input type="checkbox" data-a="rd-on" ${R}${r.bordc ? ' checked' : ''}> Bordure</label><input type="color" data-a="rdc" ${R} value="${r.bordc || '#1d2733'}"${r.bordc ? '' : ' disabled'} aria-label="Couleur de la bordure"><input type="number" min="0" max="8" data-a="rde" ${R} value="${r.bordc ? r.borde : ''}" placeholder="—"${r.bordc ? '' : ' disabled'} style="width:56px" aria-label="Épaisseur de la bordure"> px</div>
     <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
       ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div>
     <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option></select>
@@ -1169,7 +1181,7 @@ function blocMessages() {
       `<div class="rg-l2"><label><input type="checkbox" ${A} data-f="actif"${m.actif ? ' checked' : ''}> Actif</label></div>
       <div class="rg-l2"><input type="text" ${A} data-f="ico" value="${esc(m.ico)}" placeholder="Icône" style="max-width:70px" aria-label="Icône"><input type="text" ${A} data-f="texte" value="${esc(m.texte)}" placeholder="Texte du message" style="flex:1;min-width:200px" aria-label="Texte du message"></div>
       <div class="rg-l2">${sel(A, 'style', [['info', 'Information'], ['attention', 'Attention'], ['urgent', 'Urgent'], ['perso', 'Couleurs personnalisées']], m.style)}${m.style === 'perso' ? `<label>Fond <input type="color" ${A} data-f="fond" value="${m.fond}"></label><label>Texte <input type="color" ${A} data-f="coul" value="${m.coul}"></label>` : ''}${sel(A, 'pos', [['haut', 'En haut de la carte'], ['bas', 'En bas de la carte']], m.pos)}</div>
-      <div class="rg-l2"><label>Durée d’affichage <input type="number" min="0" max="600" ${A} data-f="duree" value="${m.duree}" style="width:64px"> s <span class="vide">(0 = jusqu’à la fermeture)</span></label></div>
+      <div class="rg-l2"><label>Durée d’affichage <input type="number" min="0" max="600" ${A} data-f="duree" value="${m.duree || ''}" placeholder="jusqu’à la fermeture" style="width:150px"> s</label></div>
       <div class="rg-l2">${sel(A, 'rep', [['ouverture', 'À chaque ouverture de la carte'], ['session', 'Une fois par session'], ['intervalle', 'Répété à intervalle régulier']], m.rep)}${m.rep === 'intervalle' ? `<label>toutes les <input type="number" min="1" max="240" ${A} data-f="min" value="${m.min}" style="width:64px"> min</label>` : ''}</div>
       <div class="rg-l2"><label>Du <input type="date" ${A} data-f="debut" value="${m.debut}"></label><label>au <input type="date" ${A} data-f="fin" value="${m.fin}"></label></div>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="ms-add">+ Ajouter un message</button>`;
@@ -1261,7 +1273,7 @@ function blocEntete(k) {
     <label>Fond <select ${D} data-f="fond"><option value="neutre"${h.fond === 'neutre' ? ' selected' : ''}>Gris clair</option><option value="point"${h.fond === 'point' ? ' selected' : ''}>Couleur du point</option><option value="perso"${h.fond === 'perso' ? ' selected' : ''}>Couleur personnalisée</option></select>
       ${h.fond === 'perso' ? `<input type="color" ${D} data-f="fondc" value="${h.fondc}" aria-label="Couleur du fond">` : ''}</label>
     <label><input type="checkbox" data-a="eh-txt-on" data-h="${k}"${h.txtc ? ' checked' : ''}> Couleur du titre <input type="color" ${D} data-f="txtc" value="${h.txtc || '#1d2733'}"${h.txtc ? '' : ' disabled'} aria-label="Couleur du titre"></label>
-    <label>Taille du titre (0 = automatique) <input type="number" min="0" max="30" ${D} data-f="taille" value="${h.taille}"> px</label></section>`;
+    <label>Taille du titre <input type="number" min="0" max="30" ${D} data-f="taille" value="${h.taille || ''}" placeholder="automatique" style="width:110px"> px</label></section>`;
 }
 function contenuOnglet() {
   if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label><label>Bordure <input type="color" data-a="defbc" value="${cfg.defaut.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" data-a="defbe" value="${cfg.defaut.borde}" style="width:56px" aria-label="Épaisseur de la bordure"> px</label></div></section>
@@ -1283,7 +1295,6 @@ function contenuOnglet() {
     <label>Fond de la bulle <input type="color" data-o="aide_fond" value="${hex(opt('aide_fond', '')) || '#1d2733'}"> Texte <input type="color" data-o="aide_coul" value="${hex(opt('aide_coul', '')) || '#ffffff'}"></label>
     <p class="vide" style="font-size:12px;margin:0">Le texte de l’aide de chaque bouton se saisit dans « Éléments du panneau de gauche » ci-dessous, et dans l’onglet Barre de boutons pour les boutons de la barre.</p></section>
     <section><h3>Apparence</h3>
-    <label><input type="checkbox" data-o="aff_version"${opt('aff_version', true) !== false ? ' checked' : ''}> Afficher le numéro de version dans le panneau</label>
     <label>Police d’écriture ${sl('police', Object.keys(POLICES))}</label>
     <p class="vide" style="font-size:12px;margin:0 0 4px">La police Marianne s’affiche si elle est installée sur le poste, ou si ses fichiers sont placés dans le dossier lib/fonts du widget.</p>
     <label>Emplacement de la recherche de commune ${sl('pos_commune', POS_COMMUNE)}</label>
@@ -1291,9 +1302,8 @@ function contenuOnglet() {
     ${blocEtiquette('liste', 'Étiquette devant le nom (liste des établissements)')}
     ${blocEtiquette('legende', 'Étiquette de la légende')}
     ${blocSauvegarde()}
-    ${blocStyles()}
-    <section><h3>Tailles</h3>
-    <label>Hauteur maximale des listes dépliées du panneau de gauche (0 = aucune limite) <input type="number" min="0" max="1500" data-o="liste_max" value="${+opt('liste_max', 0)}"> px</label>
+        <section><h3>Tailles</h3>
+    <label>Hauteur maximale des listes dépliées du panneau de gauche <input type="number" min="0" max="1500" data-o="liste_max" data-zero="1" value="${+opt('liste_max', 0) || ''}" placeholder="aucune limite" style="width:120px"> px</label>
     <label>Largeur du popup <input type="number" min="220" max="640" data-o="larg_popup" value="${+opt('larg_popup', 300)}"> px</label>
     <label>Hauteur maximale du contenu du popup <input type="number" min="120" max="700" data-o="haut_popup" value="${+opt('haut_popup', 260)}"> px</label>
     <label>Largeur de la fiche établissement <input type="number" min="320" max="760" data-o="larg_fiche" value="${+opt('larg_fiche', 400)}"> px</label>
@@ -1409,7 +1419,7 @@ modal.addEventListener('click', e => {
 modal.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.o) {
-    const n = t.dataset.o, v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (() => { const n = t.value === '' ? +t.defaultValue : +t.value; return Math.min(+t.max || 48, Math.max(+t.min, isNaN(n) ? +t.min : n)); })() : t.value;
+    const n = t.dataset.o, v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (() => { const n = t.value === '' ? (t.dataset.zero ? 0 : +t.defaultValue) : +t.value; return Math.min(+t.max || 48, Math.max(+t.min, isNaN(n) ? +t.min : n)); })() : t.value;
     opts[n] = v; construire(); enregistrer(); if (n === 'liste_devant') dessiner(); return;
   }
   const a = t.dataset.a; if (!a) return;
