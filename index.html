@@ -249,6 +249,14 @@
   .rg-simple { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; margin-top:10px; background:#fff; }
   .rg-ajout-zone { margin-top:12px; } .rg-menu { display:flex; flex-direction:column; border:1px solid var(--line); border-radius:8px; margin-top:6px; overflow:hidden; background:#fff; }
   .rg-menu button { text-align:left; border:0 !important; border-bottom:1px solid #eef1f5 !important; border-radius:0 !important; padding:8px 12px !important; font-size:13px !important; } .rg-menu button:hover { background:#e8eef7; }
+  .rg-corps li { display:block !important; padding:0 !important; border:0 !important; margin:0 !important; } .rg-corps li > details, .rg-corps li > .rg-simple { width:100%; box-sizing:border-box; margin-top:6px; }
+  details.regle > summary { padding:6px 8px; gap:6px; } details.regle > summary .rg-nom { min-width:0; } .rg-btns { flex:none; } .rg-btns button { padding:2px 7px !important; font-size:12px !important; }
+  details.regle.el > summary::before { content:"⚙"; font-size:14px; } details.regle.el[open] > summary::before { content:"⚙"; color:var(--accent); } .rg-simple { padding:6px 8px; margin-top:6px; }
+  .prog-leg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--muted); margin:4px 0 8px; } .prog-leg i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
+  .prog-focus { background:#fff3bf; border-radius:8px; padding:6px 10px; font-size:13px; margin:6px 0; } .prog-focus button { margin-left:8px; font:inherit; font-size:12px; cursor:pointer; }
+  .prog-l.cl { cursor:pointer; border-radius:6px; } .prog-l.cl:hover { background:#f6f8fb; } .pal-lab { min-width:104px; font-size:13px; }
+  .flt-btn { display:inline-block; margin-top:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+  .flt-btn:hover { background:#f1f4f8; } .flt-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; outline:2px solid var(--accent); outline-offset:1px; }
 </style>
 </head>
 <body>
@@ -257,7 +265,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '33';
+const VERSION = '36';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -327,19 +335,27 @@ const nBarre = b => {
 const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#1f4e8c',
   contenu:['point', 'rien', 'texte', 'colonne'].includes(e.contenu) ? e.contenu : 'point', texte:String(e.texte || ''), col:String(e.col || ''), taille:Math.max(12, Math.min(44, +e.taille || 22)), bord:e.bord === 'perso' ? 'perso' : 'point', bordc:hex(e.bordc) || '#ffffff', borde:Math.max(0, Math.min(8, e.borde === undefined ? 2 : (+e.borde || 0))) }; };
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
-const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#count .ver'], boutons:['Boutons du panneau', '.panel.gauche button.link'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
+const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#count .ver'], boutons:['Boutons du panneau', '.panel.gauche button.link'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && s.type === 'tableau') ? 'tableau' : 'liste', tab:nTab(s && s.tab) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
 const nSt = x => { x = x || {}; return { coul:hex(x.coul), fond:hex(x.fond), taille:Math.max(0, Math.min(40, +x.taille || 0)), gras:!!x.gras, ital:!!x.ital }; };
 const ICO_DEF = { iti:'🧭', prog:'📊' };
-const nFiltre = f => { f = f || {}; return { o:f.o === true, fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
-const nInd = i => { i = i || {}; return { o:i.o === true, nom:String(i.nom || ''), grp:String(i.grp || ''), fait:String(i.fait || ''), att:String(i.att || ''), orange:Math.max(0, Math.min(200, +i.orange || 50)), vert:Math.max(0, Math.min(200, +i.vert || 80)) }; };
+const nFiltre = f => { f = f || {}; return { tous:f.tous !== false, tousTxt:String(f.tousTxt || ''), bouton:f.bouton === true, aide:String(f.aide || ''), o:f.o === true, fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
+const nCond = c => ({ c:String((c && c.c) || ''), op:(c && c.op) || '=', v:String((c && c.v) ?? ''), on:!!(c && c.on) });
+const nInd = i => {
+  i = i || {};
+  let pal = Array.isArray(i.paliers) && i.paliers.length ? i.paliers.map(p => ({ de:Math.max(0, Math.min(1000, +p.de || 0)), couleur:hex(p.couleur) || '#2a9d8f' }))
+    : [{ de:0, couleur:'#c1121f' }, { de:Math.max(0, Math.min(200, +i.orange || 50)), couleur:'#f4821f' }, { de:Math.max(0, Math.min(200, +i.vert || 80)), couleur:'#2a9d8f' }];   // anciens réglages : seuils orange et vert
+  pal.sort((a, b) => a.de - b.de); pal[0].de = 0;
+  return { o:i.o === true, nom:String(i.nom || ''), grp:String(i.grp || ''), mode:['ratio', 'part', 'compte', 'somme', 'moyenne'].includes(i.mode) ? i.mode : 'ratio', num:String(i.num || i.fait || ''), den:String(i.den || i.att || ''), col:String(i.col || ''),
+    cond:nCond(i.cond), base:nCond(i.base), libNum:String(i.libNum || ''), libDen:String(i.libDen || ''), unite:String(i.unite || ''), couleur:hex(i.couleur) || '#1f4e8c', paliers:pal };
+};
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
 const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k])])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, rechChamp = '', sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
 const libel = c => labels[c] || joli(c);
@@ -502,6 +518,7 @@ haut.onAdd = () => {
   });
   d.querySelector('#q-champ').addEventListener('change', e => { rechChamp = e.target.value; appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
+  d.querySelector('#count').addEventListener('click', e => { if (e.target.id === 'prog-x') { progFocus = null; appliquerFiltres(); } });
   d.querySelector('#reduire').addEventListener('click', e => { const r = d.classList.toggle('reduit'); e.target.setAttribute('aria-expanded', String(!r)); e.target.textContent = r ? '▾ Déplier le panneau' : '▴ Réduire le panneau'; });
   d.querySelector('#iti-btn').addEventListener('click', () => ouvrirIti());
   d.querySelector('#prog-btn').addEventListener('click', () => ouvrirProg());
@@ -512,6 +529,11 @@ haut.onAdd = () => {
     else if (t === 'curseur') { const v = +e.target.value; filtreSel[c] = v === 1 ? ['__oui__'] : v === 2 ? ['__non__'] : []; e.target.parentNode.querySelectorAll('.cur-l span').forEach((x, i) => x.classList.toggle('on', i === v)); }
     else { const det = e.target.closest('details'); filtreSel[c] = [...det.querySelectorAll('input:checked')].map(x => x.value); const df = filtresDefs.find(f => f.c === c); det.querySelector('summary').textContent = ((df && df.nom) || libel(c)) + (filtreSel[c].length ? ` (${filtreSel[c].length})` : ''); }
     appliquerFiltres();
+  });
+  d.querySelector('#filtres').addEventListener('click', e => {   // filtre « oui » affiché comme bouton : un clic active ou désactive
+    const b = e.target.closest('button.flt-btn'); if (!b) return;
+    const c = b.dataset.c, on = !(filtreSel[c] && filtreSel[c].length); filtreSel[c] = on ? ['__oui__'] : [];
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.textContent = (on ? '✓ ' : '') + b.dataset.nom; appliquerFiltres();
   });
   d.querySelector('#filtres').addEventListener('toggle', e => { const t = e.target; if (!t.matches) return; if (t.id === 'filtres-sec') filtresSecOuvert = t.open; else if (t.dataset && t.dataset.c) etatFiltres.set(t.dataset.c, t.open); }, true);
   d.querySelector('#filtres').addEventListener('input', e => { if (e.target.dataset.t === 'curseur') e.target.dispatchEvent(new Event('change', { bubbles:true })); });
@@ -595,13 +617,14 @@ function majListe() {
   const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 5000);
   document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
 }
-const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : ''); return a ? ` style="${a}"` : ''; };
+const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
 function filtreHtml(f) {
   const c = f.c, nom = f.nom || libel(c), sl = new Set(filtreSel[c] || []);
+  if (f.type === 'oui' && f.bouton) { const on = sl.size > 0; return `<button type="button" class="flt-btn${on ? ' on' : ''}" data-c="${esc(c)}" data-nom="${esc(nom)}" aria-pressed="${on}"${fs(f)}>${on ? '✓ ' : ''}${esc(nom)}</button>`; }
   if (f.type === 'oui') return `<label class="flt"${fs(f)}><input type="checkbox" data-c="${esc(c)}" data-t="oui"${sl.size ? ' checked' : ''}> ${esc(nom)}</label>`;
   if (f.type === 'curseur') { const pos = sl.has('__oui__') ? 1 : sl.has('__non__') ? 2 : 0; return `<label class="flt"${fs(f)}>${esc(nom)}<span class="cur"><input type="range" min="0" max="2" step="1" value="${pos}" data-c="${esc(c)}" data-t="curseur" aria-label="${esc(nom)} : tous, oui ou non"><span class="cur-l">${['Tous', 'Oui', 'Non'].map((t, i) => `<span${i === pos ? ' class="on"' : ''}>${t}</span>`).join('')}</span></span></label>`; }
   const vals = [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 1000);
-  if (f.type === 'unique') return `<label class="flt"${fs(f)}>${esc(nom)}<select data-c="${esc(c)}" data-t="unique"><option value="">Tous</option>${vals.map(v => `<option${sl.has(v) ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`;
+  if (f.type === 'unique') return `<label class="flt"${fs(f)}>${esc(nom)}<select data-c="${esc(c)}" data-t="unique">${f.tous !== false ? `<option value="">${esc(f.tousTxt || 'Tous')}</option>` : ''}${vals.map(v => `<option${sl.has(v) ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`;
   const ouv = etatFiltres.has(c) ? etatFiltres.get(c) : opt('filtres_sous_ouvert', false) === true;
   return `<details class="flt-d" data-c="${esc(c)}"${ouv ? ' open' : ''}><summary${fs(f)}>${esc(nom)}${sl.size ? ` (${sl.size})` : ''}</summary><div class="liste">${vals.map(v => `<label><input type="checkbox" data-c="${esc(c)}" value="${esc(v)}"${sl.has(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}</div></details>`;
 }
@@ -615,7 +638,7 @@ function appliquerFiltres() {
   let n = 0; const cnt = cptCols.map(c => [c, new Map()]);
   for (const m of marqueurs.values()) {
     const d = m._cifi;
-    const ok = !(d.style.regles.length ? d.style.regles.some(i => masques.has('r' + i)) : masques.has('r-1')) && correspondRech(d) && Object.entries(filtreSel).every(([c, v]) => {
+    const ok = !(d.style.regles.length ? d.style.regles.some(i => masques.has('r' + i)) : masques.has('r-1')) && correspondRech(d) && (!progFocus || (fmt(progFocus.c, d.vals[progFocus.c]) ?? '(vide)') === progFocus.v) && Object.entries(filtreSel).every(([c, v]) => {
       if (!v || !v.length) return true; const df = filtresDefs.find(f => f.c === c);
       if (df && df.type === 'oui') return egalTxt(d.fv[c], df.oui);
       if (df && df.type === 'curseur') return egalTxt(d.fv[c], v.includes('__oui__') ? df.oui : df.non);
@@ -624,7 +647,7 @@ function appliquerFiltres() {
   }
   document.getElementById('compteurs').innerHTML = cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
     [...mp].sort((a, b) => b[1] - a[1]).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
-  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (opt('aff_version', true) !== false ? `<br><small class="ver">version ${VERSION}</small>` : '');
+  document.getElementById('count').innerHTML = `<strong>${n}</strong> sur ${marqueurs.size} établissement${marqueurs.size > 1 ? 's' : ''}` + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') + (opt('aff_version', true) !== false ? `<br><small class="ver">version ${VERSION}</small>` : '');
   majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
@@ -797,8 +820,9 @@ function construire() {
   const valsDe = c => [...new Set([...marqueurs.values()].map(x => x._cifi.fv[c]))].filter(v => v !== undefined).sort((a, b) => String(a).localeCompare(String(b), 'fr')).slice(0, 1000);
   const defSig = JSON.stringify([opt('filtres_titre_on', true), opt('filtres_titre', 'Filtres'), opt('filtres_ico', ''), opt('filtres_ouvert', true), opt('filtres_sous_ouvert', false)]);
   if (defSig !== sigFiltresDef) { sigFiltresDef = defSig; etatFiltres.clear(); filtresSecOuvert = opt('filtres_ouvert', true) !== false; sigFiltres = ''; }
-  const sig = JSON.stringify(filtresDefs.map(f => [f.c, f.nom, f.type, f.oui, f.non, f.fond, f.coul, f.gras, (f.type === 'oui' || f.type === 'curseur') ? 0 : valsDe(f.c)]));
+  const sig = JSON.stringify(filtresDefs.map(f => [f.c, f.nom, f.type, f.oui, f.non, f.fond, f.coul, f.gras, f.bouton, f.aide, f.tous, f.tousTxt, (f.type === 'oui' || f.type === 'curseur') ? 0 : valsDe(f.c)]));
   Object.keys(filtreSel).forEach(c => { const df = filtresDefs.find(f => f.c === c); if (!df) delete filtreSel[c]; else if (df.type !== 'oui' && df.type !== 'curseur') filtreSel[c] = (filtreSel[c] || []).filter(v => valsDe(c).includes(v)); });
+  filtresDefs.forEach(f => { if (f.type === 'unique' && f.tous === false) { const v = valsDe(f.c); if (v.length && !(filtreSel[f.c] && filtreSel[f.c].length)) filtreSel[f.c] = [v[0]]; } });   // sans « Tous », la première valeur est sélectionnée
   if (sig !== sigFiltres) { sigFiltres = sig; document.getElementById('filtres').innerHTML = filtresBloc(); }
   majCluster();
   appliquerFiltres(); appliquerAffichage();
@@ -883,24 +907,48 @@ let progOuvert = false, progInd = 0;
 const nbVal = v => { const n = Number(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isNaN(n) ? 0 : n; };
 function ouvrirProg() { fermerFiche(); fermerIti(); progOuvert = true; progDessiner(); progPanel.classList.add('ouvert'); progPanel.setAttribute('aria-hidden', 'false'); }
 function fermerProg() { progOuvert = false; progPanel.classList.remove('ouvert'); progPanel.setAttribute('aria-hidden', 'true'); }
+const nbFr = n => Number(n).toLocaleString('fr-FR', { maximumFractionDigits:2 });
+const warnInd = x => x.mode === 'ratio' ? (!x.num || !x.den) : x.mode === 'part' ? !x.cond.c : (x.mode === 'somme' || x.mode === 'moyenne') ? !x.col : false;
+function progDescr(I) {
+  const lc = c => libel(c), cond = k => `${lc(k.c)} ${(OPS.find(o => o[0] === k.op) || [0, ''])[1]}${k.op === 'vide' || k.op === 'rempli' ? '' : ' « ' + k.v + ' »'}`;
+  if (I.mode === 'ratio') return `${I.libNum || lc(I.num)} sur ${I.libDen || lc(I.den)}`;
+  if (I.mode === 'part') return `Part des établissements : ${cond(I.cond)}${I.base.on && I.base.c ? ', parmi ceux où ' + cond(I.base) : ''}`;
+  if (I.mode === 'compte') return I.cond.c ? `Nombre d’établissements : ${cond(I.cond)}` : 'Nombre d’établissements';
+  return `${I.mode === 'somme' ? 'Somme' : 'Moyenne'} de ${lc(I.col)}`;
+}
 function progDessiner() {
   const P = cfg.prog, I = P.inds[progInd] || P.inds[0];
   const tete = '<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-p="fermer" aria-label="Fermer">✕</button><h2>Progression</h2></div>';
-  if (!I || !I.grp || !I.fait || !I.att) { progPanel.innerHTML = tete + '<div class="fp-corps"><p class="vide">Aucun indicateur configuré. Ouvrez « Configurer le widget », onglet Progression : choisissez la colonne de regroupement, les contrôles réalisés et les contrôles attendus.</p></div>'; return; }
+  if (!I || warnInd(I)) { progPanel.innerHTML = tete + '<div class="fp-corps"><p class="vide">Aucun indicateur complet. Ouvrez « Configurer le widget », onglet Progression, et choisissez le mode de calcul et ses colonnes.</p></div>'; return; }
   const lignes = P.suivre ? [...marqueurs.values()].filter(m => cluster.hasLayer(m)).map(m => m._cifi.vals) : (donnees.size ? [...donnees.values()] : [...marqueurs.values()].map(m => m._cifi.vals));
-  const g = new Map(); let tf = 0, ta = 0;
-  lignes.forEach(v => { const k = fmt(I.grp, v[I.grp]) ?? '(vide)', o = g.get(k) || { nom:k, f:0, a:0 }, f = nbVal(v[I.fait]), a = nbVal(v[I.att]); o.f += f; o.a += a; g.set(k, o); tf += f; ta += a; });
-  const pct = (f, a) => a > 0 ? f / a * 100 : null, coul = p => p === null ? '#9aa5b1' : p >= I.vert ? '#2a9d8f' : p >= I.orange ? '#f4821f' : '#c1121f';
-  const ligne = (nom, f, a, cls) => { const p = pct(f, a); return `<div class="prog-l${cls || ''}" data-g="${esc(nom)}"><div class="prog-t"><span>${esc(nom)}</span><span>${f} / ${a} · ${p === null ? '—' : Math.round(p) + ' %'}</span></div><div class="prog-b"><i style="width:${p === null ? 0 : Math.min(100, p)}%;background:${coul(p)}"></i></div></div>`; };
-  const rows = [...g.values()].sort((x, y) => P.tri === 'nom' ? String(x.nom).localeCompare(String(y.nom), 'fr') : ((pct(x.f, x.a) ?? -1) - (pct(y.f, y.a) ?? -1)) * (P.tri === 'asc' ? 1 : -1));
+  const ok = (k, v) => !k.c || test(k, v), pctMode = I.mode === 'ratio' || I.mode === 'part';
+  const feed = (o, v) => {
+    if (I.mode === 'ratio') { o.a += nbVal(v[I.num]); o.b += nbVal(v[I.den]); }
+    else if (I.mode === 'part') { if (!I.base.on || ok(I.base, v)) { o.b++; if (ok(I.cond, v)) o.a++; } }
+    else if (I.mode === 'compte') { if (ok(I.cond, v)) o.a++; }
+    else if (I.mode === 'somme') o.a += nbVal(v[I.col]);
+    else { const x = v[I.col]; if (x !== null && x !== undefined && x !== '' && !isNaN(Number(String(x).replace(',', '.')))) { o.a += nbVal(x); o.n++; } }
+  };
+  const g = new Map(), tot = { nom:I.nom || 'Ensemble', a:0, b:0, n:0 };
+  lignes.forEach(v => { if (I.grp) { const k = fmt(I.grp, v[I.grp]) ?? '(vide)', o = g.get(k) || { nom:k, a:0, b:0, n:0 }; feed(o, v); g.set(k, o); } feed(tot, v); });
+  const val = o => pctMode ? (o.b > 0 ? o.a / o.b * 100 : null) : I.mode === 'moyenne' ? (o.n > 0 ? o.a / o.n : null) : o.a;
+  const tous = [...g.values()].concat([tot]), max = Math.max(1e-9, ...tous.map(o => val(o) ?? 0)), u = I.unite ? ' ' + esc(I.unite) : '';
+  const coul = v => v === null ? '#9aa5b1' : pctMode ? ([...I.paliers].reverse().find(p => v >= p.de) || I.paliers[0]).couleur : I.couleur;
+  const ligne = (o, cls) => { const v = val(o), w = v === null ? 0 : pctMode ? Math.min(100, v) : v / max * 100;
+    const t = pctMode ? `${nbFr(o.a)} / ${nbFr(o.b)}${u} · ${v === null ? '—' : Math.round(v) + ' %'}` : `${v === null ? '—' : nbFr(v)}${u}`;
+    return `<div class="prog-l${cls || ''}${!cls && P.clic && I.grp ? ' cl' : ''}" data-g="${esc(o.nom)}"><div class="prog-t"><span>${esc(o.nom)}</span><span>${t}</span></div><div class="prog-b"><i style="width:${w}%;background:${coul(v)}"></i></div></div>`; };
+  const rows = [...g.values()].sort((x, y) => P.tri === 'nom' ? String(x.nom).localeCompare(String(y.nom), 'fr') : ((val(x) ?? -1) - (val(y) ?? -1)) * (P.tri === 'asc' ? 1 : -1));
+  const leg = pctMode ? `<div class="prog-leg">${I.paliers.map((p, j) => `<span><i style="background:${p.couleur}"></i>${j === 0 ? (I.paliers[1] ? 'moins de ' + I.paliers[1].de + ' %' : 'toutes valeurs') : 'dès ' + p.de + ' %'}</span>`).join('')}</div>` : '';
   progPanel.innerHTML = tete + `<div class="fp-corps">${P.inds.length > 1 ? `<label style="font-size:13px">Indicateur <select id="prog-ind">${P.inds.map((x, i) => `<option value="${i}"${x === I ? ' selected' : ''}>${esc(x.nom || 'Indicateur ' + (i + 1))}</option>`).join('')}</select></label>` : ''}
-    <p class="vide" style="font-size:12px">${esc(libel(I.fait))} sur ${esc(libel(I.att))}, par ${esc(libel(I.grp))}${P.suivre ? ' · selon les filtres en cours' : ''}. Orange dès ${I.orange} %, vert dès ${I.vert} %.</p>
-    ${ligne('Ensemble', tf, ta, ' ens')}${rows.map(r => ligne(r.nom, r.f, r.a)).join('') || '<p class="vide">Aucune donnée.</p>'}</div>`;
+    <p class="vide" style="font-size:12px;margin:6px 0 0">${esc(progDescr(I))}${I.grp ? ', par ' + esc(libel(I.grp)) : ''}${P.suivre ? ' · établissements visibles' : ''}.</p>${leg}
+    ${progFocus ? `<div class="prog-focus">Carte limitée à « ${esc(progFocus.v)} » <button type="button" data-p="tous">Tout afficher</button></div>` : ''}
+    ${ligne(tot, ' ens')}${rows.map(r => ligne(r)).join('') || (I.grp ? '<p class="vide">Aucune donnée.</p>' : '')}</div>`;
 }
 progPanel.addEventListener('click', e => {
   if (e.target.closest('[data-p="fermer"]')) { fermerProg(); return; }
+  if (e.target.closest('[data-p="tous"]')) { progFocus = null; appliquerFiltres(); return; }
   const l = e.target.closest('.prog-l[data-g]'), I = cfg.prog.inds[progInd] || cfg.prog.inds[0];
-  if (l && !l.classList.contains('ens') && cfg.prog.clic && I && filtresDefs.some(f => f.c === I.grp && (f.type === 'multi' || f.type === 'unique'))) { filtreSel[I.grp] = [l.dataset.g]; sigFiltres = ''; construire(); }
+  if (l && !l.classList.contains('ens') && cfg.prog.clic && I && I.grp) { progFocus = { c:I.grp, v:l.dataset.g }; appliquerFiltres(); recentrer(); }
 });
 progPanel.addEventListener('change', e => { if (e.target.id === 'prog-ind') { progInd = +e.target.value || 0; progDessiner(); } });
 
@@ -1035,7 +1083,7 @@ function blocSection(sec, i) {
     ${btn('tb-radd', G, '+ ligne')}
     <label><input type="checkbox" data-a="tb" ${G} data-f="vides"${T.vides ? ' checked' : ''}> Masquer les lignes dont toutes les valeurs de colonnes sont vides</label>`;
 }
-function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary>${sum}</summary><div class="rg-corps-r">${body}</div></details>`; }
+function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen${ok === 'el' ? ' el' : ''}" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary${ok === 'el' ? ' data-aide="Configurer cet élément"' : ''}>${sum}</summary><div class="rg-corps-r">${body}</div></details>`; }
 function resumeEntree(x) { return [x.gn && 'nom gras', x.gi && 'nom italique', x.vg && 'valeur grasse', x.vi && 'valeur italique', x.vb && 'pastille', x.ta && ({ p:'petite', g:'grande', tg:'très grande' })[x.ta], x.cn && 'couleur du nom', x.cw && 'couleur de la valeur'].filter(Boolean).join(' · ') || 'style par défaut'; }
 function blocListe(g) {
   const l = listeDe(g), cb = (a, at, v, t) => `<label><input type="checkbox" data-a="${a}" ${at}${v ? ' checked' : ''}> ${t}</label>`;
@@ -1066,14 +1114,13 @@ function blocElementsGauche() {
     return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${res}${btns}`, corps)}</li>`
       : `<li><div class="rg-simple"><span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${btns}</div></li>`;
   }).join('');
-  return `<ul>${lignes}</ul>${menuAjout('elts', cache.map(k => [k, ELTS_GAUCHE[k]]), 'el-add', 'Ajouter un élément')}`;
+  return `${menuAjout('elts', cache.map(k => [k, ELTS_GAUCHE[k]]), 'el-add', 'Ajouter un élément')}<ul>${lignes}</ul>`;
 }
 function blocBoutonsBarre() {
   const b = cfg.barre, vis = b.boutons.filter(x => x.on), cache = b.boutons.filter(x => !x.on);
-  return `<section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche. « Ajouter un bouton » propose les boutons connus qui ne sont pas dans la barre.</p>
-    <ul>${vis.map(x => { const E = `data-e="${x.id}"`; return `<li>${rgd('el', '', `data-e="b:${x.id}"`, elOuverts.has('b:' + x.id), `<span class="rg-nom">${esc(NOMS_BARRE[x.id])}</span><small class="res">${esc(x.txt || 'icône par défaut')}</small><span class="rg-btns">${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}${btn('bb-del', E, '✕', 'Retirer de la barre')}</span>`,
-      `<div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Aide au survol (infobulle)" style="flex:1;min-width:150px" aria-label="Aide au survol"></div>`)}</li>`; }).join('')}</ul>
-    ${menuAjout('barre', cache.map(x => [x.id, NOMS_BARRE[x.id]]), 'bb-add', 'Ajouter un bouton')}</section>`;
+  return `<section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche.</p>
+    ${menuAjout('barre', cache.map(x => [x.id, NOMS_BARRE[x.id]]), 'bb-add', 'Ajouter un bouton')}<ul>${vis.map(x => { const E = `data-e="${x.id}"`; return `<li>${rgd('el', '', `data-e="b:${x.id}"`, elOuverts.has('b:' + x.id), `<span class="rg-nom">${esc(NOMS_BARRE[x.id])}</span><small class="res">${esc(x.txt || 'icône par défaut')}</small><span class="rg-btns">${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}${btn('bb-del', E, '✕', 'Retirer de la barre')}</span>`,
+      `<div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Aide au survol (infobulle)" style="flex:1;min-width:150px" aria-label="Aide au survol"></div>`)}</li>`; }).join('')}</ul></section>`;
 }
 function blocPicker() {   // sélecteur de colonnes : recherche et ajout de plusieurs colonnes d'un coup
   const l = listeDe(picker.g), dispo = allCols.filter(c => !l.some(x => x.c === c)), q = sansAccent(picker.q);
@@ -1155,22 +1202,33 @@ function blocFiltres() {
       <div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(f.nom)}" placeholder="Nom affiché (par défaut : ${esc(f.c ? libel(f.c) : 'nom de la colonne')})" aria-label="Nom affiché"></div>
       <div class="rg-l2"><select ${A} data-f="type" aria-label="Type de filtre"><option value="multi"${f.type === 'multi' ? ' selected' : ''}>Choix multiples (cases à cocher)</option><option value="unique"${f.type === 'unique' ? ' selected' : ''}>Choix unique (liste déroulante)</option><option value="oui"${f.type === 'oui' ? ' selected' : ''}>Oui / non : case « seulement les oui »</option><option value="curseur"${f.type === 'curseur' ? ' selected' : ''}>Oui / non : curseur Tous · Oui · Non</option></select>
       ${f.type === 'oui' || f.type === 'curseur' ? `<label>Valeur « oui » <input type="text" ${A} data-f="oui" value="${esc(f.oui)}" style="max-width:110px"></label>` : ''}${f.type === 'curseur' ? `<label>Valeur « non » <input type="text" ${A} data-f="non" value="${esc(f.non)}" style="max-width:110px"></label>` : ''}</div>
+      ${f.type === 'oui' ? `<div class="rg-l2"><label>Apparence <select ${A} data-f="bouton"><option value=""${f.bouton ? '' : ' selected'}>Case à cocher</option><option value="1"${f.bouton ? ' selected' : ''}>Bouton cliquable</option></select></label></div>` : ''}
+      ${f.type === 'unique' ? `<div class="rg-l2"><label><input type="checkbox" ${A} data-f="tous"${f.tous ? ' checked' : ''}> Proposer une entrée « Tous »</label>${f.tous ? `<input type="text" ${A} data-f="tousTxt" value="${esc(f.tousTxt)}" placeholder="Tous" style="max-width:120px" aria-label="Texte de l’entrée Tous">` : '<span class="vide" style="font-size:12px">La première valeur est alors sélectionnée.</span>'}</div>` : ''}
+      <div class="rg-l2"><input type="text" ${A} data-f="aide" value="${esc(f.aide)}" placeholder="Aide au survol (facultatif)" aria-label="Aide au survol"></div>
       <div class="rg-l2"><label><input type="checkbox" ${A} data-f="fond-on"${f.fond ? ' checked' : ''}> Fond</label><input type="color" ${A} data-f="fond" value="${f.fond || '#fff3bf'}"${f.fond ? '' : ' disabled'} aria-label="Couleur du fond"><label><input type="checkbox" ${A} data-f="coul-on"${f.coul ? ' checked' : ''}> Couleur du texte</label><input type="color" ${A} data-f="coul" value="${f.coul || '#1d2733'}"${f.coul ? '' : ' disabled'} aria-label="Couleur du texte"><label><input type="checkbox" ${A} data-f="gras"${f.gras ? ' checked' : ''}> Gras</label></div>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="fl-add">+ Ajouter un filtre</button>`;
 }
 function blocProg() {
-  const P = cfg.prog;
+  const P = cfg.prog, MODES = [['ratio', 'Rapport entre deux colonnes (somme ÷ somme)'], ['part', 'Part des établissements qui remplissent une condition'], ['compte', 'Nombre d’établissements'], ['somme', 'Somme d’une colonne'], ['moyenne', 'Moyenne d’une colonne']];
+  const selV = (at, v, vide) => `<select ${at}><option value="">${vide}</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
+  const cond = (i, w, k, titre) => { const C = `data-a="pc" data-i="${i}" data-w="${w}"`; return `<div class="rg-sous">${titre}</div><div class="rg-l2">${selCol(`${C} data-f="c"`, k.c)}<select ${C} data-f="op" aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" ${C} data-f="v" value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}</div>`; };
   return `<section><h3>Options</h3>
-    <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Tenir compte des filtres en cours</label>
-    <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre filtre la carte (si la colonne de regroupement est un filtre)</label>
-    <label>Tri <select data-a="pg" data-f="tri">${[['nom', 'Par nom'], ['asc', 'Avancement croissant'], ['desc', 'Avancement décroissant']].map(([v, t]) => `<option value="${v}"${P.tri === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></section>
-    ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`, inc = !x.grp || !x.fait || !x.att;
-      return rgd('pi', i, '', x.o, `<span class="rg-nom">${esc(x.nom || 'Indicateur ' + (i + 1))}</span>${inc ? '<small class="res warn">⚠ colonnes à choisir</small>' : '<small class="res">complet</small>'}<span class="rg-btns">${btn('pi-del', `data-i="${i}"`, '✕', 'Supprimer')}</span>`,
-      `<div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur (ex. Contrôles 2026)"></div>
-      <label>Regrouper par ${selCol(`${A} data-f="grp"`, x.grp)}</label>
-      <label>Contrôles réalisés (colonne numérique) ${selCol(`${A} data-f="fait"`, x.fait)}</label>
-      <label>Contrôles attendus (colonne numérique) ${selCol(`${A} data-f="att"`, x.att)}</label>
-      <label>Orange à partir de <input type="number" min="0" max="200" ${A} data-f="orange" value="${x.orange}" style="width:64px"> % · vert à partir de <input type="number" min="0" max="200" ${A} data-f="vert" value="${x.vert}" style="width:64px"> %</label>`); }).join('')}
+    <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Calculer sur les établissements visibles (selon la recherche et les filtres)</label>
+    <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre n’affiche sur la carte que les établissements de cette barre</label>
+    <label>Tri des barres <select data-a="pg" data-f="tri">${[['nom', 'Par nom'], ['asc', 'Résultat croissant'], ['desc', 'Résultat décroissant']].map(([v, t]) => `<option value="${v}"${P.tri === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></section>
+    ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`, pct = x.mode === 'ratio' || x.mode === 'part';
+      return rgd('pi', i, '', x.o, `<span class="rg-nom">${esc(x.nom || 'Indicateur ' + (i + 1))}</span>${warnInd(x) ? '<small class="res warn">⚠ à compléter</small>' : `<small class="res">${esc(MODES.find(m => m[0] === x.mode)[1].split(' (')[0])}</small>`}<span class="rg-btns">${btn('pi-del', `data-i="${i}"`, '✕', 'Supprimer l’indicateur')}</span>`,
+      `<div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur" aria-label="Nom de l’indicateur"></div>
+      <label>Regrouper par ${selV(`${A} data-f="grp"`, x.grp, 'Aucun (une seule barre)')}</label>
+      <label>Mode de calcul <select ${A} data-f="mode">${MODES.map(([v, t]) => `<option value="${v}"${x.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+      ${x.mode === 'ratio' ? `<label>Numérateur ${selCol(`${A} data-f="num"`, x.num)}</label><label>Libellé du numérateur <input type="text" ${A} data-f="libNum" value="${esc(x.libNum)}" placeholder="ex. réalisés" style="max-width:160px"></label>
+        <label>Dénominateur ${selCol(`${A} data-f="den"`, x.den)}</label><label>Libellé du dénominateur <input type="text" ${A} data-f="libDen" value="${esc(x.libDen)}" placeholder="ex. attendus" style="max-width:160px"></label>` : ''}
+      ${x.mode === 'part' ? cond(i, 'cond', x.cond, 'Part des établissements où…') + `<label><input type="checkbox" ${A} data-f="baseon"${x.base.on ? ' checked' : ''}> Seulement parmi une partie des établissements</label>${x.base.on ? cond(i, 'base', x.base, 'Parmi ceux où…') : ''}` : ''}
+      ${x.mode === 'compte' ? cond(i, 'cond', x.cond, 'Compter seulement ceux où… (facultatif)') : ''}
+      ${x.mode === 'somme' || x.mode === 'moyenne' ? `<label>Colonne ${selCol(`${A} data-f="col"`, x.col)}</label>` : ''}
+      <label>Unité affichée (facultatif) <input type="text" ${A} data-f="unite" value="${esc(x.unite)}" placeholder="ex. contrôles, €" style="max-width:140px"></label>
+      ${pct ? `<div class="rg-sous">Couleur de la barre selon le résultat</div>${x.paliers.map((q, j) => `<div class="rg-l2">${j === 0 ? `<span class="pal-lab">${x.paliers[1] ? 'Moins de ' + x.paliers[1].de + ' %' : 'Toutes les valeurs'}</span>` : `<span class="pal-lab">À partir de</span><input type="number" min="0" max="1000" data-a="pp" data-i="${i}" data-j="${j}" data-f="de" value="${q.de}" style="width:70px" aria-label="Seuil"> %`}<input type="color" data-a="pp" data-i="${i}" data-j="${j}" data-f="couleur" value="${q.couleur}" aria-label="Couleur">${j > 0 ? btn('pp-del', `data-i="${i}" data-j="${j}"`, '✕', 'Retirer ce palier') : ''}</div>`).join('')}${btn('pp-add', `data-i="${i}"`, '+ palier de couleur')}`
+        : `<label>Couleur des barres <input type="color" ${A} data-f="couleur" value="${x.couleur}"></label>`}`); }).join('')}
     <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
 }
 function blocEtiquette(k, titre) {
@@ -1217,7 +1275,7 @@ function contenuOnglet() {
   if (onglet === 'prog') return blocProg();
   const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
   const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
-  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Seuls les éléments affichés sont listés. Cliquez sur un élément pour régler son texte, son icône et son aide ; ✕ le retire du panneau ; « Ajouter un élément » le remet. Le panneau défile si les éléments dépassent la hauteur du widget.</p>
+  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">⚙ pour régler un élément (texte, icône, aide), ✕ pour le retirer, « Ajouter un élément » pour en remettre un.</p>
     ${blocElementsGauche()}</section>
     <section><h3>Aides au survol</h3>
     <label><input type="checkbox" data-o="aide_on"${opt('aide_on', true) !== false ? ' checked' : ''}> Afficher une bulle d’aide quand on effleure un bouton</label>
@@ -1260,7 +1318,7 @@ const AIDES_ONGLET = {
   prog:'Barres d’avancement par administration ou unité. Exemple : contrôles réalisés sur contrôles attendus, regroupés par Administration.',
   barre:'Les boutons de la barre sur la carte. Un bouton placé ici disparaît du panneau de gauche.',
   general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' };
-const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(x => !x.grp || !x.fait || !x.att).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
+const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
 function majCfgClasses() { const b = document.body; if (b && b.classList) b.classList.toggle('cfg-large', modal.classList.contains('ouvert') && !modal.classList.contains('reduit')); }
 function dessiner() {
   const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0, av = avertOnglet();
@@ -1333,7 +1391,9 @@ modal.addEventListener('click', e => {
     case 'rc-add': cfg.recherche.cols.push({ c:'', nom:'' }); break;
     case 'rc-up': case 'rc-down': deplacer(cfg.recherche.cols, i, a === 'rc-up' ? -1 : 1); break;
     case 'rc-del': cfg.recherche.cols.splice(i, 1); break;
-    case 'pi-add': { const ia = allCols.find(c => /attendu/i.test(libel(c))), ifa = allCols.find(c => /contr.le.*2026/i.test(libel(c))); cfg.prog.inds.push(nInd({ nom:'Contrôles réalisés / attendus', fait:ifa || '', att:ia || '' })); break; }
+    case 'pp-add': { const X = cfg.prog.inds[i], l = X.paliers[X.paliers.length - 1]; X.paliers.push({ de:Math.min(1000, l.de + 10), couleur:'#2a9d8f' }); break; }
+    case 'pp-del': { const X = cfg.prog.inds[i]; if (X.paliers.length > 1) X.paliers.splice(+b.dataset.j, 1); break; }
+    case 'pi-add': cfg.prog.inds.push(nInd({ nom:'Nouvel indicateur' })); break;
     case 'pi-del': if (!sure()) return; cfg.prog.inds.splice(i, 1); break;
     case 'bb-up': case 'bb-down': { const l = cfg.barre.boutons, vis = l.filter(x => x.on), p = vis.findIndex(x => x.id === b.dataset.e), q = vis[p + (a === 'bb-up' ? -1 : 1)]; if (p >= 0 && q) { const i2 = l.findIndex(x => x.id === b.dataset.e), j2 = l.indexOf(q); [l[i2], l[j2]] = [l[j2], l[i2]]; } break; }
     case 'ord-up': case 'ord-down': { const vis = cfg.ordre.filter(x => opt('aff_' + x, true) !== false), p = vis.indexOf(b.dataset.e), q = vis[p + (a === 'ord-up' ? -1 : 1)]; if (p >= 0 && q) { const i2 = cfg.ordre.indexOf(b.dataset.e), j2 = cfg.ordre.indexOf(q); [cfg.ordre[i2], cfg.ordre[j2]] = [cfg.ordre[j2], cfg.ordre[i2]]; } break; }
@@ -1386,10 +1446,12 @@ modal.addEventListener('change', e => {
     case 'tb': cfg.sections[+t.dataset.g].tab[t.dataset.f] = t.checked; break;
     case 'rch': cfg.recherche[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break;
     case 'rc': { const X = cfg.recherche.cols[+t.dataset.i]; if (X) X[t.dataset.f] = t.value; break; }
-    case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
+    case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (f === 'bouton') F.bouton = t.value === '1'; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
     case 'st': { const X = cfg.styles[t.dataset.sk], f = t.dataset.f; if (f === 'coul-on') X.coul = t.checked ? '#1d2733' : ''; else if (f === 'fond-on') X.fond = t.checked ? '#e8eef7' : ''; else if (f === 'taille') X.taille = Math.max(0, Math.min(40, +t.value || 0)); else if (t.type === 'checkbox') X[f] = t.checked; else X[f] = t.value; break; }
     case 'pg': { cfg.prog[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
-    case 'pi': { const X = cfg.prog.inds[+t.dataset.i]; if (X) X[t.dataset.f] = t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
+    case 'pi': { const X = cfg.prog.inds[+t.dataset.i], f = t.dataset.f; if (X) { if (f === 'baseon') X.base.on = t.checked; else X[f] = t.value; } break; }
+    case 'pc': { const X = cfg.prog.inds[+t.dataset.i]; if (X) X[t.dataset.w][t.dataset.f] = t.value; break; }
+    case 'pp': { const X = cfg.prog.inds[+t.dataset.i]; if (X) { const q = X.paliers[+t.dataset.j]; if (t.dataset.f === 'de') q.de = Math.max(0, Math.min(1000, +t.value || 0)); else q.couleur = t.value; X.paliers.sort((u, v) => u.de - v.de); X.paliers[0].de = 0; } break; }
     case 'bb': { cfg.barre[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, t.value === '' ? +t.defaultValue : +t.value)) : t.value; break; }
     case 'bb-b': { const x = cfg.barre.boutons.find(y => y.id === t.dataset.e); if (x) x[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
     case 'et': { const E = cfg.etiquettes[t.dataset.ek], f = t.dataset.f; if (t.type === 'number') { const n = t.value === '' ? +t.defaultValue : +t.value; E[f] = Math.max(+t.min, Math.min(+t.max, isNaN(n) ? +t.min : n)); } else E[f] = t.value; break; }
@@ -1409,7 +1471,7 @@ modal.addEventListener('change', e => {
     case 'cv': R.si[k].v = t.value; break;
     default: return;
   }
-  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'fl' && ['type', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
+  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'pi' && ['mode', 'baseon'].includes(t.dataset.f)) || (a === 'pc' && t.dataset.f === 'op') || (a === 'fl' && ['type', 'tous', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
 });
 modal.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.a === 'pk-q' && picker) { picker.q = t.value; const q = sansAccent(t.value); modal.querySelectorAll('.pk-item').forEach(x => { x.style.display = !q || x.dataset.lib.includes(q) ? '' : 'none'; }); } });
 modal.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.gen')) return; if (d.dataset.ok === 'el') { if (d.open) elOuverts.add(d.dataset.e); else elOuverts.delete(d.dataset.e); return; } const i = +d.dataset.i, k = d.dataset.ok, o = k === 'col' ? listeDe(d.dataset.g)[i] : k === 'sec' ? cfg.sections[i] : k === 'fl' ? cfg.filtres[i] : k === 'ms' ? cfg.messages[i] : k === 'pi' ? cfg.prog.inds[i] : null; if (o) o.o = d.open; }, true);
