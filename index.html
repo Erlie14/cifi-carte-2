@@ -260,6 +260,7 @@
   details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
   .cpt-main { font-weight:700; margin-top:6px; }
+  .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan b { color:var(--ink); }
 </style>
 </head>
 <body>
@@ -268,7 +269,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '42';
+const VERSION = '44';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -691,6 +692,8 @@ function fichier(d) {
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> <button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button></div></div>`;
 }
+const refEchec = {};   // tables liées illisibles : motif renvoyé par Grist
+const nk = v => { const t = String(v ?? '').trim(), c = t.replace(/\s+/g, ''); return /^\d+$/.test(c) ? c.replace(/^0+(?=\d)/, '') : t; };   // identifiants numériques : espaces et zéros initiaux ignorés
 const tablesLiees = () => [...new Set(cfg.sections.filter(x => x.type === 'lie' && x.lie.table).map(x => x.lie.table))];
 const libelT = (tn, c) => (labelsT[tn] || {})[c] || joli(c);
 const colsDe = tn => Object.keys(labelsT[tn] || {}).filter(c => c !== 'id' && c !== 'manualSort' && !c.startsWith('gristHelper_'));
@@ -704,20 +707,31 @@ function anneeDe(tn, c, v) {
 function cleLiee(tn, L, row, M) { if (refDe((typesT[tn] || {})[L])) return M ? String(fmtG(tn, L, row[L]) ?? '').trim() : String(row[L]); return String(row[L] ?? '').trim(); }
 const anneeCible = L => L.mode === 'courante' ? new Date().getFullYear() : L.mode === 'precedente' ? new Date().getFullYear() - 1 : L.mode === 'fixe' ? (L.annee || new Date().getFullYear()) : null;
 const periodeTxt = L => { const a = anneeCible(L); return a ? (L.mode === 'courante' ? 'l’année en cours (' + a + ')' : L.mode === 'precedente' ? 'l’année précédente (' + a + ')' : String(a)) : ''; };
+function diagLie(sec, d) {   // explique pourquoi un tableau lié est vide : lien introuvable, ou lignes seulement sur d'autres périodes
+  const L = sec.lie, tab = refTabs[L.table], cleP = nk(L.cle2 ? d.vals[L.cle2] : d.id), annees = new Set(); let cle = 0;
+  tab.forEach(row => { if (cleP && nk(cleLiee(L.table, L.cle, row, L.cle2)) === cleP) { cle++; const a = L.dateCol ? anneeDe(L.table, L.dateCol, row[L.dateCol]) : null; if (a) annees.add(a); } });
+  return { total:tab.size, cle, cleP:String(cleP), annees:[...annees].sort() };
+}
 function ligneLiees(sec, d) {   // lignes de l'autre table qui concernent cet établissement, sur la période choisie
   const L = sec.lie, tab = refTabs[L.table]; if (!tab || !L.cle) return [];
-  const cleP = L.cle2 ? String(d.vals[L.cle2] ?? '').trim() : String(d.id); if (!cleP) return [];
+  const cleP = nk(L.cle2 ? d.vals[L.cle2] : d.id); if (!cleP) return [];
   const an = anneeCible(L), rows = [];
-  tab.forEach(row => { if (cleLiee(L.table, L.cle, row, L.cle2) !== cleP) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; rows.push(row); });
+  tab.forEach(row => { if (nk(cleLiee(L.table, L.cle, row, L.cle2)) !== cleP) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; rows.push(row); });
   const tc = L.triCol || L.dateCol; if (tc) { const sg = L.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
   return L.max ? rows.slice(0, L.max) : rows;
 }
 function sectionDonnees(sec, vals, d) {   // section « liste de colonnes », « mini tableau » ou « tableau lié »
   if (sec.type === 'lie') {
-    const L = sec.lie, cols = L.cols.filter(x => x.c); if (!L.table || !L.cle || !cols.length) return { n:0, html:'' };
-    if (!refTabs[L.table]) return { n:0, force:true, html:'<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">Chargement…</p>' };
+    const L = sec.lie, cols = L.cols.filter(x => x.c), msg = t => ({ n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${t}</p>` });
+    if (!L.table || !L.cle || !cols.length) return msg('Tableau lié incomplet : choisissez la table, la colonne de lien et au moins une colonne (onglet Fiche de la configuration).');
+    if (!refTabs[L.table]) return msg(refEchec[L.table] ? `Impossible de lire la table « ${esc(joli(L.table))} » : ${esc(refEchec[L.table])}` : 'Chargement…');
     const rows = d ? ligneLiees(sec, d) : [], per = periodeTxt(L);
-    if (!rows.length) return L.afficherVide ? { n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : '')))}</p>` } : { n:0, html:'' };
+    if (!rows.length) {
+      if (!L.afficherVide) return { n:0, html:'' };
+      const dg = d ? diagLie(sec, d) : null;
+      const det = !dg ? '' : dg.cle > 0 ? `Il existe ${dg.cle} ligne(s) pour cette fiche sur d’autres périodes (${dg.annees.join(', ') || 'dates non reconnues'}).` : `Aucune ligne de la table ne correspond à cette fiche (valeur de lien : « ${esc(dg.cleP)} » ; ${dg.total} ligne(s) dans la table).`;
+      return msg(esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : ''))) + (det ? `<br><small>${det}</small>` : ''));
+    }
     return { n:rows.length, html:`${per ? `<p class="vide" style="padding:0 12px;margin:0 0 4px;font-size:12px">Période : ${esc(per)}</p>` : ''}<div class="mini-wrap"><table class="mini"><thead><tr>${cols.map(x => `<th>${esc(x.nom || libelT(L.table, x.c))}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(x => `<td>${esc(fmtG(L.table, x.c, r[x.c]) ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
   }
   if (sec.type !== 'tableau') { const l = champsDe(sec.cols, vals); return { n:l.length, html:lignes(l) }; }
@@ -807,7 +821,7 @@ async function chargerLibelles() {
   } catch (e) { console.warn('Libellés indisponibles', e); }
   await chargerTable();
 }
-async function chargerTabLiee(x) { try { const rt = await grist.docApi.fetchTable(x), mm = new Map(); rt.id.forEach((id, k) => { const o = { id }; Object.keys(rt).forEach(c => { if (c !== 'id') o[c] = rt[c][k]; }); mm.set(id, o); }); refTabs[x] = mm; } catch (e) { /* table liée illisible */ } }
+async function chargerTabLiee(x) { try { const rt = await grist.docApi.fetchTable(x), mm = new Map(); rt.id.forEach((id, k) => { const o = { id }; Object.keys(rt).forEach(c => { if (c !== 'id') o[c] = rt[c][k]; }); mm.set(id, o); }); refTabs[x] = mm; delete refEchec[x]; } catch (e) { refEchec[x] = String((e && e.message) || e); } }
 async function chargerLieesManquantes() { const need = tablesLiees().filter(x => !refTabs[x]); if (!need.length) return; await Promise.all(need.map(chargerTabLiee)); if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheId, false); if (modal.classList.contains('ouvert')) dessiner(); }
 let derLiees = 0;
 function rafraichirLiees() { const need = tablesLiees(); if (!need.length || Date.now() - derLiees < 4000) return; derLiees = Date.now(); Promise.all(need.map(chargerTabLiee)).then(() => { if (ficheId !== null && !lieeOuverte) ouvrirFiche(ficheId, false); }); }
@@ -816,8 +830,8 @@ async function chargerTable() {
     if (!tid) tid = await grist.selectedTable.getTableId();
     const t = await grist.docApi.fetchTable(tid), cols = Object.keys(t).filter(k => k !== 'id' && k !== 'manualSort' && !k.startsWith('gristHelper_')), m = new Map();
     t.id.forEach((id, k) => { const o = {}; cols.forEach(c => { o[c] = t[c][k]; }); m.set(id, o); });
-    allCols = cols; donnees = m; erreurAcces = '';
-    const liees = new Set(Object.values(types).map(refDe).filter(Boolean).map(r => r.table)); tablesLiees().forEach(x => liees.add(x));   // tables des colonnes « Référence » et des tableaux liés
+    allCols = cols; donnees = m; refTabs[tid] = m; erreurAcces = '';
+    const liees = new Set(Object.values(types).map(refDe).filter(Boolean).map(r => r.table)); tablesLiees().forEach(x => liees.add(x)); [...liees].forEach(x => Object.values(typesT[x] || {}).map(refDe).filter(Boolean).forEach(r => { if (r.table !== tid) liees.add(r.table); }));   // tables des colonnes « Référence » et des tableaux liés
     for (const x of liees) await chargerTabLiee(x);
   } catch (e) { erreurAcces = String((e && e.message) || e); }
 }
@@ -1124,6 +1138,22 @@ function autoLie(table) {   // réglage de départ générique : table, colonne 
   const cols = [date].concat(cc.filter(c => c !== cle && c !== date)).filter(Boolean).slice(0, 5);
   return nLie({ table:pref, cle, cle2, dateCol:date, mode:'toutes', cols:cols.map(c => ({ c, nom:'' })) });
 }
+function bilanLie(sec) {   // contrôle du lien dans la configuration : ce que le widget lit réellement dans les deux tables
+  const L = sec.lie; if (!L.table || !L.cle) return '';
+  const tab = refTabs[L.table], boite = h => `<div class="lie-bilan">${h}</div>`;
+  if (!tab) return boite(refEchec[L.table] ? `<b class="warn">Table illisible :</b> ${esc(refEchec[L.table])}` : 'Table non chargée : réessayez dans un instant.');
+  const typeCle = (typesT[L.table] || {})[L.cle] || '', main = donnees.size ? [...donnees.entries()].map(([id, o]) => ({ id, vals:o })) : [...marqueurs.values()].map(m => ({ id:m._cifi.id, vals:m._cifi.vals }));
+  const cm = r => nk(L.cle2 ? r.vals[L.cle2] : r.id), ex = a => [...new Set(a.filter(x => x !== ''))].slice(0, 3).map(x => '« ' + esc(x) + ' »').join(', ') || '(vide)';
+  const lk = new Map(), ans = {}; let sans = 0;
+  tab.forEach(row => { const k = nk(cleLiee(L.table, L.cle, row, L.cle2)); lk.set(k, (lk.get(k) || 0) + 1); if (L.dateCol) { const a = anneeDe(L.table, L.dateCol, row[L.dateCol]); if (a) ans[a] = (ans[a] || 0) + 1; else sans++; } });
+  const mk = new Set(main.map(cm)), avec = main.filter(r => lk.has(cm(r))).length, an = anneeCible(L);
+  let perN = 0; tab.forEach(row => { if (!mk.has(nk(cleLiee(L.table, L.cle, row, L.cle2)))) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; perN++; });
+  return boite(`<b>Vérification du lien</b><br>Table lue : ${tab.size} ligne(s) · type de la colonne de lien : ${esc(typeCle || 'inconnu')}<br>
+    Valeurs de lien dans la table liée : ${ex([...lk.keys()])}<br>Valeurs de lien dans les fiches : ${ex(main.map(cm))}<br>
+    Fiches ayant au moins une ligne liée : <b>${avec}</b> sur ${main.length}<br>
+    ${L.dateCol ? `Lignes par année : ${Object.keys(ans).sort().map(a => a + ' : ' + ans[a]).join(' · ') || 'aucune date reconnue'}${sans ? ' · dates non reconnues : ' + sans : ''}<br>` : ''}
+    ${an && L.dateCol ? `Lignes liées sur ${esc(periodeTxt(L))} : <b>${perN}</b>` : 'Aucun filtre de période.'}`);
+}
 function blocLie(sec, i) {
   const L = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(L.table);
   const selT = (f, v, vide) => `<select ${A(f)}><option value="">${vide}</option>${cT.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select>`;
@@ -1142,7 +1172,8 @@ function blocLie(sec, i) {
     <label>Trier par ${selT('triCol', L.triCol, 'La date (par défaut)')} <select ${A('triDir')}><option value="desc"${L.triDir === 'desc' ? ' selected' : ''}>Du plus récent au plus ancien</option><option value="asc"${L.triDir === 'asc' ? ' selected' : ''}>Du plus ancien au plus récent</option></select></label>
     <label>Nombre maximal de lignes <input type="number" min="0" max="200" ${A('max')} value="${L.max || ''}" placeholder="toutes" style="width:90px"></label>
     <label><input type="checkbox" ${A('afficherVide')}${L.afficherVide ? ' checked' : ''}> Afficher la section quand il n’y a aucun résultat</label>
-    ${L.afficherVide ? `<label>Texte affiché <input type="text" ${A('videTxt')} value="${esc(L.videTxt)}" placeholder="Aucun résultat pour l’année en cours"></label>` : ''}` : ''}`;
+    ${L.afficherVide ? `<label>Texte affiché <input type="text" ${A('videTxt')} value="${esc(L.videTxt)}" placeholder="Aucun résultat pour l’année en cours"></label>` : ''}
+    ${bilanLie(sec)}` : ''}`;
 }
 function blocSection(sec, i) {
   const T = sec.tab, G = `data-g="${i}"`;
