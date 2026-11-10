@@ -246,6 +246,9 @@
   details.regle > summary .res { color:var(--muted); font-size:11px; white-space:nowrap; } details.regle > summary .res.warn { color:#c1121f; }
   .pk-liste { max-height:52vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:6px; margin-bottom:8px; } .pk-item { display:flex; gap:6px; align-items:center; padding:3px 2px; font-size:13px; margin:0 !important; }
   .rg-pied-onglet { margin-top:18px; padding-top:10px; border-top:1px solid var(--line); } .rg-corps button.danger { background:#c1121f; color:#fff; border-color:#c1121f; }
+  .rg-simple { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; margin-top:10px; background:#fff; }
+  .rg-ajout-zone { margin-top:12px; } .rg-menu { display:flex; flex-direction:column; border:1px solid var(--line); border-radius:8px; margin-top:6px; overflow:hidden; background:#fff; }
+  .rg-menu button { text-align:left; border:0 !important; border-bottom:1px solid #eef1f5 !important; border-radius:0 !important; padding:8px 12px !important; font-size:13px !important; } .rg-menu button:hover { background:#e8eef7; }
 </style>
 </head>
 <body>
@@ -254,7 +257,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '32';
+const VERSION = '33';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -830,7 +833,7 @@ document.addEventListener('click', e => { if (e.target.closest && !e.target.clos
 /* ================= AIDES AU SURVOL ================= */
 const aideEl = document.createElement('div'); aideEl.id = 'aide'; aideEl.setAttribute('role', 'tooltip'); document.body.appendChild(aideEl);
 function aideMontrer(el) {
-  const t = el.getAttribute('data-aide'); if (!t || opt('aide_on', true) === false) return; clearTimeout(aideT);
+  const t = el.getAttribute('data-aide'); if (!t || (opt('aide_on', true) === false && !el.closest('#reglages'))) return; clearTimeout(aideT);
   aideT = setTimeout(() => {
     aideEl.textContent = t; aideEl.style.display = 'block';
     const r = el.getBoundingClientRect(), w = aideEl.offsetWidth, h = aideEl.offsetHeight; let x = r.left + r.width / 2 - w / 2, y = r.bottom + 8;
@@ -1013,7 +1016,7 @@ const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
 const deplacer = (l, i, d) => { const j = i + d; if (j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; };
 const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
 const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
-const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}"` : ''}>${t}</button>`;
+const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}" data-aide="${lab}"` : ''}>${t}</button>`;
 
 function blocFicheSections() {
   return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
@@ -1044,7 +1047,34 @@ function blocListe(g) {
       <label><input type="checkbox" data-a="cw-on" ${at}${x.cw ? ' checked' : ''}> Couleur de la valeur</label><input type="color" data-a="cw" ${at} value="${x.cw || '#1d2733'}"${x.cw ? '' : ' disabled'} aria-label="Couleur de la valeur"></div>`)}</li>`; }).join('')}</ul>
     <button type="button" class="rg-ajout" data-a="pk-open" data-g="${g}">+ Ajouter des colonnes…</button>`;
 }
-let picker = null;
+let picker = null, menuOuvert = null;
+const elOuverts = new Set(), NOMS_BARRE = { zoomin:'Zoom avant (+)', zoomout:'Zoom arrière (−)', tout:'Voir tous les points', legende:'Légende', iti:'Préparer un itinéraire', prog:'Voir la progression' };
+function menuAjout(cle, items, action, libelle) {   // bouton « + Ajouter … » qui propose les éléments connus non affichés
+  if (!items.length) return '';
+  return `<div class="rg-ajout-zone"><button type="button" class="rg-ajout" data-a="menu" data-m="${cle}" aria-expanded="${menuOuvert === cle}">+ ${libelle}</button>${menuOuvert === cle ? `<div class="rg-menu">${items.map(([k, nom]) => btn(action, `data-e="${k}"`, esc(nom))).join('')}</div>` : ''}</div>`;
+}
+function blocElementsGauche() {
+  const vis = cfg.ordre.filter(k => opt('aff_' + k, true) !== false), cache = cfg.ordre.filter(k => opt('aff_' + k, true) === false);
+  const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['liste', 'tout', 'iti', 'prog', 'legende'];
+  const lignes = vis.map(k => {
+    const E = `data-e="${k}"`, L_ = LIB[k], btns = `<span class="rg-btns">${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}${btn('el-del', E, '✕', 'Retirer du panneau')}</span>`;
+    const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(opt(L_[0], L_[1]))}" placeholder="Texte affiché" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
+      + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
+      + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
+      + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '');
+    const res = L_ ? `<small class="res">${esc(opt(L_[0], L_[1]))}</small>` : '';
+    return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${res}${btns}`, corps)}</li>`
+      : `<li><div class="rg-simple"><span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${btns}</div></li>`;
+  }).join('');
+  return `<ul>${lignes}</ul>${menuAjout('elts', cache.map(k => [k, ELTS_GAUCHE[k]]), 'el-add', 'Ajouter un élément')}`;
+}
+function blocBoutonsBarre() {
+  const b = cfg.barre, vis = b.boutons.filter(x => x.on), cache = b.boutons.filter(x => !x.on);
+  return `<section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche. « Ajouter un bouton » propose les boutons connus qui ne sont pas dans la barre.</p>
+    <ul>${vis.map(x => { const E = `data-e="${x.id}"`; return `<li>${rgd('el', '', `data-e="b:${x.id}"`, elOuverts.has('b:' + x.id), `<span class="rg-nom">${esc(NOMS_BARRE[x.id])}</span><small class="res">${esc(x.txt || 'icône par défaut')}</small><span class="rg-btns">${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}${btn('bb-del', E, '✕', 'Retirer de la barre')}</span>`,
+      `<div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Aide au survol (infobulle)" style="flex:1;min-width:150px" aria-label="Aide au survol"></div>`)}</li>`; }).join('')}</ul>
+    ${menuAjout('barre', cache.map(x => [x.id, NOMS_BARRE[x.id]]), 'bb-add', 'Ajouter un bouton')}</section>`;
+}
 function blocPicker() {   // sélecteur de colonnes : recherche et ajout de plusieurs colonnes d'un coup
   const l = listeDe(picker.g), dispo = allCols.filter(c => !l.some(x => x.c === c)), q = sansAccent(picker.q);
   return `<div class="pk"><div class="rg-l1"><button type="button" data-a="pk-cancel">← Retour</button><b>Ajouter des colonnes</b></div>
@@ -1162,16 +1192,14 @@ function blocBarre() {
     <label>Fond <input type="color" ${D} data-f="fond" value="${b.fond}"> Icône <input type="color" ${D} data-f="coul" value="${b.coul}"></label>
     <label>Bordure <input type="color" ${D} data-f="bordc" value="${b.bordc}"> <input type="number" min="0" max="4" ${D} data-f="borde" value="${b.borde}" style="width:56px"> px</label>
     <label><input type="checkbox" ${D} data-f="ombre"${b.ombre ? ' checked' : ''}> Ombre</label></section>
-    <section><h3>Boutons de la barre</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Un bouton placé dans la barre disparaît du panneau de gauche. Le symbole peut être un caractère ou un emoji (vide = icône par défaut).</p>
-    <ul>${b.boutons.map(x => { const E = `data-e="${x.id}"`; return `<li class="rg-ord"><div class="rg-l1"><label><input type="checkbox" data-a="bb-b" ${E} data-f="on"${x.on ? ' checked' : ''}> <b>${noms[x.id]}</b></label>${btn('bb-up', E, '▲', 'Monter')}${btn('bb-down', E, '▼', 'Descendre')}</div>
-      <div class="rg-l2"><input type="text" data-a="bb-b" ${E} data-f="txt" value="${esc(x.txt)}" placeholder="Symbole ou emoji" style="max-width:150px" aria-label="Symbole"><input type="text" data-a="bb-b" ${E} data-f="ti" value="${esc(x.ti)}" placeholder="Aide au survol (infobulle)" aria-label="Aide au survol"></div></li>`; }).join('')}</ul></section>`;
+    ${blocBoutonsBarre()}`;
 }
 function blocEntete(k) {
   const h = cfg.entetes[k], D = `data-a="eh" data-h="${k}"`, opts_ = (val, vide) => `<option value="">${vide}</option>` + allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('');
   return `<section><h3>En-tête ${k === 'popup' ? 'du popup' : 'de la fiche'}</h3>
     <label>Titre <select ${D} data-f="titre">${opts_(h.titre, 'Nom de l’établissement')}</select></label>
     <label>Sous-titre <select ${D} data-f="sous">${opts_(h.sous, 'Aucun')}</select></label>
-    <label><input type="checkbox" ${D} data-f="etiq"${h.etiq ? ' checked' : ''}> Afficher l’étiquette de la règle (ex. « Critique »)</label>
+    <label><input type="checkbox" ${D} data-f="etiq"${h.etiq ? ' checked' : ''}> Afficher l’étiquette de la règle d’affichage des points</label>
     <label>Fond <select ${D} data-f="fond"><option value="neutre"${h.fond === 'neutre' ? ' selected' : ''}>Gris clair</option><option value="point"${h.fond === 'point' ? ' selected' : ''}>Couleur du point</option><option value="perso"${h.fond === 'perso' ? ' selected' : ''}>Couleur personnalisée</option></select>
       ${h.fond === 'perso' ? `<input type="color" ${D} data-f="fondc" value="${h.fondc}" aria-label="Couleur du fond">` : ''}</label>
     <label><input type="checkbox" data-a="eh-txt-on" data-h="${k}"${h.txtc ? ' checked' : ''}> Couleur du titre <input type="color" ${D} data-f="txtc" value="${h.txtc || '#1d2733'}"${h.txtc ? '' : ' disabled'} aria-label="Couleur du titre"></label>
@@ -1189,12 +1217,8 @@ function contenuOnglet() {
   if (onglet === 'prog') return blocProg();
   const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
   const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
-  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Cochez les éléments à proposer, changez leur ordre avec ▲ ▼ et modifiez leurs textes. Le panneau défile si les éléments dépassent la hauteur du widget.</p>
-    <ul>${cfg.ordre.map(k => { const E = `data-e="${k}"`, L_ = LIB[k]; return `<li class="rg-ord"><div class="rg-l1"><label><input type="checkbox" data-o="aff_${k}"${opt('aff_' + k, true) !== false ? ' checked' : ''}> <b>${ELTS_GAUCHE[k]}</b></label>${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}</div>
-      ${L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(opt(L_[0], L_[1]))}" placeholder="Texte affiché" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : ''}
-      ${['liste', 'tout', 'iti', 'prog', 'legende'].includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : ''}
-      ${['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'].includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : ''}
-      ${k === 'liste' || k === 'legende' ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : ''}</li>`; }).join('')}</ul></section>
+  return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Seuls les éléments affichés sont listés. Cliquez sur un élément pour régler son texte, son icône et son aide ; ✕ le retire du panneau ; « Ajouter un élément » le remet. Le panneau défile si les éléments dépassent la hauteur du widget.</p>
+    ${blocElementsGauche()}</section>
     <section><h3>Aides au survol</h3>
     <label><input type="checkbox" data-o="aide_on"${opt('aide_on', true) !== false ? ' checked' : ''}> Afficher une bulle d’aide quand on effleure un bouton</label>
     <label>Délai avant affichage <input type="number" min="0" max="3000" data-o="aide_delai" value="${+opt('aide_delai', 400)}" style="width:72px"> ms · taille du texte <input type="number" min="10" max="20" data-o="aide_taille" value="${+opt('aide_taille', 12)}" style="width:56px"> px</label>
@@ -1281,7 +1305,7 @@ modal.addEventListener('click', e => {
       else if (o === 'filtres') { cfg.filtres = []; cfg.recherche = nRech({}); } else if (o === 'messages') cfg.messages = []; else if (o === 'prog') cfg.prog = nProg({}); else if (o === 'barre') cfg.barre = nBarre({});
       else if (o === 'general') { cfg.styles = Object.fromEntries(Object.keys(STYLES_TXT).map(x => [x, nSt({})])); cfg.etiquettes = { liste:nEtq({}), legende:nEtq({}) }; cfg.ordre = normOrdre([]); Object.keys(opts).filter(x => x !== 'cfg').forEach(x => { delete opts[x]; }); }
       break; }
-    case 'onglet': onglet = b.dataset.t; dessiner(); return;
+    case 'onglet': onglet = b.dataset.t; menuOuvert = null; dessiner(); return;
     case 'up': case 'down': deplacer(listeDe(g), i, a === 'up' ? -1 : 1); break;
     case 'del': listeDe(g).splice(i, 1); break;
     case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
@@ -1311,8 +1335,13 @@ modal.addEventListener('click', e => {
     case 'rc-del': cfg.recherche.cols.splice(i, 1); break;
     case 'pi-add': { const ia = allCols.find(c => /attendu/i.test(libel(c))), ifa = allCols.find(c => /contr.le.*2026/i.test(libel(c))); cfg.prog.inds.push(nInd({ nom:'Contrôles réalisés / attendus', fait:ifa || '', att:ia || '' })); break; }
     case 'pi-del': if (!sure()) return; cfg.prog.inds.splice(i, 1); break;
-    case 'bb-up': case 'bb-down': { const l = cfg.barre.boutons, i = l.findIndex(x => x.id === b.dataset.e), j = i + (a === 'bb-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; break; }
-    case 'ord-up': case 'ord-down': { const i = cfg.ordre.indexOf(b.dataset.e), j = i + (a === 'ord-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < cfg.ordre.length) [cfg.ordre[i], cfg.ordre[j]] = [cfg.ordre[j], cfg.ordre[i]]; break; }
+    case 'bb-up': case 'bb-down': { const l = cfg.barre.boutons, vis = l.filter(x => x.on), p = vis.findIndex(x => x.id === b.dataset.e), q = vis[p + (a === 'bb-up' ? -1 : 1)]; if (p >= 0 && q) { const i2 = l.findIndex(x => x.id === b.dataset.e), j2 = l.indexOf(q); [l[i2], l[j2]] = [l[j2], l[i2]]; } break; }
+    case 'ord-up': case 'ord-down': { const vis = cfg.ordre.filter(x => opt('aff_' + x, true) !== false), p = vis.indexOf(b.dataset.e), q = vis[p + (a === 'ord-up' ? -1 : 1)]; if (p >= 0 && q) { const i2 = cfg.ordre.indexOf(b.dataset.e), j2 = cfg.ordre.indexOf(q); [cfg.ordre[i2], cfg.ordre[j2]] = [cfg.ordre[j2], cfg.ordre[i2]]; } break; }
+    case 'el-del': opts['aff_' + b.dataset.e] = false; break;
+    case 'el-add': opts['aff_' + b.dataset.e] = true; menuOuvert = null; break;
+    case 'menu': menuOuvert = menuOuvert === b.dataset.m ? null : b.dataset.m; dessiner(); return;
+    case 'bb-del': { const x = cfg.barre.boutons.find(y => y.id === b.dataset.e); if (x) x.on = false; break; }
+    case 'bb-add': { const x = cfg.barre.boutons.find(y => y.id === b.dataset.e); if (x) x.on = true; menuOuvert = null; break; }
     default: return;
   }
   sauver();
@@ -1383,7 +1412,7 @@ modal.addEventListener('change', e => {
   sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'fl' && ['type', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
 });
 modal.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.a === 'pk-q' && picker) { picker.q = t.value; const q = sansAccent(t.value); modal.querySelectorAll('.pk-item').forEach(x => { x.style.display = !q || x.dataset.lib.includes(q) ? '' : 'none'; }); } });
-modal.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.gen')) return; const i = +d.dataset.i, k = d.dataset.ok, o = k === 'col' ? listeDe(d.dataset.g)[i] : k === 'sec' ? cfg.sections[i] : k === 'fl' ? cfg.filtres[i] : k === 'ms' ? cfg.messages[i] : k === 'pi' ? cfg.prog.inds[i] : null; if (o) o.o = d.open; }, true);
+modal.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.gen')) return; if (d.dataset.ok === 'el') { if (d.open) elOuverts.add(d.dataset.e); else elOuverts.delete(d.dataset.e); return; } const i = +d.dataset.i, k = d.dataset.ok, o = k === 'col' ? listeDe(d.dataset.g)[i] : k === 'sec' ? cfg.sections[i] : k === 'fl' ? cfg.filtres[i] : k === 'ms' ? cfg.messages[i] : k === 'pi' ? cfg.prog.inds[i] : null; if (o) o.o = d.open; }, true);
 modal.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details.regle') && cfg.regles[+d.dataset.r]) cfg.regles[+d.dataset.r].o = d.open; }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerReglages(); });
 function boutonSecours() {
