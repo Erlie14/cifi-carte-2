@@ -268,7 +268,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '41';
+const VERSION = '42';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -342,7 +342,7 @@ const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['N
   bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
 const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
-const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'courante', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
+const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
   cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, videTxt:String(l.videTxt || '') }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
@@ -1013,7 +1013,7 @@ function itiDessiner() {
   const legDe = k => iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined;
   const info = l => l === undefined ? '' : l === null ? '<small>Trajet non calculé</small>' : `<small>${fmtDist(l.d)} · ${fmtDuree(l.t)}</small>`;
   const retourLeg = iti.retour && iti.legs.length ? iti.legs[iti.legs.length - 1] : undefined;
-  itiPanel.innerHTML = `<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-i="fermer" aria-label="Fermer">✕</button><h2>Itinéraire de contrôle</h2></div>
+  itiPanel.innerHTML = `<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-i="fermer" aria-label="Fermer">✕</button><h2>Itinéraire</h2></div>
     <div class="fp-corps">
       <div class="iti-ligne"><label><input type="radio" name="itimode" value="car"${iti.mode === 'car' ? ' checked' : ''}> 🚗 Voiture</label><label><input type="radio" name="itimode" value="pedestrian"${iti.mode === 'pedestrian' ? ' checked' : ''}> 🚶 À pied</label></div>
       <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> Revenir au point de départ</label>
@@ -1061,7 +1061,7 @@ async function itiCalculer() {
   itiDessiner(); if (itiRoute.getLayers().length) map.fitBounds(itiRoute.getBounds(), { padding:[50,50] });
 }
 function itiTexte() {
-  const l = [`Itinéraire de contrôle – ${iti.mode === 'car' ? 'voiture' : 'à pied'}`];
+  const l = [`Itinéraire – ${iti.mode === 'car' ? 'voiture' : 'à pied'}`];
   iti.ids.forEach((id, k) => { const g = iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined; l.push(`${k + 1}. ${nomDe(id)}${g ? ` (${fmtDist(g.d)}, ${fmtDuree(g.t)})` : ''}`); });
   if (iti.total) l.push(`Total : ${fmtDist(iti.total.d)}, ${fmtDuree(iti.total.t)}`);
   return l.join('\n');
@@ -1107,25 +1107,31 @@ const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab
 function blocFicheSections() {
   return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'lie' ? (!sec.lie.table || !sec.lie.cle || !sec.lie.cols.some(x => x.c)) : sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
     return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'lie' ? 'tableau lié · ' + sec.lie.cols.length + ' colonne(s)' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
-      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button> <button type="button" class="rg-ajout" data-a="sadd-t">+ Ajouter une section « tableau »</button> <button type="button" class="rg-ajout" data-a="sadd-l">+ Ajouter une section « contrôles liés »</button>';
+      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
 }
-function autoLie(table) {   // propose un réglage de départ : table, colonne de lien, date et colonnes usuelles
-  const tabs = tablesDispo(), pref = table || tabs.find(t => /compte|contr[oô]le|^cr/i.test(t)) || tabs[0] || '', cc = colsDe(pref);
-  const f1 = (re, l, lib) => l.find(c => re.test(lib(c)) || re.test(c)) || '';
-  const sir = f1(/^siret$/i, cc, c => libelT(pref, c)) || cc.find(c => /siret/i.test(libelT(pref, c)) && !/lat|lon/i.test(libelT(pref, c))) || '';
-  const mainSir = f1(/^siret$/i, allCols, libel) || allCols.find(c => /siret/i.test(libel(c)) && !/lat|lon/i.test(libel(c))) || '';
-  const date = cc.find(c => ((typesT[pref] || {})[c] || '').startsWith('Date')) || f1(/date/i, cc, c => libelT(pref, c));
-  const cols = [date, f1(/unit/i, cc, c => libelT(pref, c)), f1(/remarque|commentaire/i, cc, c => libelT(pref, c)), f1(/infraction/i, cc, c => libelT(pref, c)), f1(/suite/i, cc, c => libelT(pref, c))].filter(Boolean);
-  return nLie({ table:pref, cle:sir, cle2:mainSir, dateCol:date, mode:'courante', cols:cols.map(c => ({ c, nom:'' })) });
+function autoLie(table) {   // réglage de départ générique : table, colonne de lien (même libellé ou référence vers cette table), date et premières colonnes
+  const tabs = tablesDispo(), pref = table || tabs[0] || '', cc = colsDe(pref), nrm = x => sansAccent(String(x)).replace(/[^a-z0-9]/g, '');
+  const mainLib = new Map(allCols.map(c => [nrm(libel(c)), c])), typ = c => (typesT[pref] || {})[c] || '';
+  let cle = '', cle2 = '';
+  const ref = cc.find(c => { const r = refDe(typ(c)); return r && r.table === tid; });
+  if (ref) cle = ref;   // colonne Référence vers la table affichée : lien par l'identifiant de la ligne
+  else {
+    const cand = cc.filter(c => mainLib.has(nrm(libelT(pref, c))));
+    cle = cand.find(c => /siret|siren|identifiant|^id|code|num|ref/i.test(libelT(pref, c))) || cand[0] || '';
+    if (cle) cle2 = mainLib.get(nrm(libelT(pref, cle)));
+  }
+  const date = cc.find(c => typ(c).startsWith('Date')) || '';
+  const cols = [date].concat(cc.filter(c => c !== cle && c !== date)).filter(Boolean).slice(0, 5);
+  return nLie({ table:pref, cle, cle2, dateCol:date, mode:'toutes', cols:cols.map(c => ({ c, nom:'' })) });
 }
 function blocLie(sec, i) {
   const L = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(L.table);
   const selT = (f, v, vide) => `<select ${A(f)}><option value="">${vide}</option>${cT.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select>`;
-  return `<div class="rg-sous">Table des contrôles</div>
+  return `<div class="rg-sous">Table liée</div>
     <div class="rg-l2"><select ${A('table')} aria-label="Table liée"><option value="">Choisir une table…</option>${tablesDispo().map(t => `<option value="${esc(t)}"${t === L.table ? ' selected' : ''}>${esc(joli(t))}</option>`).join('')}</select></div>
-    ${L.table ? `<div class="rg-sous">Lien avec l’établissement</div>
+    ${L.table ? `<div class="rg-sous">Lien avec la fiche</div>
     <label>Colonne de la table liée ${selT('cle', L.cle, 'Choisir…')}</label>
-    <label>correspond à la colonne de l’établissement <select ${A('cle2')}><option value="">(identifiant de la ligne)</option>${allCols.map(c => `<option value="${esc(c)}"${c === L.cle2 ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select></label>
+    <label>correspond à la colonne de la fiche <select ${A('cle2')}><option value="">(identifiant de la ligne)</option>${allCols.map(c => `<option value="${esc(c)}"${c === L.cle2 ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select></label>
     <div class="rg-sous">Période</div>
     <label>Colonne de date ${selT('dateCol', L.dateCol, 'Aucune')}</label>
     <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${L.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${L.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${L.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
@@ -1223,7 +1229,7 @@ function carteRegle(r, i) {
     <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
       ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div>
     <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option></select>
-      ${r.bulle.t ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À contrôler" style="max-width:150px" aria-label="Texte de la bulle">`) + `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` : ''}</div>
+      ${r.bulle.t ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À vérifier" style="max-width:150px" aria-label="Texte de la bulle">`) + `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` : ''}</div>
     <div class="rg-l2"><label><input type="checkbox" data-a="rpu-on" ${R}${r.pulse.on ? ' checked' : ''}> Signal pulsé</label>${r.pulse.on ? `<input type="color" data-a="rpuc" ${R} value="${r.pulse.couleur}" aria-label="Couleur du signal"><select data-a="rpur" ${R} aria-label="Rythme du signal">${[['lent', 'Lent'], ['normal', 'Normal'], ['rapide', 'Rapide']].map(([v, t]) => `<option value="${v}"${r.pulse.rythme === v ? ' selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div></div></details>`;
 }
 function blocSauvegarde() {
@@ -1304,7 +1310,7 @@ function blocProg() {
       ${x.mode === 'part' ? cond(i, 'cond', x.cond, 'Part des établissements où…') + `<label><input type="checkbox" ${A} data-f="baseon"${x.base.on ? ' checked' : ''}> Seulement parmi une partie des établissements</label>${x.base.on ? cond(i, 'base', x.base, 'Parmi ceux où…') : ''}` : ''}
       ${x.mode === 'compte' ? cond(i, 'cond', x.cond, 'Compter seulement ceux où… (facultatif)') : ''}
       ${x.mode === 'somme' || x.mode === 'moyenne' ? `<label>Colonne ${selCol(`${A} data-f="col"`, x.col)}</label>` : ''}
-      <label>Unité affichée (facultatif) <input type="text" ${A} data-f="unite" value="${esc(x.unite)}" placeholder="ex. contrôles, €" style="max-width:140px"></label>
+      <label>Unité affichée (facultatif) <input type="text" ${A} data-f="unite" value="${esc(x.unite)}" placeholder="ex. dossiers, €" style="max-width:140px"></label>
       ${pct ? `<div class="rg-sous">Couleur de la barre selon le résultat</div>${x.paliers.map((q, j) => `<div class="rg-l2">${j === 0 ? `<span class="pal-lab">${x.paliers[1] ? 'Moins de ' + x.paliers[1].de + ' %' : 'Toutes les valeurs'}</span>` : `<span class="pal-lab">À partir de</span><input type="number" min="0" max="1000" data-a="pp" data-i="${i}" data-j="${j}" data-f="de" value="${q.de}" style="width:70px" aria-label="Seuil"> %`}<input type="color" data-a="pp" data-i="${i}" data-j="${j}" data-f="couleur" value="${q.couleur}" aria-label="Couleur">${j > 0 ? btn('pp-del', `data-i="${i}" data-j="${j}"`, '✕', 'Retirer ce palier') : ''}</div>`).join('')}${btn('pp-add', `data-i="${i}"`, '+ palier de couleur')}`
         : `<label>Couleur des barres <input type="color" ${A} data-f="couleur" value="${x.couleur}"></label>`}`); }).join('')}
     <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
@@ -1387,11 +1393,11 @@ function contenuOnglet() {
 }
 const AIDES_ONGLET = {
   points:'Une règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent ses conditions. Exemple : « Niveau de risque est égal à Critique » → rouge.',
-  popup:'Choisissez les colonnes affichées au clic sur un point. Exemple : commune, statut, date du dernier contrôle. Cliquez sur une colonne pour régler son style.',
+  popup:'Choisissez les colonnes affichées au clic sur un point. Exemple : commune, statut, date de mise à jour. Cliquez sur une colonne pour régler son style.',
   fiche:'La fiche s’ouvre avec « Voir la fiche complète ». Créez des sections pliables : liste de colonnes, ou mini tableau (par exemple un historique par année).',
   filtres:'La barre de recherche et les filtres du panneau de gauche. Exemple : un filtre « Département » à choix multiples et un curseur oui/non sur « Est-ce un cible ? ».',
   messages:'Bandeaux temporaires sur la carte. Exemple : « Maintenance vendredi », 10 secondes, une fois par session.',
-  prog:'Barres d’avancement par administration ou unité. Exemple : contrôles réalisés sur contrôles attendus, regroupés par Administration.',
+  prog:'Barres d’avancement par administration ou unité. Exemple : dossiers traités sur dossiers prévus, regroupés par service.',
   barre:'Les boutons de la barre sur la carte. Un bouton placé ici disparaît du panneau de gauche.',
   general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' };
 const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'lie' ? (!x.lie.table || !x.lie.cle || !x.lie.cols.some(c => c.c)) : x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
@@ -1462,11 +1468,9 @@ modal.addEventListener('click', e => {
     case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
     case 'sdel': if (!sure()) return; cfg.sections.splice(+g, 1); break;
     case 'sadd': cfg.sections.push(nSec({ nom:'Nouvelle section' })); break;
-    case 'sadd-l': cfg.sections.push(nSec({ nom:'Contrôles de l’année', type:'lie', lie:autoLie() })); break;
     case 'lc-add': cfg.sections[+g].lie.cols.push({ c:'', nom:'' }); break;
     case 'lc-del': cfg.sections[+g].lie.cols.splice(+b.dataset.j, 1); break;
     case 'lc-up': case 'lc-down': deplacer(cfg.sections[+g].lie.cols, +b.dataset.j, a === 'lc-up' ? -1 : 1); break;
-    case 'sadd-t': { const rows = [2025, 2024, 2023, 2022].map(y => ({ cells:[{ c:'', v:String(y) }, { c:allCols.find(x => new RegExp('contr.les?.*' + y, 'i').test(libel(x))) || '', v:'' }, { c:'', v:'' }] })); cfg.sections.push(nSec({ nom:'Historique des contrôles', type:'tableau', tab:{ heads:['Année', 'Contrôles', 'Remarques'], vides:true, rows } })); break; }
     case 'tb-hadd': { const T = cfg.sections[+g].tab; T.heads.push('Colonne ' + (T.heads.length + 1)); T.rows.forEach(r => r.cells.push({ c:'', v:'' })); break; }
     case 'tb-hdel': { const T = cfg.sections[+g].tab, j = +b.dataset.j; T.heads.splice(j, 1); T.rows.forEach(r => r.cells.splice(j, 1)); break; }
     case 'tb-radd': { const T = cfg.sections[+g].tab; T.rows.push({ cells:T.heads.map(() => ({ c:'', v:'' })) }); break; }
@@ -1543,7 +1547,7 @@ modal.addEventListener('change', e => {
       if (f === 'afficherVide') L.afficherVide = t.checked; else if (f === 'annee' || f === 'max') L[f] = Math.max(0, +t.value || 0);
       else { L[f] = t.value; if (f === 'table') { const a = autoLie(t.value); L.cle = a.cle; L.cle2 = a.cle2; L.dateCol = a.dateCol; L.cols = a.cols; L.triCol = ''; } } break; }
     case 'lc': { const X = cfg.sections[+t.dataset.g].lie.cols[+t.dataset.j]; if (X) X[t.dataset.f] = t.value; break; }
-    case 'sec-type': cfg.sections[+t.dataset.g].type = t.value; break;
+    case 'sec-type': { const S = cfg.sections[+t.dataset.g]; S.type = t.value; if (t.value === 'lie' && !S.lie.table) S.lie = autoLie(); if (t.value === 'tableau' && !S.tab.heads.length) S.tab = nTab({ heads:['Colonne 1', 'Colonne 2'], rows:[{ cells:[{}, {}] }] }); break; }
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
     case 'tb-c': { const C = cfg.sections[+t.dataset.g].tab.rows[+t.dataset.k].cells[+t.dataset.j]; C[t.dataset.f] = t.value; break; }
     case 'tb': cfg.sections[+t.dataset.g].tab[t.dataset.f] = t.checked; break;
