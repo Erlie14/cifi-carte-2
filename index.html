@@ -235,6 +235,17 @@
   .mini-wrap { overflow-x:auto; padding:0 10px 10px; } table.mini { border-collapse:collapse; width:100%; font-size:var(--fs-fiche, 14px); }
   .mini th { background:#f1f4f8; text-align:left; padding:6px 8px; font-weight:600; border-bottom:1px solid var(--line); white-space:nowrap; } .mini td { padding:6px 8px; border-bottom:1px solid #eef1f5; vertical-align:top; } .mini tr:last-child td { border-bottom:0; }
   .tb-ligne { border:1px solid var(--line); border-radius:8px; padding:6px 8px; margin:6px 0; } .tb-cell { display:flex; flex-direction:column; gap:2px; min-width:120px; } .tb-cell small { color:var(--muted); font-size:11px; }
+  :root { --larg-cfg:min(480px, 100vw); }
+  #reglages { position:absolute; top:0; right:0; bottom:0; left:auto; width:var(--larg-cfg); background:transparent; padding:0; align-items:stretch; justify-content:flex-end; pointer-events:none; }
+  #reglages .rg-boite { pointer-events:auto; width:100%; max-height:none; height:100%; border-radius:0; box-shadow:-4px 0 18px #0004; }
+  #reglages.reduit .rg-boite { display:none; } .rg-onglet-reduit { display:none; position:absolute; right:0; top:74px; pointer-events:auto; } #reglages.reduit .rg-onglet-reduit { display:block; }
+  .rg-onglet-reduit button { border:1px solid var(--line); border-right:0; border-radius:8px 0 0 8px; background:#fff; padding:10px 12px; font:inherit; font-size:13px; cursor:pointer; box-shadow:-2px 2px 8px #0003; }
+  body.cfg-large #fiche-panel, body.cfg-large #iti-panel, body.cfg-large #prog-panel, body.cfg-large .leaflet-right { right:var(--larg-cfg); }
+  body.cfg-large #barre.pos-hd { right:calc(var(--larg-cfg) + 56px); } body.cfg-large #barre.pos-bd { right:calc(var(--larg-cfg) + 10px); }
+  .rg-aide { font-size:12px; color:var(--muted); margin:10px 0 0; line-height:1.4; } .warn { color:#c1121f; font-weight:700; font-size:12px; }
+  details.regle > summary .res { color:var(--muted); font-size:11px; white-space:nowrap; } details.regle > summary .res.warn { color:#c1121f; }
+  .pk-liste { max-height:52vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:6px; margin-bottom:8px; } .pk-item { display:flex; gap:6px; align-items:center; padding:3px 2px; font-size:13px; margin:0 !important; }
+  .rg-pied-onglet { margin-top:18px; padding-top:10px; border-top:1px solid var(--line); } .rg-corps button.danger { background:#c1121f; color:#fff; border-color:#c1121f; }
 </style>
 </head>
 <body>
@@ -243,7 +254,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '31';
+const VERSION = '32';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -283,10 +294,17 @@ function sombre(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) retur
 const afficherMsg = h => { const m = document.getElementById('msg'); m.innerHTML = h; m.style.display = h ? 'flex' : 'none'; };
 
 /* ================= ÉTAT ================= */
-const nEntree = x => ({ c:x.c, nom:x.nom || '', gn:x.gn ?? !!x.gras, gi:!!x.gi, vg:x.vg ?? x.vs === 'b', vi:x.vi ?? x.vs === 'i', vb:x.vb ?? x.vs === 'badge', ta:x.ta || '', cn:x.cn || '', cw:x.cw || '' });
-const nRegle = r => ({ o:r.o === true, nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '', bordc:hex(r.bordc), borde:Math.max(0, Math.min(8, +r.borde || 0)),
-  contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' },
-  bulle:{ t:(r.bulle && r.bulle.t) || '', src:(r.bulle && r.bulle.src) || '', e:(r.bulle && r.bulle.e) || '', c:(r.bulle && r.bulle.c) || '', couleur:/^#[0-9a-f]{6}$/i.test((r.bulle && r.bulle.couleur) || '') ? r.bulle.couleur : '#c1121f', pulse:!!(r.bulle && r.bulle.pulse) } });
+const nEntree = x => ({ c:x.c, nom:x.nom || '', gn:x.gn ?? !!x.gras, gi:!!x.gi, vg:x.vg ?? x.vs === 'b', vi:x.vi ?? x.vs === 'i', vb:x.vb ?? x.vs === 'badge', ta:x.ta || '', cn:x.cn || '', cw:x.cw || '', o:x.o === true });
+const nRegle = r => {
+  const b = r.bulle || {}, hc = x => /^#[0-9a-f]{6}$/i.test(x || '') ? x : '#c1121f';
+  let pu = r.pulse || null, bt = b.t || '';
+  if (!pu) { if (b.t === 'signal') { pu = { on:true, couleur:b.couleur }; bt = ''; } else if (b.pulse) pu = { on:true, couleur:b.couleur }; }   // ancienne configuration : bulle et signal liés
+  pu = pu || {};
+  return { o:r.o === true, nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '', bordc:hex(r.bordc), borde:Math.max(0, Math.min(8, +r.borde || 0)),
+    contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' },
+    bulle:{ t:bt === 'signal' ? '' : bt, src:b.src || '', e:b.e || '', c:b.c || '', couleur:hc(b.couleur) },
+    pulse:{ on:pu.on === true, couleur:hc(pu.couleur), rythme:['lent', 'normal', 'rapide'].includes(pu.rythme) ? pu.rythme : 'normal' } };
+};
 const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
 const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
 const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'] };
@@ -308,13 +326,13 @@ const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'car
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
 const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#count .ver'], boutons:['Boutons du panneau', '.panel.gauche button.link'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
-const nSec = s => ({ nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && s.type === 'tableau') ? 'tableau' : 'liste', tab:nTab(s && s.tab) });
-const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
+const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && s.type === 'tableau') ? 'tableau' : 'liste', tab:nTab(s && s.tab) });
+const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
 const nSt = x => { x = x || {}; return { coul:hex(x.coul), fond:hex(x.fond), taille:Math.max(0, Math.min(40, +x.taille || 0)), gras:!!x.gras, ital:!!x.ital }; };
 const ICO_DEF = { iti:'🧭', prog:'📊' };
-const nFiltre = f => { f = f || {}; return { fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
-const nInd = i => { i = i || {}; return { nom:String(i.nom || ''), grp:String(i.grp || ''), fait:String(i.fait || ''), att:String(i.att || ''), orange:Math.max(0, Math.min(200, +i.orange || 50)), vert:Math.max(0, Math.min(200, +i.vert || 80)) }; };
+const nFiltre = f => { f = f || {}; return { o:f.o === true, fond:hex(f.fond), coul:hex(f.coul), gras:!!f.gras, c:String(f.c || ''), nom:String(f.nom || ''), type:['multi', 'unique', 'oui', 'curseur'].includes(f.type) ? f.type : 'multi', oui:String(f.oui || 'Oui'), non:String(f.non || 'Non') }; };
+const nInd = i => { i = i || {}; return { o:i.o === true, nom:String(i.nom || ''), grp:String(i.grp || ''), fait:String(i.fait || ''), att:String(i.att || ''), orange:Math.max(0, Math.min(200, +i.orange || 50)), vert:Math.max(0, Math.min(200, +i.vert || 80)) }; };
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
 const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k])])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
@@ -361,17 +379,18 @@ function test(k, vals) {
 const regleActive = r => r.si.length && r.si.every(k => k.c);
 const nomRegle = r => r.nom.trim() || (r.si[0] && r.si[0].c ? `${libel(r.si[0].c)} ${(OPS.find(o => o[0] === r.si[0].op) || [])[0] || ''} ${r.si[0].v || ''}`.trim() : 'Règle');
 function styleDe(vals) {
-  let couleur = null, forme = null, contenu = null, bulle = null, bordc = null, borde = null, cat = -1; const regles = [];
+  let couleur = null, forme = null, contenu = null, bulle = null, pulse = null, bordc = null, borde = null, cat = -1; const regles = [];
   cfg.regles.forEach((r, i) => {
     if (!regleActive(r) || !r.si.every(k => test(k, vals))) return;
     regles.push(i); if (cat < 0) cat = i;
     if (couleur === null && r.couleur) couleur = r.couleur;
     if (forme === null && r.forme) forme = r.forme;
     if (bordc === null && r.bordc) { bordc = r.bordc; borde = r.borde; }
-    if (bulle === null && r.bulle.t) bulle = { t:r.bulle.t, couleur:r.bulle.couleur, pulse:r.bulle.t === 'signal' || r.bulle.pulse, txt: r.bulle.t === 'signal' ? '' : r.bulle.src === 'col' ? String(fmt(r.bulle.c, vals[r.bulle.c]) ?? '').slice(0, 24) : r.bulle.e };
+    if (bulle === null && r.bulle.t) bulle = { t:r.bulle.t, couleur:r.bulle.couleur, txt: r.bulle.src === 'col' ? String(fmt(r.bulle.c, vals[r.bulle.c]) ?? '').slice(0, 24) : r.bulle.e };
+    if (pulse === null && r.pulse.on) pulse = { couleur:r.pulse.couleur, rythme:r.pulse.rythme };
     if (contenu === null && r.contenu.t) contenu = r.contenu.t === 'emoji' ? r.contenu.e : (r.contenu.c ? String(fmt(r.contenu.c, vals[r.contenu.c]) ?? '').slice(0, 6) : '');
   });
-  return { couleur: couleur || cfg.defaut.couleur, forme: forme || cfg.defaut.forme, contenu: contenu || '', bulle, bordc: bordc || cfg.defaut.bordc, borde: bordc ? borde : cfg.defaut.borde, cat, regles };
+  return { couleur: couleur || cfg.defaut.couleur, forme: forme || cfg.defaut.forme, contenu: contenu || '', bulle, pulse, bordc: bordc || cfg.defaut.bordc, borde: bordc ? borde : cfg.defaut.borde, cat, regles };
 }
 
 /* ================= CARTE ET PANNEAU DE GAUCHE ================= */
@@ -606,11 +625,11 @@ function appliquerFiltres() {
   majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
-  const t = +opt('taille', 30) || 30, s = d.style, c = s.contenu, g = s.forme === 'goutte', b = s.bulle;
+  const t = +opt('taille', 30) || 30, s = d.style, c = s.contenu, g = s.forme === 'goutte', b = s.bulle, p = s.pulse;
   let avant = '', apres = '';
+  if (p) avant = `<span class="pulse" style="--bc:${p.couleur};width:${t}px;height:${t}px;animation-duration:${({ lent:2.6, normal:1.6, rapide:0.9 })[p.rythme] || 1.6}s"></span>`;
   if (b) {
     const k = sombre(b.couleur) ? '#1d2733' : '#fff';
-    if (b.pulse) avant = `<span class="pulse" style="--bc:${b.couleur};width:${t}px;height:${t}px"></span>`;
     if (b.t === 'coin') apres = `<span class="bul coin" style="background:${b.couleur};color:${k}">${esc(b.txt)}</span>`;
     if (b.t === 'texte') apres = `<span class="bul txt" style="background:${b.couleur};color:${k};--bc:${b.couleur};left:${t + 9}px;top:${Math.round(t / 2 - 11)}px">${esc(b.txt)}</span>`;
   }
@@ -996,6 +1015,11 @@ const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option va
 const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
 const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}"` : ''}>${t}</button>`;
 
+function blocFicheSections() {
+  return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
+    return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
+      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button> <button type="button" class="rg-ajout" data-a="sadd-t">+ Ajouter une section « tableau »</button>';
+}
 function blocSection(sec, i) {
   const T = sec.tab, G = `data-g="${i}"`;
   const type = `<div class="rg-l2"><label>Type de section <select data-a="sec-type" ${G}><option value="liste"${sec.type === 'liste' ? ' selected' : ''}>Liste de colonnes</option><option value="tableau"${sec.type === 'tableau' ? ' selected' : ''}>Mini tableau (lignes × colonnes)</option></select></label></div>`;
@@ -1008,20 +1032,29 @@ function blocSection(sec, i) {
     ${btn('tb-radd', G, '+ ligne')}
     <label><input type="checkbox" data-a="tb" ${G} data-f="vides"${T.vides ? ' checked' : ''}> Masquer les lignes dont toutes les valeurs de colonnes sont vides</label>`;
 }
+function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary>${sum}</summary><div class="rg-corps-r">${body}</div></details>`; }
+function resumeEntree(x) { return [x.gn && 'nom gras', x.gi && 'nom italique', x.vg && 'valeur grasse', x.vi && 'valeur italique', x.vb && 'pastille', x.ta && ({ p:'petite', g:'grande', tg:'très grande' })[x.ta], x.cn && 'couleur du nom', x.cw && 'couleur de la valeur'].filter(Boolean).join(' · ') || 'style par défaut'; }
 function blocListe(g) {
-  const l = listeDe(g), dispo = allCols.filter(c => !l.some(x => x.c === c));
-  const cb = (a, at, v, t) => `<label><input type="checkbox" data-a="${a}" ${at}${v ? ' checked' : ''}> ${t}</label>`;
-  return `<ul>${l.map((x, i) => { const at = `data-g="${g}" data-i="${i}"`; return `<li><div class="rg-l1"><span class="nomcol">${esc(libel(x.c))}</span>${btn('up', at, '▲', 'Monter')}${btn('down', at, '▼', 'Descendre')}${btn('del', at, '✕', 'Retirer')}</div>
-    <div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché"></div>
+  const l = listeDe(g), cb = (a, at, v, t) => `<label><input type="checkbox" data-a="${a}" ${at}${v ? ' checked' : ''}> ${t}</label>`;
+  return `<ul>${l.map((x, i) => { const at = `data-g="${g}" data-i="${i}"`; return `<li>${rgd('col', i, `data-g="${g}"`, x.o, `<span class="rg-nom">${esc(libel(x.c))}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span><small class="res">${esc(resumeEntree(x))}</small><span class="rg-btns">${btn('up', at, '▲', 'Monter')}${btn('down', at, '▼', 'Descendre')}${btn('del', at, '✕', 'Retirer')}</span>`,
+    `<div class="rg-l2"><input type="text" value="${esc(x.nom)}" placeholder="Nom affiché (par défaut : ${esc(libel(x.c))})" data-a="lib" ${at} aria-label="Nom affiché"></div>
     <div class="rg-l2"><b class="rg-lab">Nom</b>${cb('gn', at, x.gn, 'gras')}${cb('gi', at, x.gi, 'italique')}<b class="rg-lab">Valeur</b>${cb('vg', at, x.vg, 'gras')}${cb('vi', at, x.vi, 'italique')}${cb('vb', at, x.vb, 'pastille')}
     <select data-a="ta" ${at} aria-label="Taille du texte">${[['', 'Taille normale'], ['p', 'Petite'], ['g', 'Grande'], ['tg', 'Très grande']].map(([v, t]) => `<option value="${v}"${(x.ta || '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
     <div class="rg-l2"><label><input type="checkbox" data-a="cn-on" ${at}${x.cn ? ' checked' : ''}> Couleur du nom</label><input type="color" data-a="cn" ${at} value="${x.cn || '#1d2733'}"${x.cn ? '' : ' disabled'} aria-label="Couleur du nom">
-      <label><input type="checkbox" data-a="cw-on" ${at}${x.cw ? ' checked' : ''}> Couleur de la valeur</label><input type="color" data-a="cw" ${at} value="${x.cw || '#1d2733'}"${x.cw ? '' : ' disabled'} aria-label="Couleur de la valeur"></div></li>`; }).join('')}</ul>
-    <select data-a="add" data-g="${g}" aria-label="Ajouter une colonne"><option value="">+ Ajouter une colonne…</option>${dispo.map(c => `<option value="${esc(c)}">${esc(libel(c))}</option>`).join('')}</select>`;
+      <label><input type="checkbox" data-a="cw-on" ${at}${x.cw ? ' checked' : ''}> Couleur de la valeur</label><input type="color" data-a="cw" ${at} value="${x.cw || '#1d2733'}"${x.cw ? '' : ' disabled'} aria-label="Couleur de la valeur"></div>`)}</li>`; }).join('')}</ul>
+    <button type="button" class="rg-ajout" data-a="pk-open" data-g="${g}">+ Ajouter des colonnes…</button>`;
+}
+let picker = null;
+function blocPicker() {   // sélecteur de colonnes : recherche et ajout de plusieurs colonnes d'un coup
+  const l = listeDe(picker.g), dispo = allCols.filter(c => !l.some(x => x.c === c)), q = sansAccent(picker.q);
+  return `<div class="pk"><div class="rg-l1"><button type="button" data-a="pk-cancel">← Retour</button><b>Ajouter des colonnes</b></div>
+    <input type="search" data-a="pk-q" value="${esc(picker.q)}" placeholder="Rechercher une colonne…" aria-label="Rechercher une colonne" style="width:100%;margin:8px 0">
+    <div class="pk-liste">${dispo.map(c => { const lib = sansAccent(libel(c) + ' ' + c); return `<label class="pk-item" data-lib="${esc(lib)}"${q && !lib.includes(q) ? ' style="display:none"' : ''}><input type="checkbox" data-a="pk-chk" data-c="${esc(c)}"${picker.sel.has(c) ? ' checked' : ''}> ${esc(libel(c))}</label>`; }).join('') || '<p class="vide">Toutes les colonnes sont déjà ajoutées.</p>'}</div>
+    <div class="rg-l2"><button type="button" data-a="pk-all">Tout cocher / décocher (colonnes affichées)</button><button type="button" class="rg-ajout" data-a="pk-add">Ajouter les colonnes cochées (<span id="pk-n">${picker.sel.size}</span>)</button></div></div>`;
 }
 function carteRegle(r, i) {
   const R = `data-r="${i}"`;
-  return `<details class="regle" ${R}${r.o ? ' open' : ''}><summary>${swatch(r.forme || cfg.defaut.forme, r.couleur || cfg.defaut.couleur, r.contenu.t === 'emoji' ? r.contenu.e : '', r.bordc || cfg.defaut.bordc, r.bordc ? r.borde : cfg.defaut.borde)}<span class="rg-nom">${esc(nomRegle(r))}</span><span class="rg-btns">${btn('rup', R, '▲', 'Monter')}${btn('rdown', R, '▼', 'Descendre')}${btn('rdel', R, '✕', 'Supprimer la règle')}</span></summary>
+  return `<details class="regle" ${R}${r.o ? ' open' : ''}><summary>${swatch(r.forme || cfg.defaut.forme, r.couleur || cfg.defaut.couleur, r.contenu.t === 'emoji' ? r.contenu.e : '', r.bordc || cfg.defaut.bordc, r.bordc ? r.borde : cfg.defaut.borde)}<span class="rg-nom">${esc(nomRegle(r))}</span>${regleActive(r) ? '' : '<small class="res warn">⚠ condition incomplète</small>'}<span class="rg-btns">${btn('rdup', R, '⧉', 'Dupliquer la règle')}${btn('rup', R, '▲', 'Monter')}${btn('rdown', R, '▼', 'Descendre')}${btn('rdel', R, '✕', 'Supprimer la règle')}</span></summary>
     <div class="rg-corps-r"><div class="rg-sous">Nom dans la légende</div><div class="rg-l2"><input type="text" value="${esc(r.nom)}" placeholder="facultatif" data-a="rnom" ${R} aria-label="Nom dans la légende"></div>
     <div class="rg-sous">Si</div>
     ${r.si.map((k, j) => { const K = `${R} data-k="${j}"`; return `<div class="rg-l2">${selCol(`data-a="cc" ${K}`, k.c)}<select data-a="co" ${K} aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" data-a="cv" ${K} value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}${btn('cdel', K, '✕', 'Retirer la condition')}</div>`; }).join('')}
@@ -1031,10 +1064,17 @@ function carteRegle(r, i) {
       <label><input type="checkbox" data-a="rf-on" ${R}${r.forme ? ' checked' : ''}> Forme</label>${selForme(`data-a="rf" ${R}`, r.forme || 'rond', !r.forme)}</div>
     <div class="rg-l2"><label><input type="checkbox" data-a="rd-on" ${R}${r.bordc ? ' checked' : ''}> Bordure</label><input type="color" data-a="rdc" ${R} value="${r.bordc || '#1d2733'}"${r.bordc ? '' : ' disabled'} aria-label="Couleur de la bordure"><input type="number" min="0" max="8" data-a="rde" ${R} value="${r.borde}"${r.bordc ? '' : ' disabled'} style="width:56px" aria-label="Épaisseur de la bordure"> px</div>
     <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
-      ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c)     : ''}</div>
-    <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option><option value="signal"${r.bulle.t === 'signal' ? ' selected' : ''}>Signal pulsé seul</option></select>
-      ${r.bulle.t && r.bulle.t !== 'signal' ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À contrôler" style="max-width:150px" aria-label="Texte de la bulle">`) : ''}
-      ${r.bulle.t ? `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` + (r.bulle.t !== 'signal' ? `<label><input type="checkbox" data-a="rbp" ${R}${r.bulle.pulse ? ' checked' : ''}> pulsé</label>` : '') : ''}</div></div></details>`;
+      ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div>
+    <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option></select>
+      ${r.bulle.t ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À contrôler" style="max-width:150px" aria-label="Texte de la bulle">`) + `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` : ''}</div>
+    <div class="rg-l2"><label><input type="checkbox" data-a="rpu-on" ${R}${r.pulse.on ? ' checked' : ''}> Signal pulsé</label>${r.pulse.on ? `<input type="color" data-a="rpuc" ${R} value="${r.pulse.couleur}" aria-label="Couleur du signal"><select data-a="rpur" ${R} aria-label="Rythme du signal">${[['lent', 'Lent'], ['normal', 'Normal'], ['rapide', 'Rapide']].map(([v, t]) => `<option value="${v}"${r.pulse.rythme === v ? ' selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div></div></details>`;
+}
+function blocSauvegarde() {
+  return `<section><h3>Sauvegarde et partage de la configuration</h3><p class="vide" style="font-size:12px;margin:0 0 6px">Exportez vos réglages sous forme de texte pour les conserver ou les copier dans un autre document ; importez un texte exporté pour l’appliquer ici.</p>
+    <div class="rg-l2"><button type="button" data-a="exp">Exporter la configuration</button></div>
+    <textarea id="rg-exp" readonly rows="4" style="width:100%;font:12px monospace;margin-top:6px" placeholder="Le texte exporté apparaît ici" aria-label="Configuration exportée"></textarea>
+    <div class="rg-sous">Importer</div><textarea id="rg-imp" rows="4" style="width:100%;font:12px monospace" placeholder="Collez ici une configuration exportée" aria-label="Configuration à importer"></textarea>
+    <div class="rg-l2"><button type="button" data-a="imp" class="rg-ajout">Importer et remplacer mes réglages</button></div></section>`;
 }
 function blocStyles() {
   return `<section><h3>Styles de texte du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Pour chaque texte : couleur, fond (en pastille, comme l’étiquette du popup), taille, gras, italique. Un filtre peut aussi avoir son propre fond dans l’onglet Filtres.</p>
@@ -1047,12 +1087,14 @@ function blocStyles() {
 function blocMessages() {
   const sel = (A, f, ch, v) => `<select ${A} data-f="${f}">${ch.map(([val, t]) => `<option value="${val}"${val === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   return `<p class="vide" style="font-size:12px">Un message passager s’affiche en bandeau sur la carte. Plusieurs messages s’affichent à tour de rôle. Décochez « Actif » pour en arrêter un.</p>
-    ${cfg.messages.map((m, i) => { const A = `data-a="ms" data-i="${i}"`, I = `data-i="${i}"`; return `<section><div class="rg-sec"><label><input type="checkbox" ${A} data-f="actif"${m.actif ? ' checked' : ''}> Actif</label>${btn('ms-prev', I, 'Aperçu')}${btn('ms-up', I, '▲', 'Monter')}${btn('ms-down', I, '▼', 'Descendre')}${btn('ms-del', I, '✕', 'Supprimer')}</div>
+    ${cfg.messages.map((m, i) => { const A = `data-a="ms" data-i="${i}"`, I = `data-i="${i}"`;
+      return rgd('ms', i, '', m.o, `<span class="rg-nom">${m.actif ? '●' : '○'} ${esc(m.texte.slice(0, 36) || 'Message vide')}</span><small class="res${m.actif && !m.texte.trim() ? ' warn' : ''}">${m.actif ? (m.texte.trim() ? 'actif' : '⚠ sans texte') : 'inactif'}</small><span class="rg-btns">${btn('ms-prev', I, 'Aperçu')}${btn('ms-up', I, '▲', 'Monter')}${btn('ms-down', I, '▼', 'Descendre')}${btn('ms-del', I, '✕', 'Supprimer')}</span>`,
+      `<div class="rg-l2"><label><input type="checkbox" ${A} data-f="actif"${m.actif ? ' checked' : ''}> Actif</label></div>
       <div class="rg-l2"><input type="text" ${A} data-f="ico" value="${esc(m.ico)}" placeholder="Icône" style="max-width:70px" aria-label="Icône"><input type="text" ${A} data-f="texte" value="${esc(m.texte)}" placeholder="Texte du message" style="flex:1;min-width:200px" aria-label="Texte du message"></div>
       <div class="rg-l2">${sel(A, 'style', [['info', 'Information'], ['attention', 'Attention'], ['urgent', 'Urgent'], ['perso', 'Couleurs personnalisées']], m.style)}${m.style === 'perso' ? `<label>Fond <input type="color" ${A} data-f="fond" value="${m.fond}"></label><label>Texte <input type="color" ${A} data-f="coul" value="${m.coul}"></label>` : ''}${sel(A, 'pos', [['haut', 'En haut de la carte'], ['bas', 'En bas de la carte']], m.pos)}</div>
       <div class="rg-l2"><label>Durée d’affichage <input type="number" min="0" max="600" ${A} data-f="duree" value="${m.duree}" style="width:64px"> s <span class="vide">(0 = jusqu’à la fermeture)</span></label></div>
       <div class="rg-l2">${sel(A, 'rep', [['ouverture', 'À chaque ouverture de la carte'], ['session', 'Une fois par session'], ['intervalle', 'Répété à intervalle régulier']], m.rep)}${m.rep === 'intervalle' ? `<label>toutes les <input type="number" min="1" max="240" ${A} data-f="min" value="${m.min}" style="width:64px"> min</label>` : ''}</div>
-      <div class="rg-l2"><label>Du <input type="date" ${A} data-f="debut" value="${m.debut}"></label><label>au <input type="date" ${A} data-f="fin" value="${m.fin}"></label></div></section>`; }).join('')}
+      <div class="rg-l2"><label>Du <input type="date" ${A} data-f="debut" value="${m.debut}"></label><label>au <input type="date" ${A} data-f="fin" value="${m.fin}"></label></div>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="ms-add">+ Ajouter un message</button>`;
 }
 function blocRecherche() {
@@ -1077,11 +1119,13 @@ function blocFiltres() {
     <label><input type="checkbox" data-o="filtres_ouvert"${opt('filtres_ouvert', true) !== false ? ' checked' : ''}> Section dépliée par défaut</label>
     <label><input type="checkbox" data-o="filtres_sous_ouvert"${opt('filtres_sous_ouvert', false) === true ? ' checked' : ''}> Sous-sections (chaque filtre à cases) dépliées par défaut</label></section>
     <p class="vide" style="font-size:12px">Créez ici tous les filtres proposés dans le panneau de gauche : le panneau de droite de Grist n’en propose plus.</p>
-    ${cfg.filtres.map((f, i) => { const A = `data-a="fl" data-i="${i}"`, I = `data-i="${i}"`; return `<section><div class="rg-sec">${selC(`${A} data-f="c"`, f.c)}${btn('fl-up', I, '▲', 'Monter')}${btn('fl-down', I, '▼', 'Descendre')}${btn('fl-del', I, '✕', 'Supprimer')}</div>
+    ${cfg.filtres.map((f, i) => { const A = `data-a="fl" data-i="${i}"`, I = `data-i="${i}"`, TL = { multi:'choix multiples', unique:'choix unique', oui:'case oui/non', curseur:'curseur oui/non' };
+      return rgd('fl', i, '', f.o, `<span class="rg-nom">${esc(f.nom || (f.c ? libel(f.c) : 'Nouveau filtre'))}</span>${f.c ? `<small class="res">${TL[f.type]}</small>` : '<small class="res warn">⚠ choisissez une colonne</small>'}<span class="rg-btns">${btn('fl-up', I, '▲', 'Monter')}${btn('fl-down', I, '▼', 'Descendre')}${btn('fl-del', I, '✕', 'Supprimer')}</span>`,
+      `<div class="rg-l2">${selC(`${A} data-f="c"`, f.c)}</div>
       <div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(f.nom)}" placeholder="Nom affiché (par défaut : ${esc(f.c ? libel(f.c) : 'nom de la colonne')})" aria-label="Nom affiché"></div>
       <div class="rg-l2"><select ${A} data-f="type" aria-label="Type de filtre"><option value="multi"${f.type === 'multi' ? ' selected' : ''}>Choix multiples (cases à cocher)</option><option value="unique"${f.type === 'unique' ? ' selected' : ''}>Choix unique (liste déroulante)</option><option value="oui"${f.type === 'oui' ? ' selected' : ''}>Oui / non : case « seulement les oui »</option><option value="curseur"${f.type === 'curseur' ? ' selected' : ''}>Oui / non : curseur Tous · Oui · Non</option></select>
       ${f.type === 'oui' || f.type === 'curseur' ? `<label>Valeur « oui » <input type="text" ${A} data-f="oui" value="${esc(f.oui)}" style="max-width:110px"></label>` : ''}${f.type === 'curseur' ? `<label>Valeur « non » <input type="text" ${A} data-f="non" value="${esc(f.non)}" style="max-width:110px"></label>` : ''}</div>
-      <div class="rg-l2"><label><input type="checkbox" ${A} data-f="fond-on"${f.fond ? ' checked' : ''}> Fond</label><input type="color" ${A} data-f="fond" value="${f.fond || '#fff3bf'}"${f.fond ? '' : ' disabled'} aria-label="Couleur du fond"><label><input type="checkbox" ${A} data-f="coul-on"${f.coul ? ' checked' : ''}> Couleur du texte</label><input type="color" ${A} data-f="coul" value="${f.coul || '#1d2733'}"${f.coul ? '' : ' disabled'} aria-label="Couleur du texte"><label><input type="checkbox" ${A} data-f="gras"${f.gras ? ' checked' : ''}> Gras</label></div></section>`; }).join('')}
+      <div class="rg-l2"><label><input type="checkbox" ${A} data-f="fond-on"${f.fond ? ' checked' : ''}> Fond</label><input type="color" ${A} data-f="fond" value="${f.fond || '#fff3bf'}"${f.fond ? '' : ' disabled'} aria-label="Couleur du fond"><label><input type="checkbox" ${A} data-f="coul-on"${f.coul ? ' checked' : ''}> Couleur du texte</label><input type="color" ${A} data-f="coul" value="${f.coul || '#1d2733'}"${f.coul ? '' : ' disabled'} aria-label="Couleur du texte"><label><input type="checkbox" ${A} data-f="gras"${f.gras ? ' checked' : ''}> Gras</label></div>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="fl-add">+ Ajouter un filtre</button>`;
 }
 function blocProg() {
@@ -1090,11 +1134,13 @@ function blocProg() {
     <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Tenir compte des filtres en cours</label>
     <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre filtre la carte (si la colonne de regroupement est un filtre)</label>
     <label>Tri <select data-a="pg" data-f="tri">${[['nom', 'Par nom'], ['asc', 'Avancement croissant'], ['desc', 'Avancement décroissant']].map(([v, t]) => `<option value="${v}"${P.tri === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></section>
-    ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`; return `<section><div class="rg-sec"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur (ex. Contrôles 2026)">${btn('pi-del', `data-i="${i}"`, 'Supprimer')}</div>
+    ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`, inc = !x.grp || !x.fait || !x.att;
+      return rgd('pi', i, '', x.o, `<span class="rg-nom">${esc(x.nom || 'Indicateur ' + (i + 1))}</span>${inc ? '<small class="res warn">⚠ colonnes à choisir</small>' : '<small class="res">complet</small>'}<span class="rg-btns">${btn('pi-del', `data-i="${i}"`, '✕', 'Supprimer')}</span>`,
+      `<div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur (ex. Contrôles 2026)"></div>
       <label>Regrouper par ${selCol(`${A} data-f="grp"`, x.grp)}</label>
       <label>Contrôles réalisés (colonne numérique) ${selCol(`${A} data-f="fait"`, x.fait)}</label>
       <label>Contrôles attendus (colonne numérique) ${selCol(`${A} data-f="att"`, x.att)}</label>
-      <label>Orange à partir de <input type="number" min="0" max="200" ${A} data-f="orange" value="${x.orange}" style="width:64px"> % · vert à partir de <input type="number" min="0" max="200" ${A} data-f="vert" value="${x.vert}" style="width:64px"> %</label></section>`; }).join('')}
+      <label>Orange à partir de <input type="number" min="0" max="200" ${A} data-f="orange" value="${x.orange}" style="width:64px"> % · vert à partir de <input type="number" min="0" max="200" ${A} data-f="vert" value="${x.vert}" style="width:64px"> %</label>`); }).join('')}
     <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
 }
 function blocEtiquette(k, titre) {
@@ -1136,7 +1182,7 @@ function contenuOnglet() {
     <p class="vide" style="font-size:12px">Chaque règle s’applique aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
     ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button>`;
   if (onglet === 'popup') return blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
-  if (onglet === 'fiche') return blocEntete('fiche') + cfg.sections.map((sec, i) => `<section><div class="rg-sec"><input type="text" value="${esc(sec.nom)}" data-a="nom" data-g="${i}" aria-label="Nom de la section" placeholder="Nom de la section">${btn('sup', `data-g="${i}"`, '▲', 'Monter')}${btn('sdown', `data-g="${i}"`, '▼', 'Descendre')}${btn('sdel', `data-g="${i}"`, 'Supprimer')}</div>${blocSection(sec, i)}</section>`).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button> <button type="button" class="rg-ajout" data-a="sadd-t">+ Ajouter une section « tableau »</button>';
+  if (onglet === 'fiche') return blocFicheSections();
   if (onglet === 'barre') return blocBarre();
   if (onglet === 'filtres') return blocFiltres();
   if (onglet === 'messages') return blocMessages();
@@ -1162,6 +1208,7 @@ function contenuOnglet() {
     <label>Largeur du panneau de gauche <input type="number" min="220" max="520" data-o="largeur_gauche" value="${+opt('largeur_gauche', 300)}"> px</label></section>
     ${blocEtiquette('liste', 'Étiquette devant le nom (liste des établissements)')}
     ${blocEtiquette('legende', 'Étiquette de la légende')}
+    ${blocSauvegarde()}
     ${blocStyles()}
     <section><h3>Tailles</h3>
     <label>Hauteur maximale des listes dépliées du panneau de gauche (0 = aucune limite) <input type="number" min="0" max="1500" data-o="liste_max" value="${+opt('liste_max', 0)}"> px</label>
@@ -1180,15 +1227,26 @@ function contenuOnglet() {
     <label>Taille du texte du popup <input type="number" min="10" max="22" data-o="taille_popup" value="${+opt('taille_popup', 13)}"> px</label>
     <label>Taille du texte de la fiche <input type="number" min="10" max="24" data-o="taille_fiche" value="${+opt('taille_fiche', 14)}"> px</label></section>`;
 }
+const AIDES_ONGLET = {
+  points:'Une règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent ses conditions. Exemple : « Niveau de risque est égal à Critique » → rouge.',
+  popup:'Choisissez les colonnes affichées au clic sur un point. Exemple : commune, statut, date du dernier contrôle. Cliquez sur une colonne pour régler son style.',
+  fiche:'La fiche s’ouvre avec « Voir la fiche complète ». Créez des sections pliables : liste de colonnes, ou mini tableau (par exemple un historique par année).',
+  filtres:'La barre de recherche et les filtres du panneau de gauche. Exemple : un filtre « Département » à choix multiples et un curseur oui/non sur « Est-ce un cible ? ».',
+  messages:'Bandeaux temporaires sur la carte. Exemple : « Maintenance vendredi », 10 secondes, une fois par session.',
+  prog:'Barres d’avancement par administration ou unité. Exemple : contrôles réalisés sur contrôles attendus, regroupés par Administration.',
+  barre:'Les boutons de la barre sur la carte. Un bouton placé ici disparaît du panneau de gauche.',
+  general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' };
+const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(x => !x.grp || !x.fait || !x.att).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
+function majCfgClasses() { const b = document.body; if (b && b.classList) b.classList.toggle('cfg-large', modal.classList.contains('ouvert') && !modal.classList.contains('reduit')); }
 function dessiner() {
-  const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0;
-  modal.innerHTML = `<div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><span id="rg-etat" class="rg-etat">${esc(etatSauv)}</span>${btn('fermer', '', 'Fermer')}</div>
-    <div class="rg-onglets">${[['points', 'Affichage des points'], ['popup', 'Popup'], ['fiche', 'Fiche'], ['filtres', 'Filtres'], ['messages', 'Messages'], ['prog', 'Progression'], ['barre', 'Barre de boutons'], ['general', 'Général']].map(([k, t]) => `<button type="button" data-a="onglet" data-t="${k}" aria-pressed="${onglet === k}">${t}</button>`).join('')}</div>
-    <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est en « Accès complet » dans le panneau de droite de Grist.</p>` : ''}${contenuOnglet()}</div></div>`;
+  const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0, av = avertOnglet();
+  modal.innerHTML = `<div class="rg-onglet-reduit"><button type="button" data-a="reduire" aria-label="Rouvrir la configuration">⚙ Réglages ▸</button></div><div class="rg-boite" role="dialog" aria-label="Configurer le widget"><div class="rg-tete"><h2>Configurer le widget</h2><span id="rg-etat" class="rg-etat">${esc(etatSauv)}</span>${btn('reduire', '', '◂ Réduire', 'Réduire le volet pour voir toute la carte')}${btn('fermer', '', 'Fermer')}</div>
+    <div class="rg-onglets" role="tablist">${[['points', 'Affichage des points'], ['popup', 'Popup'], ['fiche', 'Fiche'], ['filtres', 'Filtres'], ['messages', 'Messages'], ['prog', 'Progression'], ['barre', 'Barre de boutons'], ['general', 'Général']].map(([k, t]) => `<button type="button" role="tab" data-a="onglet" data-t="${k}" aria-pressed="${onglet === k}" aria-selected="${onglet === k}">${t}${av[k] ? ` <span class="warn" title="Réglages incomplets">⚠ ${av[k]}</span>` : ''}</button>`).join('')}</div>
+    <div class="rg-corps">${erreurAcces ? `<p style="color:#c1121f;font-size:13px">Impossible de lire toutes les colonnes : vérifiez que le widget est en « Accès complet » dans le panneau de droite de Grist.</p>` : ''}${picker ? blocPicker() : `<p class="rg-aide">${AIDES_ONGLET[onglet]}</p>` + contenuOnglet() + `<div class="rg-pied-onglet"><button type="button" data-a="reset" class="rg-danger">Réinitialiser cet onglet</button></div>`}</div></div>`;
   modal.querySelector('.rg-corps').scrollTop = y;
 }
-function fermerReglages() { modal.classList.remove('ouvert'); msgSig = ''; planifierMessages(); }
-function ouvrirReglages() { dessiner(); modal.classList.add('ouvert'); }
+function fermerReglages() { modal.classList.remove('ouvert'); picker = null; majCfgClasses(); msgSig = ''; planifierMessages(); }
+function ouvrirReglages() { dessiner(); modal.classList.add('ouvert'); majCfgClasses(); }
 function etat(t) { etatSauv = t; const e = document.getElementById('rg-etat'); if (e) e.textContent = t; }
 function enregistrer() {
   clearTimeout(minuteur); etat('Enregistrement…');
@@ -1203,38 +1261,56 @@ modal.addEventListener('click', e => {
   if (e.target === modal) { fermerReglages(); return; }
   const b = e.target.closest('button[data-a]'); if (!b) return;
   const a = b.dataset.a, g = b.dataset.g, i = +b.dataset.i, r = +b.dataset.r, k = +b.dataset.k;
+  const sure = () => {   // confirmation en deux clics, sans fenêtre du navigateur (souvent bloquée dans Grist)
+    if (b.dataset.arme === '1') return true;
+    b.dataset.arme = '1'; b.dataset.txt = b.textContent; b.textContent = 'Confirmer ?'; b.classList.add('danger');
+    setTimeout(() => { delete b.dataset.arme; b.textContent = b.dataset.txt; b.classList.remove('danger'); }, 3000); return false;
+  };
   switch (a) {
     case 'fermer': fermerReglages(); return;
+    case 'reduire': modal.classList.toggle('reduit'); majCfgClasses(); return;
+    case 'pk-open': picker = { g, q:'', sel:new Set() }; dessiner(); return;
+    case 'pk-cancel': picker = null; dessiner(); return;
+    case 'pk-add': { const l = listeDe(picker.g); picker.sel.forEach(c => { if (!l.some(x => x.c === c)) l.push({ c, nom:'', gn:false, gi:false, vg:false, vi:false, vb:false, ta:'', cn:'', cw:'', o:false }); }); picker = null; break; }
+    case 'pk-all': { const it = [...modal.querySelectorAll('.pk-item')].filter(x => x.style.display !== 'none'), tout = it.length && it.every(x => x.querySelector('input').checked); it.forEach(x => { const c = x.querySelector('input'); c.checked = !tout; if (tout) picker.sel.delete(c.dataset.c); else picker.sel.add(c.dataset.c); }); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
+    case 'rdup': cfg.regles.splice(r + 1, 0, JSON.parse(JSON.stringify(cfg.regles[r]))); break;
+    case 'exp': { const o = {}; Object.keys(opts).forEach(x => { if (x !== 'cfg') o[x] = opts[x]; }); const ta = modal.querySelector('#rg-exp'); ta.value = JSON.stringify({ cifi:'configuration', version:VERSION, cfg, options:o }); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* copie manuelle */ } etat(ok ? '✓ Configuration exportée et copiée' : 'Configuration exportée : copiez le texte'); return; }
+    case 'imp': { let o; try { o = JSON.parse(modal.querySelector('#rg-imp').value); } catch (e) { etat('⚠ Texte non reconnu'); return; } if (!o || o.cifi !== 'configuration' || !o.cfg) { etat('⚠ Ce texte n’est pas une configuration CIFI'); return; } if (!sure()) return; cfg = norm(o.cfg); Object.keys(opts).filter(x => x !== 'cfg').forEach(x => { delete opts[x]; }); Object.assign(opts, o.options || {}); break; }
+    case 'reset': { if (!sure()) return; const o = onglet;
+      if (o === 'points') { cfg.regles = []; cfg.defaut = nDef({}); } else if (o === 'popup') { cfg.popup = []; cfg.entetes.popup = nEnt({}); } else if (o === 'fiche') { cfg.sections = []; cfg.entetes.fiche = nEnt({}); }
+      else if (o === 'filtres') { cfg.filtres = []; cfg.recherche = nRech({}); } else if (o === 'messages') cfg.messages = []; else if (o === 'prog') cfg.prog = nProg({}); else if (o === 'barre') cfg.barre = nBarre({});
+      else if (o === 'general') { cfg.styles = Object.fromEntries(Object.keys(STYLES_TXT).map(x => [x, nSt({})])); cfg.etiquettes = { liste:nEtq({}), legende:nEtq({}) }; cfg.ordre = normOrdre([]); Object.keys(opts).filter(x => x !== 'cfg').forEach(x => { delete opts[x]; }); }
+      break; }
     case 'onglet': onglet = b.dataset.t; dessiner(); return;
     case 'up': case 'down': deplacer(listeDe(g), i, a === 'up' ? -1 : 1); break;
     case 'del': listeDe(g).splice(i, 1); break;
     case 'sup': case 'sdown': deplacer(cfg.sections, +g, a === 'sup' ? -1 : 1); break;
-    case 'sdel': if (!confirm('Supprimer cette section ?')) return; cfg.sections.splice(+g, 1); break;
+    case 'sdel': if (!sure()) return; cfg.sections.splice(+g, 1); break;
     case 'sadd': cfg.sections.push(nSec({ nom:'Nouvelle section' })); break;
     case 'sadd-t': { const rows = [2025, 2024, 2023, 2022].map(y => ({ cells:[{ c:'', v:String(y) }, { c:allCols.find(x => new RegExp('contr.les?.*' + y, 'i').test(libel(x))) || '', v:'' }, { c:'', v:'' }] })); cfg.sections.push(nSec({ nom:'Historique des contrôles', type:'tableau', tab:{ heads:['Année', 'Contrôles', 'Remarques'], vides:true, rows } })); break; }
     case 'tb-hadd': { const T = cfg.sections[+g].tab; T.heads.push('Colonne ' + (T.heads.length + 1)); T.rows.forEach(r => r.cells.push({ c:'', v:'' })); break; }
     case 'tb-hdel': { const T = cfg.sections[+g].tab, j = +b.dataset.j; T.heads.splice(j, 1); T.rows.forEach(r => r.cells.splice(j, 1)); break; }
     case 'tb-radd': { const T = cfg.sections[+g].tab; T.rows.push({ cells:T.heads.map(() => ({ c:'', v:'' })) }); break; }
-    case 'tb-rdel': cfg.sections[+g].tab.rows.splice(k, 1); break;
+    case 'tb-rdel': if (!sure()) return; cfg.sections[+g].tab.rows.splice(k, 1); break;
     case 'tb-rup': case 'tb-rdown': deplacer(cfg.sections[+g].tab.rows, k, a === 'tb-rup' ? -1 : 1); break;
     case 'tb-rdup': { const R = cfg.sections[+g].tab.rows; R.splice(k + 1, 0, JSON.parse(JSON.stringify(R[k]))); break; }
     case 'radd': cfg.regles.push(nRegle({ o:true, si:[{ c:'', op:'=', v:'' }], couleur:'#c1121f' })); break;
     case 'rup': case 'rdown': deplacer(cfg.regles, r, a === 'rup' ? -1 : 1); break;
-    case 'rdel': cfg.regles.splice(r, 1); break;
+    case 'rdel': if (!sure()) return; cfg.regles.splice(r, 1); break;
     case 'cadd': cfg.regles[r].si.push({ c:'', op:'=', v:'' }); break;
     case 'cdel': cfg.regles[r].si.splice(k, 1); break;
     case 'fl-add': cfg.filtres.push(nFiltre({})); break;
     case 'fl-up': case 'fl-down': deplacer(cfg.filtres, i, a === 'fl-up' ? -1 : 1); break;
-    case 'fl-del': cfg.filtres.splice(i, 1); break;
+    case 'fl-del': if (!sure()) return; cfg.filtres.splice(i, 1); break;
     case 'ms-add': cfg.messages.push(nMsg({ texte:'Nouveau message', actif:true })); break;
     case 'ms-up': case 'ms-down': deplacer(cfg.messages, i, a === 'ms-up' ? -1 : 1); break;
-    case 'ms-del': cfg.messages.splice(i, 1); break;
+    case 'ms-del': if (!sure()) return; cfg.messages.splice(i, 1); break;
     case 'ms-prev': afficherMessage(i); return;
     case 'rc-add': cfg.recherche.cols.push({ c:'', nom:'' }); break;
     case 'rc-up': case 'rc-down': deplacer(cfg.recherche.cols, i, a === 'rc-up' ? -1 : 1); break;
     case 'rc-del': cfg.recherche.cols.splice(i, 1); break;
     case 'pi-add': { const ia = allCols.find(c => /attendu/i.test(libel(c))), ifa = allCols.find(c => /contr.le.*2026/i.test(libel(c))); cfg.prog.inds.push(nInd({ nom:'Contrôles réalisés / attendus', fait:ifa || '', att:ia || '' })); break; }
-    case 'pi-del': cfg.prog.inds.splice(i, 1); break;
+    case 'pi-del': if (!sure()) return; cfg.prog.inds.splice(i, 1); break;
     case 'bb-up': case 'bb-down': { const l = cfg.barre.boutons, i = l.findIndex(x => x.id === b.dataset.e), j = i + (a === 'bb-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; break; }
     case 'ord-up': case 'ord-down': { const i = cfg.ordre.indexOf(b.dataset.e), j = i + (a === 'ord-up' ? -1 : 1); if (i >= 0 && j >= 0 && j < cfg.ordre.length) [cfg.ordre[i], cfg.ordre[j]] = [cfg.ordre[j], cfg.ordre[i]]; break; }
     default: return;
@@ -1263,7 +1339,9 @@ modal.addEventListener('change', e => {
     case 'rbc': R.bulle.c = t.value; break;
     case 'rbe': R.bulle.e = t.value; break;
     case 'rbk': R.bulle.couleur = t.value; break;
-    case 'rbp': R.bulle.pulse = t.checked; break;
+    case 'rpu-on': R.pulse.on = t.checked; break;
+    case 'rpuc': R.pulse.couleur = t.value; break;
+    case 'rpur': R.pulse.rythme = t.value; break;
     case 'defbc': cfg.defaut.bordc = t.value; break;
     case 'defbe': cfg.defaut.borde = Math.max(0, Math.min(8, t.value === '' ? 3 : +t.value || 0)); break;
     case 'rd-on': R.bordc = t.checked ? '#1d2733' : ''; if (t.checked && !R.borde) R.borde = 3; break;
@@ -1272,6 +1350,7 @@ modal.addEventListener('change', e => {
     case 'eh': { const H = cfg.entetes[t.dataset.h]; H[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (+t.value || 0) : t.value; break; }
     case 'eh-txt-on': cfg.entetes[t.dataset.h].txtc = t.checked ? '#1d2733' : ''; break;
     case 'ms': { const M = cfg.messages[+t.dataset.i], f = t.dataset.f; if (M) M[f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
+    case 'pk-chk': { if (t.checked) picker.sel.add(t.dataset.c); else picker.sel.delete(t.dataset.c); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
     case 'sec-type': cfg.sections[+t.dataset.g].type = t.value; break;
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
     case 'tb-c': { const C = cfg.sections[+t.dataset.g].tab.rows[+t.dataset.k].cells[+t.dataset.j]; C[t.dataset.f] = t.value; break; }
@@ -1301,8 +1380,10 @@ modal.addEventListener('change', e => {
     case 'cv': R.si[k].v = t.value; break;
     default: return;
   }
-  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'fl' && ['type', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
+  sauver(['add', 'rc-on', 'rf-on', 'rct', 'cc', 'co', 'cn-on', 'cw-on', 'rbt', 'rbs', 'rpu-on', 'eh-txt-on', 'rd-on'].includes(a) || (a === 'eh' && t.dataset.f === 'fond') || (a === 'et' && ['couleur', 'contenu', 'bord'].includes(t.dataset.f)) || (a === 'fl' && ['type', 'fond-on', 'coul-on'].includes(t.dataset.f)) || (a === 'st' && /-on$/.test(t.dataset.f)) || (a === 'ms' && ['style', 'rep'].includes(t.dataset.f)) || a === 'sec-type' || a === 'tb-h' || (a === 'tb-c' && t.dataset.f === 'c'));
 });
+modal.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.a === 'pk-q' && picker) { picker.q = t.value; const q = sansAccent(t.value); modal.querySelectorAll('.pk-item').forEach(x => { x.style.display = !q || x.dataset.lib.includes(q) ? '' : 'none'; }); } });
+modal.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.gen')) return; const i = +d.dataset.i, k = d.dataset.ok, o = k === 'col' ? listeDe(d.dataset.g)[i] : k === 'sec' ? cfg.sections[i] : k === 'fl' ? cfg.filtres[i] : k === 'ms' ? cfg.messages[i] : k === 'pi' ? cfg.prog.inds[i] : null; if (o) o.o = d.open; }, true);
 modal.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details.regle') && cfg.regles[+d.dataset.r]) cfg.regles[+d.dataset.r].o = d.open; }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerReglages(); });
 function boutonSecours() {
