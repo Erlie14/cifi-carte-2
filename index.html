@@ -264,6 +264,9 @@
   .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini:not(.ligne) { width:100%; } .mini td.nw { white-space:nowrap; } .mini.ligne th, .mini.ligne td { white-space:nowrap; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
   .fp-corps details.sub { border:1px solid var(--line); border-radius:8px; margin:6px 8px; } details.sub > summary { font-size:13px; padding:6px 10px; }
   details.regle.el { margin-top:6px; }
+  .iti-avert { margin:0 0 8px; padding:6px 10px; background:#fff4e5; border-left:3px solid #f4821f; border-radius:6px; font-size:12.5px; }
+  .iti-adr { display:flex; gap:6px; margin:6px 0; } .iti-adr input { flex:1; min-width:0; font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; }
+  .iti-adr-res { list-style:none; margin:4px 0 8px; padding:0; border:1px solid var(--line); border-radius:6px; } .iti-adr-res button { display:block; width:100%; text-align:left; font:inherit; font-size:13px; padding:6px 8px; background:none; border:0; border-bottom:1px solid #eef1f5; cursor:pointer; } .iti-adr-res button:hover { background:#e8eef7; }
 </style>
 </head>
 <body>
@@ -272,7 +275,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '55';
+const VERSION = '57';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -1045,7 +1048,8 @@ progPanel.addEventListener('change', e => { if (e.target.id === 'prog-ind') { pr
 
 /* ================= ITINÉRAIRE DE CONTRÔLE ================= */
 const itiPanel = document.createElement('aside'); itiPanel.id = 'iti-panel'; itiPanel.setAttribute('aria-label', 'Préparation d’un itinéraire'); itiPanel.setAttribute('aria-hidden', 'true'); document.body.appendChild(itiPanel);
-const iti = { ids:[], mode:'car', retour:false, depart:null, legs:[], total:null, msg:'' };
+const ITI_AVERT = 'Attention : les itinéraires sont calculés automatiquement et peuvent contenir des erreurs (travaux, accès fermés, sens interdits…). Vérifiez le trajet avant de partir.', ITI_AVERT_PIED = 'À pied : trajet donné à titre indicatif, il peut emprunter des chemins difficiles ou non praticables.';   // textes par défaut des avertissements du panneau d’itinéraire
+const iti = { ids:[], mode:'car', retour:false, depart:null, departLib:'', adr:{ ouvert:false, q:'', res:[], msg:'' }, legs:[], total:null, msg:'' };
 const itiRoute = L.featureGroup().addTo(map), itiPts = L.layerGroup().addTo(map);
 let attendDepart = false;
 const hav = (a, b) => { const t = Math.PI / 180, dl = (b.lat - a.lat) * t, dn = (b.lng - a.lng) * t, x = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dn / 2) ** 2; return 12742000 * Math.asin(Math.sqrt(x)); };
@@ -1062,15 +1066,39 @@ function itiMarques() {
   iti.ids.forEach((id, k) => { const p = ptDe(id); if (p) L.marker(p, { icon:L.divIcon({ className:'', iconSize:[18,18], iconAnchor:[26,26], html:`<div class="iti-num">${k + 1}</div>` }), interactive:false, zIndexOffset:1000 }).addTo(itiPts); });
   if (iti.depart) L.marker(iti.depart, { icon:L.divIcon({ className:'', iconSize:[24,24], iconAnchor:[4,22], html:'<div style="font-size:22px;line-height:24px">🏁</div>' }), interactive:false, zIndexOffset:1000 }).addTo(itiPts);
 }
+function itiAvert() {   // avertissements affichés sous le titre (textes modifiables dans la configuration ; vides = masqués)
+  const a = String(optBrut('iti_avert', ITI_AVERT)), b = String(optBrut('iti_avert_pied', ITI_AVERT_PIED));
+  return (a ? `<p class="iti-avert">⚠ ${esc(a)}</p>` : '') + (iti.mode === 'pedestrian' && b ? `<p class="iti-avert">🚶 ${esc(b)}</p>` : '');
+}
+async function itiChercherAdresse() {   // géocodage par la Géoplateforme (IGN) : le texte saisi est envoyé à ce service
+  iti.adr.q = String(((itiPanel.querySelector('#iti-adr-q') || {}).value) || iti.adr.q).trim(); iti.adr.res = [];
+  if (iti.adr.q.length < 3) { iti.adr.msg = 'Saisissez au moins 3 caractères.'; itiDessiner(); return; }
+  iti.adr.msg = 'Recherche…'; itiDessiner();
+  try {
+    const r = await fetch(`${opt('geocode_url', 'https://data.geopf.fr/geocodage/search')}?q=${encodeURIComponent(iti.adr.q)}&limit=5`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    iti.adr.res = ((await r.json()).features || []).map(f => { const c = f.geometry && f.geometry.coordinates, p = f.properties || {}; return c && c.length > 1 ? { lat:+c[1], lng:+c[0], lib:String(p.label || p.fulltext || p.name || iti.adr.q) } : null; }).filter(x => x && isFinite(x.lat) && isFinite(x.lng));
+    iti.adr.msg = iti.adr.res.length ? '' : 'Aucune adresse trouvée.';
+  } catch (e) { iti.adr.msg = 'Recherche impossible pour le moment (' + e.message + ').'; }
+  itiDessiner();
+}
+function itiPosition() {   // position de l'appareil : utilisée seulement comme départ, jamais enregistrée
+  if (!navigator.geolocation) { iti.msg = 'La localisation n’est pas disponible sur cet appareil.'; itiDessiner(); return; }
+  iti.msg = 'Localisation en cours…'; itiDessiner();
+  navigator.geolocation.getCurrentPosition(p => { iti.depart = L.latLng(p.coords.latitude, p.coords.longitude); iti.departLib = 'Ma position'; itiReset(); itiDessiner(); },
+    e => { iti.msg = e.code === 1 ? 'Position refusée ou non autorisée ici : utilisez une adresse ou la carte.' : 'Position indisponible : utilisez une adresse ou la carte.'; itiDessiner(); }, { timeout:10000 });
+}
 function itiDessiner() {
   const legDe = k => iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined;
   const info = l => l === undefined ? '' : l === null ? '<small>Trajet non calculé</small>' : `<small>${fmtDist(l.d)} · ${fmtDuree(l.t)}</small>`;
   const retourLeg = iti.retour && iti.legs.length ? iti.legs[iti.legs.length - 1] : undefined;
   itiPanel.innerHTML = `<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-i="fermer" aria-label="Fermer">✕</button><h2>Itinéraire</h2></div>
-    <div class="fp-corps">
+    <div class="fp-corps">${itiAvert()}
       <div class="iti-ligne"><label><input type="radio" name="itimode" value="car"${iti.mode === 'car' ? ' checked' : ''}> 🚗 Voiture</label><label><input type="radio" name="itimode" value="pedestrian"${iti.mode === 'pedestrian' ? ' checked' : ''}> 🚶 À pied</label></div>
       <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> Revenir au point de départ</label>
-      <div style="margin-top:8px;font-size:14px">Départ : ${iti.depart ? '🏁 point choisi sur la carte <button type="button" data-i="deldep" class="iti-btn2">✕</button>' : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier point de la liste'} <button type="button" data-i="dep" class="iti-btn2">Choisir sur la carte</button></div>
+      <div style="margin-top:8px;font-size:14px">Départ : ${iti.depart ? `🏁 ${esc(iti.departLib || 'point choisi sur la carte')} <button type="button" data-i="deldep" class="iti-btn2" aria-label="Retirer le départ">✕</button>` : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier point de la liste'}</div>
+      <div class="iti-actions"><button type="button" data-i="dep" class="iti-btn2">📍 Sur la carte</button><button type="button" data-i="adr" class="iti-btn2" aria-expanded="${iti.adr.ouvert}">🔎 Une adresse</button><button type="button" data-i="pos" class="iti-btn2">🧭 Ma position</button></div>
+      ${iti.adr.ouvert ? `<div class="iti-adr"><input type="search" id="iti-adr-q" value="${esc(iti.adr.q)}" placeholder="Saisissez une adresse…" aria-label="Adresse de départ"><button type="button" data-i="adr-go" class="iti-btn2">Chercher</button></div>${iti.adr.msg ? `<p class="vide" style="font-size:13px">${esc(iti.adr.msg)}</p>` : ''}${iti.adr.res.length ? `<ul class="iti-adr-res">${iti.adr.res.map((r, k) => `<li><button type="button" data-i="adr-ok" data-k="${k}">${esc(r.lib)}</button></li>`).join('')}</ul>` : ''}` : ''}
       <div class="iti-actions"><button type="button" data-i="tous">＋ Tous les points visibles</button><button type="button" data-i="opt">Optimiser l’ordre</button><button type="button" data-i="calc" class="prim">Calculer l’itinéraire</button><button type="button" data-i="vider">Vider</button></div>
       ${iti.msg ? `<p class="vide" style="font-size:13px">${esc(iti.msg)}</p>` : ''}
       ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : '<p class="vide">Ajoutez des points : bouton « ＋ Itinéraire » dans le popup, ou « Tous les points visibles » (après vos filtres).</p>'}
@@ -1114,9 +1142,10 @@ async function itiCalculer() {
   itiDessiner(); if (itiRoute.getLayers().length) map.fitBounds(itiRoute.getBounds(), { padding:[50,50] });
 }
 function itiTexte() {
-  const l = [`Itinéraire – ${iti.mode === 'car' ? 'voiture' : 'à pied'}`];
+  const l = [`Itinéraire – ${iti.mode === 'car' ? 'voiture' : 'à pied'}`]; if (iti.depart) l.push(`Départ : ${iti.departLib || 'point choisi sur la carte'}`);
   iti.ids.forEach((id, k) => { const g = iti.legs.length ? iti.legs[iti.depart ? k : k - 1] : undefined; l.push(`${k + 1}. ${nomDe(id)}${g ? ` (${fmtDist(g.d)}, ${fmtDuree(g.t)})` : ''}`); });
   if (iti.total) l.push(`Total : ${fmtDist(iti.total.d)}, ${fmtDuree(iti.total.t)}`);
+  const av = String(optBrut('iti_avert', ITI_AVERT)); if (av) l.push('', '⚠ ' + av);
   return l.join('\n');
 }
 function itiCopier(b) {
@@ -1135,14 +1164,19 @@ itiPanel.addEventListener('click', e => {
     case 'del': iti.ids.splice(k, 1); itiReset(); break;
     case 'opt': itiOptimiser(); break;
     case 'calc': itiCalculer(); return;
-    case 'dep': attendDepart = true; map.once('click', e2 => { if (!attendDepart) return; attendDepart = false; iti.depart = e2.latlng; itiReset(); itiDessiner(); }); break;
-    case 'deldep': iti.depart = null; itiReset(); break;
+    case 'dep': attendDepart = true; map.once('click', e2 => { if (!attendDepart) return; attendDepart = false; iti.depart = e2.latlng; iti.departLib = ''; itiReset(); itiDessiner(); }); break;
+    case 'deldep': iti.depart = null; iti.departLib = ''; itiReset(); break;
+    case 'adr': iti.adr.ouvert = !iti.adr.ouvert; break;
+    case 'adr-go': itiChercherAdresse(); return;
+    case 'adr-ok': { const r = iti.adr.res[k]; if (r) { iti.depart = L.latLng(r.lat, r.lng); iti.departLib = 'Adresse : ' + r.lib; iti.adr = { ouvert:false, q:'', res:[], msg:'' }; itiReset(); } break; }
+    case 'pos': itiPosition(); return;
     case 'copier': itiCopier(b); return;
     case 'imprimer': itiImprimer(); return;
     default: return;
   }
   itiDessiner();
 });
+itiPanel.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'iti-adr-q') { e.preventDefault(); itiChercherAdresse(); } });
 itiPanel.addEventListener('change', e => {
   const t = e.target;
   if (t.name === 'itimode') { iti.mode = t.value; itiReset(); itiDessiner(); }
@@ -1275,6 +1309,7 @@ function blocElementsGauche() {
       + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
       + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
       + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '')
+      + (k === 'iti' ? `<div class="rg-l2"><input type="text" data-o="iti_avert" value="${esc(optBrut('iti_avert', ITI_AVERT))}" placeholder="Avertissement du panneau d’itinéraire (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement"></div><div class="rg-l2"><input type="text" data-o="iti_avert_pied" value="${esc(optBrut('iti_avert_pied', ITI_AVERT_PIED))}" placeholder="Avertissement supplémentaire pour l’itinéraire à pied (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement à pied"></div>` : '')
       + (ELT_STYLES[k] || []).map(blocStyleTexte).join('');
     return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${GEAR}${btns}`, corps)}</li>`
       : `<li><div class="rg-simple"><span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${btns}</div></li>`;
@@ -1484,14 +1519,22 @@ function bandeau(texte, duree) {   // petit message d'information sur la carte (
   fermerMessage(true); msgEl.style.background = '#c1121f'; msgEl.style.color = '#fff'; msgEl.className = 'ouvert haut'; msgEl.querySelector('.txt').textContent = texte;
   clearTimeout(msgFin); msgFin = setTimeout(() => fermerMessage(true), duree || 7000);
 }
-function ecrireEtConfirmer(delai) {   // écrit les réglages, puis attend que Grist les renvoie : preuve que l'enregistrement a vraiment eu lieu
+async function serveurAvoue(ts) {   // relit la table des widgets sur le serveur : l'écriture y figure-t-elle vraiment ? (null = lecture impossible)
+  for (const d of [200, 500, 1000, 1800]) {
+    await new Promise(r => setTimeout(r, d));
+    try { const t = await grist.docApi.fetchTable('_grist_Views_section'); if ((t.options || []).some(o => typeof o === 'string' && o.includes(ts))) return true; } catch (e) { return null; }
+  }
+  return false;
+}
+function ecrireEtConfirmer(delai) {   // Grist accepte l'appel d'écriture même sans droit et l'applique en local : seule la relecture du serveur prouve l'enregistrement
   const ts = Date.now() + '-' + Math.random().toString(36).slice(2, 6);
   opts._maj = ts; opts.cfg = cfg;
-  const prec = attente;   // écriture précédente encore en attente : elle partage le résultat de celle-ci (évite un faux « non enregistré »)
+  const prec = attente;   // écriture précédente encore en attente : elle partage le résultat de celle-ci
   return new Promise(res => {
-    let t = null; const fin = ok => { clearTimeout(t); if (attente && attente.ts === ts) attente = null; res(ok); if (prec && prec.fin) prec.fin(ok); };
-    t = setTimeout(() => fin(false), delai || 4000); attente = { ts, ok: () => fin(true), fin };
-    Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg)).catch(() => fin(false));
+    let t = null, echoVu = false, modeEcho = false; const fin = ok => { clearTimeout(t); if (attente && attente.ts === ts) attente = null; res(ok); if (prec && prec.fin) prec.fin(ok); };
+    t = setTimeout(() => fin(false), delai || 5000); attente = { ts, ok: () => { echoVu = true; if (modeEcho) fin(true); }, fin };
+    Promise.resolve().then(() => grist.setOptions ? grist.setOptions(opts) : grist.setOption('cfg', cfg)).then(() => serveurAvoue(ts))
+      .then(r => { if (r !== null) fin(r); else if (echoVu) fin(true); else modeEcho = true; }).catch(() => fin(false));   // si le serveur ne peut pas être relu, on se rabat sur l'écho de Grist
   });
 }
 async function demanderConfig() {   // c'est Grist qui décide : le volet ne s'ouvre que si l'enregistrement est confirmé
@@ -1587,9 +1630,8 @@ modal.addEventListener('change', e => {
   const a = t.dataset.a; if (!a) return;
   const g = t.dataset.g, i = +t.dataset.i, r = +t.dataset.r, k = +t.dataset.k, R = cfg.regles[r];
   switch (a) {
-    case 'add': if (t.value) listeDe(g).push({ c:t.value, nom:'', gn:false, gi:false, vg:false, vi:false, vb:false, ta:'' }); break;
     case 'lib': listeDe(g)[i].nom = t.value; break;
-    case 'gn': case 'gi': case 'vg': case 'vi': case 'vb': listeDe(g)[i][a] = t.checked; break;
+    case 'vb': listeDe(g)[i][a] = t.checked; break;
     case 'fn': { const E = listeDe(g)[i]; E.gn = t.value.includes('g'); E.gi = t.value.includes('i'); break; }
     case 'fv': { const E = listeDe(g)[i]; E.vg = t.value.includes('g'); E.vi = t.value.includes('i'); break; }
     case 'ta': listeDe(g)[i].ta = t.value; break;
