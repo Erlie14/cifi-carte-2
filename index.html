@@ -272,7 +272,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '51';
+const VERSION = '52';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -1317,6 +1317,31 @@ function blocSauvegarde() {
     <textarea id="rg-exp" readonly rows="4" style="width:100%;font:12px monospace;margin-top:6px" placeholder="Le texte exporté apparaît ici" aria-label="Configuration exportée"></textarea>
     <div class="rg-sous">Importer</div><textarea id="rg-imp" rows="4" style="width:100%;font:12px monospace" placeholder="Collez ici une configuration exportée" aria-label="Configuration à importer"></textarea>
     <div class="rg-l2"><button type="button" data-a="imp" class="rg-ajout">Importer et remplacer mes réglages</button></div></section>`;
+}
+function blocMessages() {
+  const sel = (A, f, ch, v) => `<select ${A} data-f="${f}">${ch.map(([val, t]) => `<option value="${val}"${val === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  return `<p class="vide" style="font-size:12px">Un message passager s’affiche en bandeau sur la carte. Plusieurs messages s’affichent à tour de rôle.</p>
+    ${cfg.messages.map((m, i) => { const A = `data-a="ms" data-i="${i}"`, I = `data-i="${i}"`;
+      return rgd('ms', i, '', m.o, `<span class="rg-nom">${esc(m.texte.slice(0, 40) || 'Message ' + (i + 1))}</span><small class="res${m.actif ? '' : ' warn'}">${m.actif ? 'actif' : 'inactif'}</small><span class="rg-btns">${btn('ms-prev', I, 'Aperçu')}${btn('ms-up', I, '▲', 'Monter')}${btn('ms-down', I, '▼', 'Descendre')}${btn('ms-del', I, '✕', 'Supprimer')}</span>`,
+      `<div class="rg-l2"><label><input type="checkbox" ${A} data-f="actif"${m.actif ? ' checked' : ''}> Actif</label></div>
+      <div class="rg-l2"><input type="text" ${A} data-f="ico" value="${esc(m.ico)}" placeholder="Icône" style="max-width:70px" aria-label="Icône"><input type="text" ${A} data-f="texte" value="${esc(m.texte)}" placeholder="Texte du message" style="flex:1;min-width:200px" aria-label="Texte du message"></div>
+      <div class="rg-l2">${sel(A, 'style', [['info', 'Information'], ['attention', 'Attention'], ['urgent', 'Urgent'], ['perso', 'Couleurs personnalisées']], m.style)}${m.style === 'perso' ? `<label>Fond <input type="color" ${A} data-f="fond" value="${m.fond}"></label><label>Texte <input type="color" ${A} data-f="coul" value="${m.coul}"></label>` : ''}${sel(A, 'pos', [['haut', 'En haut de la carte'], ['bas', 'En bas de la carte']], m.pos)}</div>
+      <div class="rg-l2"><label>Durée d’affichage <input type="number" min="0" max="600" ${A} data-f="duree" value="${m.duree || ''}" placeholder="jusqu’à la fermeture" style="width:150px"> s</label></div>
+      <div class="rg-l2">${sel(A, 'rep', [['ouverture', 'À chaque ouverture de la carte'], ['session', 'Une fois par session'], ['intervalle', 'Répété à intervalle régulier']], m.rep)}${m.rep === 'intervalle' ? `<label>toutes les <input type="number" min="1" max="240" ${A} data-f="min" value="${m.min}" style="width:64px"> min</label>` : ''}</div>
+      <div class="rg-l2"><label>Du <input type="date" ${A} data-f="debut" value="${m.debut}"></label><label>au <input type="date" ${A} data-f="fin" value="${m.fin}"></label></div>`); }).join('')}
+    <button type="button" class="rg-ajout" data-a="ms-add">+ Ajouter un message</button>`;
+}
+function blocRecherche() {
+  const R = cfg.recherche;
+  return `<section><h3>Barre de recherche</h3>
+    <label><input type="checkbox" data-a="rch" data-f="nom"${R.nom ? ' checked' : ''}> Rechercher dans le nom du point</label>
+    <label>Mode <select data-a="rch" data-f="mode"><option value="toutes"${R.mode === 'toutes' ? ' selected' : ''}>Une seule barre, tous les champs à la fois</option><option value="choix"${R.mode === 'choix' ? ' selected' : ''}>L’utilisateur choisit le champ (liste à côté de la barre)</option></select></label>
+    ${R.cols.map((x, i) => `<div class="rg-sec">${selCol(`data-a="rc" data-i="${i}" data-f="c"`, x.c)}<input type="text" data-a="rc" data-i="${i}" data-f="nom" value="${esc(x.nom)}" placeholder="Libellé (facultatif)" aria-label="Libellé">${btn('rc-up', `data-i="${i}"`, '▲', 'Monter')}${btn('rc-down', `data-i="${i}"`, '▼', 'Descendre')}${btn('rc-del', `data-i="${i}"`, '✕', 'Retirer')}</div>`).join('')}
+    <button type="button" class="rg-ajout" data-a="rc-add">+ Ajouter un champ de recherche</button>
+    <label><input type="checkbox" data-o="sug_on"${opt('sug_on', true) !== false ? ' checked' : ''}> Proposer des suggestions pendant la frappe</label>
+    <label>Nombre de suggestions <input type="number" min="3" max="20" data-o="sug_max" value="${+opt('sug_max', 8)}" style="width:64px"> · à partir de <input type="number" min="1" max="5" data-o="sug_min" value="${+opt('sug_min', 2)}" style="width:56px"> lettres</label>
+    <label>Information sous le nom dans les suggestions ${selCol('data-a="rch" data-f="info"', R.info)}</label>
+    <p class="vide" style="font-size:12px;margin:6px 0 0">Avec plusieurs mots, tous doivent être trouvés. Le texte affiché dans la barre se règle dans l’onglet Général, « Éléments du panneau de gauche ».</p></section>`;
 }
 function blocFiltres() {
   const selC = (at, v) => `<select ${at} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
