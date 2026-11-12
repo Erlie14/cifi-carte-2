@@ -261,7 +261,7 @@
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
   .cpt-main { font-weight:700; margin-top:6px; }
   .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan b { color:var(--ink); }
-  .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini.fixe { table-layout:fixed; width:100%; } .mini.fixe th, .mini.fixe td { overflow-wrap:break-word; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
+  .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini:not(.ligne) { width:100%; } .mini td.nw { white-space:nowrap; } .mini.ligne th, .mini.ligne td { white-space:nowrap; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
   .fp-corps details.sub { border:1px solid var(--line); border-radius:8px; margin:6px 8px; } details.sub > summary { font-size:13px; padding:6px 10px; }
   details.regle.el { margin-top:6px; }
 </style>
@@ -272,7 +272,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '49';
+const VERSION = '50';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -343,9 +343,9 @@ const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').tri
 const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
   bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
-const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, tailleTh:Math.max(0, Math.min(30, +t.tailleTh || 0)), larg:t.larg === 'contenu' ? 'contenu' : 'auto', vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
+const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, tailleTh:Math.max(0, Math.min(30, +t.tailleTh || 0)), larg:(t.larg === 'ligne' || t.larg === 'contenu') ? 'ligne' : 'auto', vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
-  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), tailleTh:Math.max(0, Math.min(30, +l.tailleTh || 0)), larg:l.larg === 'contenu' ? 'contenu' : 'auto', gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
+  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), tailleTh:Math.max(0, Math.min(30, +l.tailleTh || 0)), larg:(l.larg === 'ligne' || l.larg === 'contenu') ? 'ligne' : 'auto', gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
@@ -742,12 +742,12 @@ function ligneLiees(sec, d) {   // lignes de l'autre table qui concernent cet é
   const tc = L.triCol || L.dateCol; if (tc) { const sg = L.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
   return L.max ? rows.slice(0, L.max) : rows;
 }
-const largeurs = (heads, m) => {   // largeur de chaque colonne (en %) d'après le plus long mot et la longueur des textes, titres compris
-  const w = heads.map((h, j) => { const t = [String(h)].concat(m.map(r => String(r[j] ?? ''))), mot = Math.max(...t.map(x => Math.max(0, ...x.split(/\s+/).map(y => y.length)))), tot = Math.max(...t.map(x => x.length)); return Math.max(mot + 1, Math.min(tot, 30) * 0.7); }), sum = w.reduce((a, b) => a + b, 0) || 1;
-  return w.map(v => (v / sum * 100).toFixed(1) + '%');
-};
+const largeurs = (heads, m) => heads.map((h, j) => {   // colonne courte : une seule ligne, largeur de son contenu ; colonne de texte long : reçoit la place restante
+  const v = m.map(r => String(r[j] ?? '')), tot = Math.max(0, ...v.map(x => x.length)), mot = Math.max(...[String(h), ...v].map(x => Math.max(0, ...x.split(/\s+/).map(y => y.length))));
+  return tot <= 16 ? { nw:true, w:(Math.max(tot, mot) + 2) + 'ch' } : { nw:false, w:'' };
+});
 const tabHtml = (o, heads, rows, w) => { const st = [o.taille && `font-size:${o.taille}px`, o.tailleTh && `--th:${o.tailleTh}px`].filter(Boolean).join(';'), a = o.larg === 'auto';
-  return `<div class="mini-wrap"><table class="mini${a ? ' fixe' : ''}"${st ? ` style="${st}"` : ''}>${a ? `<colgroup>${w.map(p => `<col style="width:${p}">`).join('')}</colgroup>` : ''}<thead><tr>${heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td${x.s || ''}>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
+  return `<div class="mini-wrap"><table class="mini${a ? '' : ' ligne'}"${st ? ` style="${st}"` : ''}>${a ? `<colgroup>${w.map(c => `<col${c.w ? ` style="width:${c.w}"` : ''}>`).join('')}</colgroup>` : ''}<thead><tr>${heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((x, j) => `<td${x.s || ''}${a && w[j].nw ? ' class="nw"' : ''}>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
 function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes », « mini tableau » ou « tableau lié »
   if (sec.type === 'lie') {
     const L = sec.lie, cols = L.cols.filter(x => x.c), msg = t => ({ n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${t}</p>` });
@@ -1208,7 +1208,7 @@ function blocLie(sec, i) {
     <div class="rg-sous">Présentation</div>
     <label>Taille du texte du tableau <input type="number" min="8" max="30" ${A('taille')} value="${L.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
     <label>Taille du texte des en-têtes <input type="number" min="8" max="30" ${A('tailleTh')} value="${L.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
-    <label>Largeur des colonnes <select ${A('larg')}><option value="auto"${L.larg === 'auto' ? ' selected' : ''}>Automatique (ajustée au contenu, identique partout)</option><option value="contenu"${L.larg === 'contenu' ? ' selected' : ''}>Selon le contenu (défilement si trop large)</option></select></label>
+    <label>Largeur des colonnes <select ${A('larg')}><option value="auto"${L.larg === 'auto' ? ' selected' : ''}>Ajustée : colonnes courtes sur une ligne, texte long à la ligne</option><option value="ligne"${L.larg === 'ligne' ? ' selected' : ''}>Tout sur une ligne (défilement horizontal, comme dans Grist)</option></select></label>
     <label><input type="checkbox" ${A('gs')}${L.gs ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>
     <div class="rg-sous">Regroupement (sous-sections pliables)</div>
     <label>Regrouper par <select ${A('grp')}><option value="">Aucun regroupement</option>${L.dateCol ? '<option value="__annee"' + (L.grp === '__annee' ? ' selected' : '') + '>Année de la colonne de date</option>' : ''}${cT.map(c => `<option value="${esc(c)}"${c === L.grp ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select></label>
@@ -1240,7 +1240,7 @@ function blocSection(sec, i) {
     ${btn('tb-radd', G, '+ ligne')}
     <label>Taille du texte du tableau <input type="number" min="8" max="30" data-a="tb" ${G} data-f="taille" value="${T.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
     <label>Taille du texte des en-têtes <input type="number" min="8" max="30" data-a="tb" ${G} data-f="tailleTh" value="${T.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
-    <label>Largeur des colonnes <select data-a="tb" ${G} data-f="larg"><option value="auto"${T.larg === 'auto' ? ' selected' : ''}>Automatique (ajustée au contenu, identique partout)</option><option value="contenu"${T.larg === 'contenu' ? ' selected' : ''}>Selon le contenu (défilement si trop large)</option></select></label>
+    <label>Largeur des colonnes <select data-a="tb" ${G} data-f="larg"><option value="auto"${T.larg === 'auto' ? ' selected' : ''}>Ajustée : colonnes courtes sur une ligne, texte long à la ligne</option><option value="ligne"${T.larg === 'ligne' ? ' selected' : ''}>Tout sur une ligne (défilement horizontal, comme dans Grist)</option></select></label>
     <label><input type="checkbox" data-a="tb" ${G} data-f="vides"${T.vides ? ' checked' : ''}> Masquer les lignes dont toutes les valeurs de colonnes sont vides</label>`;
 }
 function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen el" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary data-aide="Configurer">${ok === 'el' ? sum : sum.replace('<span class="rg-btns">', GEAR + '<span class="rg-btns">')}</summary><div class="rg-corps-r">${body}</div></details>`; }
