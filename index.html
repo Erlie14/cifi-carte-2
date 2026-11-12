@@ -261,7 +261,7 @@
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
   .cpt-main { font-weight:700; margin-top:6px; }
   .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan b { color:var(--ink); }
-  .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:12px; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
+  .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini.fixe { table-layout:fixed; width:100%; } .mini.fixe th, .mini.fixe td { overflow-wrap:break-word; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
   .fp-corps details.sub { border:1px solid var(--line); border-radius:8px; margin:6px 8px; } details.sub > summary { font-size:13px; padding:6px 10px; }
   details.regle.el { margin-top:6px; }
 </style>
@@ -272,7 +272,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '48';
+const VERSION = '49';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -343,9 +343,9 @@ const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').tri
 const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
   bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
-const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
+const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, tailleTh:Math.max(0, Math.min(30, +t.tailleTh || 0)), larg:t.larg === 'contenu' ? 'contenu' : 'auto', vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
-  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
+  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), tailleTh:Math.max(0, Math.min(30, +l.tailleTh || 0)), larg:l.larg === 'contenu' ? 'contenu' : 'auto', gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
@@ -703,7 +703,7 @@ function fichier(d) {
 let gsForce = false;   // vrai pendant l'affichage d'un tableau lié qui reprend le style de Grist
 const gsOn = () => gsForce || opt('style_grist', false) === true;
 const stylesT = {};   // style des colonnes de Grist : options (couleurs, gras…) et colonnes d'aide des règles conditionnelles
-const cssG = st => !st ? '' : [/^#[0-9a-f]{6}$/i.test(st.textColor || '') && `color:${st.textColor}`, /^#[0-9a-f]{6}$/i.test(st.fillColor || '') && `background:${st.fillColor};padding:1px 6px;border-radius:6px`, st.fontBold && 'font-weight:700', st.fontItalic && 'font-style:italic',
+const cssG = (st, cell) => !st ? '' : [/^#[0-9a-f]{6}$/i.test(st.textColor || '') && `color:${st.textColor}`, /^#[0-9a-f]{6}$/i.test(st.fillColor || '') && `background:${st.fillColor}${cell ? '' : ';padding:1px 6px;border-radius:6px'}`, st.fontBold && 'font-weight:700', st.fontItalic && 'font-style:italic',
   (st.fontUnderline || st.fontStrikethrough) && `text-decoration:${[st.fontUnderline && 'underline', st.fontStrikethrough && 'line-through'].filter(Boolean).join(' ')}`, ['left', 'center', 'right'].includes(st.alignment) && `text-align:${st.alignment}`].filter(Boolean).join(';');
 function styleGrist(tn, c, v, row) {   // colonne, valeur de liste de choix, puis première règle conditionnelle qui s'applique
   const m = (stylesT[tn] || {})[c]; if (!m) return null; const wo = m.wo || {}, st = { ...wo };
@@ -711,7 +711,7 @@ function styleGrist(tn, c, v, row) {   // colonne, valeur de liste de choix, pui
   const ro = wo.rulesOptions || []; for (let j = 0; j < (m.regles || []).length; j++) if (row && row[m.regles[j]] && ro[j]) { Object.assign(st, ro[j]); break; }
   return st;
 }
-const gsT = (tn, c, r) => { const x = gsOn() ? cssG(styleGrist(tn, c, r[c], r)) : ''; return x ? ` style="${x}"` : ''; };
+const gsT = (tn, c, r) => { const x = gsOn() ? cssG(styleGrist(tn, c, r[c], r), true) : ''; return x ? ` style="${x}"` : ''; };
 const fmtDate = (ms, f) => { const d = new Date(ms), p = n => String(n).padStart(2, '0'), mois = o => d.toLocaleDateString('fr-FR', { month:o, timeZone:'UTC' }), T = { YYYY:d.getUTCFullYear(), YY:p(d.getUTCFullYear() % 100), MMMM:mois('long'), MMM:mois('short'), MM:p(d.getUTCMonth() + 1), M:d.getUTCMonth() + 1, DD:p(d.getUTCDate()), D:d.getUTCDate() }; return f.replace(/YYYY|YY|MMMM|MMM|MM|M|DD|D/g, k => T[k]); };
 const fmtNum = (v, wo) => { try { const o = wo.numMode === 'currency' ? { style:'currency', currency:wo.currency || 'EUR' } : wo.numMode === 'percent' ? { style:'percent' } : {}; if (wo.decimals != null) o.minimumFractionDigits = wo.decimals; if (wo.maxDecimals != null) o.maximumFractionDigits = wo.maxDecimals; return v.toLocaleString('fr-FR', o); } catch (e) { return null; } };
 const refEchec = {};   // tables liées illisibles : motif renvoyé par Grist
@@ -742,6 +742,12 @@ function ligneLiees(sec, d) {   // lignes de l'autre table qui concernent cet é
   const tc = L.triCol || L.dateCol; if (tc) { const sg = L.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
   return L.max ? rows.slice(0, L.max) : rows;
 }
+const largeurs = (heads, m) => {   // largeur de chaque colonne (en %) d'après le plus long mot et la longueur des textes, titres compris
+  const w = heads.map((h, j) => { const t = [String(h)].concat(m.map(r => String(r[j] ?? ''))), mot = Math.max(...t.map(x => Math.max(0, ...x.split(/\s+/).map(y => y.length)))), tot = Math.max(...t.map(x => x.length)); return Math.max(mot + 1, Math.min(tot, 30) * 0.7); }), sum = w.reduce((a, b) => a + b, 0) || 1;
+  return w.map(v => (v / sum * 100).toFixed(1) + '%');
+};
+const tabHtml = (o, heads, rows, w) => { const st = [o.taille && `font-size:${o.taille}px`, o.tailleTh && `--th:${o.tailleTh}px`].filter(Boolean).join(';'), a = o.larg === 'auto';
+  return `<div class="mini-wrap"><table class="mini${a ? ' fixe' : ''}"${st ? ` style="${st}"` : ''}>${a ? `<colgroup>${w.map(p => `<col style="width:${p}">`).join('')}</colgroup>` : ''}<thead><tr>${heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td${x.s || ''}>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
 function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes », « mini tableau » ou « tableau lié »
   if (sec.type === 'lie') {
     const L = sec.lie, cols = L.cols.filter(x => x.c), msg = t => ({ n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${t}</p>` });
@@ -754,22 +760,23 @@ function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes »,
       const det = !dg ? '' : dg.cle > 0 ? `Il existe ${dg.cle} ligne(s) pour cette fiche sur d’autres périodes (${dg.annees.join(', ') || 'dates non reconnues'}).` : `Aucune ligne de la table ne correspond à cette fiche (valeur de lien : « ${esc(dg.cleP)} » ; ${dg.total} ligne(s) dans la table).`;
       return msg(esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : ''))) + (det ? `<br><small>${det}</small>` : ''));
     }
-    const tab = (cs, rs) => { gsForce = L.gs; try { return `<div class="mini-wrap"><table class="mini"${L.taille ? ` style="font-size:${L.taille}px"` : ''}><thead><tr>${cs.map(x => `<th>${esc(x.nom || libelT(L.table, x.c))}</th>`).join('')}</tr></thead><tbody>${rs.map(r => `<tr>${cs.map(x => `<td${gsT(L.table, x.c, r)}>${esc(fmtG(L.table, x.c, r[x.c]) ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` } finally { gsForce = false; } };
+    const hd = cs => cs.map(x => x.nom || libelT(L.table, x.c)), cel = (cs, rs) => { gsForce = L.gs; try { return rs.map(r => cs.map(x => ({ v:fmtG(L.table, x.c, r[x.c]), s:gsT(L.table, x.c, r) }))); } finally { gsForce = false; } };
+    const lg = cs => largeurs(hd(cs), cel(cs, rows).map(r => r.map(c => c.v))), tab = (cs, rs, w) => tabHtml(L, hd(cs), cel(cs, rs), w);
     let html = '';
-    if (!L.grp) html = tab(cols, rows);
+    if (!L.grp) html = tab(cols, rows, lg(cols));
     else {   // sous-sections pliables : une par valeur de la colonne choisie (ou par année de la date)
       const g = new Map(), cle = r => String(L.grp === '__annee' ? (anneeDe(L.table, L.dateCol, r[L.dateCol]) ?? '(sans date)') : (fmtG(L.table, L.grp, r[L.grp]) ?? '(vide)'));
       rows.forEach(r => { const k = cle(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); });
-      const ks = [...g.keys()].sort((a, b) => (isNaN(a - b) ? a.localeCompare(b, 'fr') : a - b) * (L.grpDir === 'asc' ? 1 : -1)), cs = L.grpHide ? cols.filter(x => x.c !== L.grp) : cols;
+      const ks = [...g.keys()].sort((a, b) => (isNaN(a - b) ? a.localeCompare(b, 'fr') : a - b) * (L.grpDir === 'asc' ? 1 : -1)), cs = L.grpHide ? cols.filter(x => x.c !== L.grp) : cols, w = lg(cs);
       html = ks.map((k, j) => { const id = `s${i}:${k}`, o = etatSections.has(id) ? etatSections.get(id) : (L.sousOuvert === 'toutes' || (L.sousOuvert === 'premiere' && j === 0));
-        return `<details class="theme sub" data-t="${esc(id)}"${o ? ' open' : ''}><summary>${esc(k)} <span class="nb">(${g.get(k).length})</span></summary>${tab(cs, g.get(k))}</details>`; }).join('');
+        return `<details class="theme sub" data-t="${esc(id)}"${o ? ' open' : ''}><summary>${esc(k)} <span class="nb">(${g.get(k).length})</span></summary>${tab(cs, g.get(k), w)}</details>`; }).join('');
     }
     return { n:rows.length, html:(per ? `<p class="vide" style="padding:0 12px;margin:0 0 4px;font-size:12px">Période : ${esc(per)}</p>` : '') + html };
   }
   if (sec.type !== 'tableau') { const l = champsDe(sec.cols, vals); return { n:l.length, html:lignes(l) }; }
   const T = sec.tab, rows = T.rows.map(r => r.cells.map(x => x.c ? { v:fmt(x.c, vals[x.c]), col:true } : { v:x.v, col:false })).filter(r => !T.vides || !r.some(x => x.col) || r.some(x => x.col && x.v !== null && x.v !== ''));
   if (!rows.length || !T.heads.length) return { n:0, html:'' };
-  return { n:rows.length, html:`<div class="mini-wrap"><table class="mini"${T.taille ? ` style="font-size:${T.taille}px"` : ''}><thead><tr>${T.heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
+  return { n:rows.length, html:tabHtml(T, T.heads, rows.map(r => r.map(x => ({ v:x.v }))), largeurs(T.heads, rows.map(r => r.map(x => x.v)))) };
 }
 function corpsFiche(d) {
   const secs = cfg.sections.map((sec, i) => ({ sec, i, r:sectionDonnees(sec, d.vals, d, i) })).filter(x => x.r.n || x.r.force);
@@ -1200,6 +1207,8 @@ function blocLie(sec, i) {
     <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${L.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${L.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${L.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
     <div class="rg-sous">Présentation</div>
     <label>Taille du texte du tableau <input type="number" min="8" max="30" ${A('taille')} value="${L.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
+    <label>Taille du texte des en-têtes <input type="number" min="8" max="30" ${A('tailleTh')} value="${L.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
+    <label>Largeur des colonnes <select ${A('larg')}><option value="auto"${L.larg === 'auto' ? ' selected' : ''}>Automatique (ajustée au contenu, identique partout)</option><option value="contenu"${L.larg === 'contenu' ? ' selected' : ''}>Selon le contenu (défilement si trop large)</option></select></label>
     <label><input type="checkbox" ${A('gs')}${L.gs ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>
     <div class="rg-sous">Regroupement (sous-sections pliables)</div>
     <label>Regrouper par <select ${A('grp')}><option value="">Aucun regroupement</option>${L.dateCol ? '<option value="__annee"' + (L.grp === '__annee' ? ' selected' : '') + '>Année de la colonne de date</option>' : ''}${cT.map(c => `<option value="${esc(c)}"${c === L.grp ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select></label>
@@ -1230,6 +1239,8 @@ function blocSection(sec, i) {
       <div class="rg-l2">${T.heads.map((h, j) => { const x = r.cells[j] || { c:'', v:'' }, at = `data-a="tb-c" ${K} data-j="${j}"`; return `<div class="tb-cell"><small>${esc(h || 'Colonne ' + (j + 1))}</small><select ${at} data-f="c" aria-label="Source de la cellule"><option value="">Texte fixe</option>${allCols.map(c => `<option value="${esc(c)}"${c === x.c ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>${x.c ? '' : `<input type="text" ${at} data-f="v" value="${esc(x.v)}" placeholder="texte" aria-label="Texte">`}</div>`; }).join('')}</div></div>`; }).join('')}
     ${btn('tb-radd', G, '+ ligne')}
     <label>Taille du texte du tableau <input type="number" min="8" max="30" data-a="tb" ${G} data-f="taille" value="${T.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
+    <label>Taille du texte des en-têtes <input type="number" min="8" max="30" data-a="tb" ${G} data-f="tailleTh" value="${T.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
+    <label>Largeur des colonnes <select data-a="tb" ${G} data-f="larg"><option value="auto"${T.larg === 'auto' ? ' selected' : ''}>Automatique (ajustée au contenu, identique partout)</option><option value="contenu"${T.larg === 'contenu' ? ' selected' : ''}>Selon le contenu (défilement si trop large)</option></select></label>
     <label><input type="checkbox" data-a="tb" ${G} data-f="vides"${T.vides ? ' checked' : ''}> Masquer les lignes dont toutes les valeurs de colonnes sont vides</label>`;
 }
 function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen el" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary data-aide="Configurer">${ok === 'el' ? sum : sum.replace('<span class="rg-btns">', GEAR + '<span class="rg-btns">')}</summary><div class="rg-corps-r">${body}</div></details>`; }
@@ -1587,13 +1598,13 @@ modal.addEventListener('change', e => {
     case 'ms': { const M = cfg.messages[+t.dataset.i], f = t.dataset.f; if (M) M[f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
     case 'pk-chk': { if (t.checked) picker.sel.add(t.dataset.c); else picker.sel.delete(t.dataset.c); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
     case 'lie': { const L = cfg.sections[+t.dataset.g].lie, f = t.dataset.f;
-      if (f === 'afficherVide' || f === 'grpHide' || f === 'gs') L[f] = t.checked; else if (f === 'annee' || f === 'max' || f === 'taille') L[f] = Math.max(0, +t.value || 0);
+      if (f === 'afficherVide' || f === 'grpHide' || f === 'gs') L[f] = t.checked; else if (f === 'annee' || f === 'max' || f === 'taille' || f === 'tailleTh') L[f] = Math.max(0, +t.value || 0);
       else { L[f] = t.value; if (f === 'table') { const a = autoLie(t.value); L.cle = a.cle; L.cle2 = a.cle2; L.dateCol = a.dateCol; L.cols = a.cols; L.triCol = ''; } } break; }
     case 'lc': { const X = cfg.sections[+t.dataset.g].lie.cols[+t.dataset.j]; if (X) X[t.dataset.f] = t.value; break; }
     case 'sec-type': { const S = cfg.sections[+t.dataset.g]; S.type = t.value; if (t.value === 'lie' && !S.lie.table) S.lie = autoLie(); if (t.value === 'tableau' && !S.tab.heads.length) S.tab = nTab({ heads:['Colonne 1', 'Colonne 2'], rows:[{ cells:[{}, {}] }] }); break; }
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
     case 'tb-c': { const C = cfg.sections[+t.dataset.g].tab.rows[+t.dataset.k].cells[+t.dataset.j]; C[t.dataset.f] = t.value; break; }
-    case 'tb': { const T = cfg.sections[+t.dataset.g].tab, f = t.dataset.f; T[f] = t.type === 'checkbox' ? t.checked : Math.max(0, Math.min(30, +t.value || 0)); break; }
+    case 'tb': { const T = cfg.sections[+t.dataset.g].tab, f = t.dataset.f; T[f] = t.type === 'checkbox' ? t.checked : t.tagName === 'SELECT' ? t.value : Math.max(0, Math.min(30, +t.value || 0)); break; }
     case 'rch': cfg.recherche[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break;
     case 'rc': { const X = cfg.recherche.cols[+t.dataset.i]; if (X) X[t.dataset.f] = t.value; break; }
     case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (f === 'fonte') { F.gras = t.value.includes('g'); F.ital = t.value.includes('i'); } else if (f === 'bouton') F.bouton = t.value === '1'; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
