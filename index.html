@@ -275,7 +275,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '59';
+const VERSION = '60';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -1517,12 +1517,13 @@ function bandeau(texte, duree) {   // petit message d'information sur la carte (
   fermerMessage(true); msgEl.style.background = '#c1121f'; msgEl.style.color = '#fff'; msgEl.className = 'ouvert haut'; msgEl.querySelector('.txt').textContent = texte;
   clearTimeout(msgFin); msgFin = setTimeout(() => fermerMessage(true), duree || 7000);
 }
-async function serveurAvoue(ts) {   // relit la table des widgets sur le serveur : l'écriture y figure-t-elle vraiment ? (null = lecture impossible)
+async function serveurAvoue(ts) {   // true : l'écriture figure sur le serveur ; false : elle n'y figure pas alors que nos réglages précédents y sont lisibles ; null : on ne peut pas conclure
+  let lisible = false;
   for (const d of [200, 500, 1000, 1800]) {
     await new Promise(r => setTimeout(r, d));
-    try { const t = await grist.docApi.fetchTable('_grist_Views_section'); if ((t.options || []).some(o => typeof o === 'string' && o.includes(ts))) return true; } catch (e) { return null; }
+    try { const x = JSON.stringify(await grist.docApi.fetchTable('_grist_Views_section')); if (x.includes(ts)) return true; lisible = lisible || x.includes('entetes'); } catch (e) { return null; }   // « entetes » : clé propre à nos réglages, preuve que le stockage est bien lisible ici
   }
-  return false;
+  return lisible ? false : null;
 }
 function ecrireEtConfirmer(delai) {   // Grist accepte l'appel d'écriture même sans droit et l'applique en local : seule la relecture du serveur prouve l'enregistrement
   const ts = Date.now() + '-' + Math.random().toString(36).slice(2, 6);
@@ -1539,7 +1540,7 @@ async function demanderConfig() {   // c'est Grist qui décide : le volet ne s'o
   if (modal.classList.contains('ouvert')) { modal.classList.remove('reduit'); majCfgClasses(); return; }
   if (!optionsChargees) { bandeau('Les réglages se chargent : réessayez dans un instant.', 4000); return; }
   if (!/[?&]config=force/.test(location.search) && !(await ecrireEtConfirmer())) {
-    bandeau('La configuration est réservée aux personnes autorisées à modifier la structure du document : Grist n’a pas confirmé l’enregistrement.', 9000); return;
+    bandeau('La configuration est réservée aux personnes autorisées à modifier la structure du document : Grist n’a pas enregistré le test. Propriétaire ? Ajoutez ?config=force à l’adresse du widget.', 12000); return;
   }
   ouvrirReglages();
 }
