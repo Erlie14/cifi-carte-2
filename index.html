@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CIFI – Carte des contrôles</title>
+<title>CIFI – Carte</title>
 
 <!--
   Les bibliothèques sont chargées depuis le dossier "lib" (aucun site tiers).
@@ -275,7 +275,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '57';
+const VERSION = '59';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -793,7 +793,7 @@ function ouvrirFiche(id, focus = true) {
   const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id; lieeOuverte = false; fermerIti(); fermerProg(); rafraichirLiees(); const eh = enteteDe(d, 'fiche');
   panneau.style.setProperty('--niv', d.style.couleur);
   panneau.innerHTML = `<div class="fp-tete" style="${eh.st}"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2 style="${eh.ts}">${esc(eh.titre)}</h2>${eh.sous ? `<div class="sous">${esc(eh.sous)}</div>` : ''}${eh.etiq}</div>
-    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-select">Sélectionner la ligne dans Grist</button> <button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>`;
+    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>`;
   panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
   if (focus) panneau.querySelector('.fp-fermer').focus();
 }
@@ -813,8 +813,6 @@ panneau.addEventListener('click', e => {
   if (e.target.closest('.fp-retour')) { if (ficheId !== null) ouvrirFiche(ficheId, false); else fermerFiche(); return; }
   const a = e.target.closest('a.ref'); if (a) { e.preventDefault(); ouvrirLiee(a.dataset.t, +a.dataset.id, a.dataset.n); return; }
   if (e.target.closest('.fp-tout')) { const t = [...panneau.querySelectorAll('details.theme')], o = t.some(x => !x.open); t.forEach(x => { x.open = o; }); }
-  const sl = e.target.closest('.fp-select');
-  if (sl && ficheId !== null) { grist.setSelectedRows([ficheId]); if (grist.setCursorPos) grist.setCursorPos({ rowId:ficheId }); sl.textContent = '✓ Ligne sélectionnée dans Grist'; }
   const it = e.target.closest('.fp-iti'); if (it && ficheId !== null) { const id = ficheId; itiAjouter([id]); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && ficheId !== null) fermerFiche(); });
