@@ -260,7 +260,7 @@
   details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
   .cpt-main { font-weight:700; margin-top:6px; }
-  .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan b { color:var(--ink); }
+  .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan.ok { color:#18753c; } .lie-bilan.ko { color:#b34000; } .sec-desc { margin:0; padding:6px 12px 2px; font-size:12.5px; color:var(--muted); }
   .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini:not(.ligne) { width:100%; } .mini td.nw { white-space:nowrap; } .mini.ligne th, .mini.ligne td { white-space:nowrap; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
   .fp-corps details.sub { border:1px solid var(--line); border-radius:8px; margin:6px 8px; } details.sub > summary { font-size:13px; padding:6px 10px; }
   details.regle.el { margin-top:6px; }
@@ -272,7 +272,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '50';
+const VERSION = '51';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -321,9 +321,9 @@ const nRegle = r => {
     bulle:{ t:bt === 'signal' ? '' : bt, src:b.src || '', e:b.e || '', c:b.c || '', couleur:hc(b.couleur) },
     pulse:{ on:pu.on === true, couleur:hc(pu.couleur), rythme:['lent', 'normal', 'rapide'].includes(pu.rythme) ? pu.rythme : 'normal' } };
 };
-const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre d’établissements affichés', version:'Numéro de version', liste:'Liste des établissements', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
+const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre de points affichés', version:'Numéro de version', liste:'Liste des points', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
 const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
-const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des établissements'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'], filtres:['filtres_titre', 'Filtres'], compteurs:['lib_compteurs', ''], count:['lib_count', '{n} sur {total} établissement{s}'], commune:['lib_commune', 'Aller à une commune…'] };
+const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des points'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'], filtres:['filtres_titre', 'Filtres'], compteurs:['lib_compteurs', ''], count:['lib_count', '{n} sur {total} point{s}'], commune:['lib_commune', 'Aller à une commune…'] };
 const hex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
 const nEnt = h => { h = h || {}; return { titre:h.titre || '', sous:h.sous || '', etiq:h.etiq !== false, fond:['neutre', 'point', 'perso'].includes(h.fond) ? h.fond : 'neutre', fondc:hex(h.fondc) || '#f6f8fb', txtc:hex(h.txtc), taille:+h.taille || 0 }; };
 const nDef = d => { d = d || {}; return { couleur:hex(d.couleur) || DEFAUT.couleur, forme:FORMES.includes(d.forme) ? d.forme : DEFAUT.forme, bordc:hex(d.bordc) || DEFAUT.bordc, borde:(d.borde === undefined || d.borde === null || isNaN(+d.borde)) ? DEFAUT.borde : Math.max(0, Math.min(8, +d.borde)) }; };
@@ -340,13 +340,13 @@ const nBarre = b => {
 const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#1f4e8c',
   contenu:['point', 'rien', 'texte', 'colonne'].includes(e.contenu) ? e.contenu : 'point', texte:String(e.texte || ''), col:String(e.col || ''), taille:Math.max(12, Math.min(44, +e.taille || 22)), bord:e.bord === 'perso' ? 'perso' : 'point', bordc:hex(e.bordc) || '#ffffff', borde:Math.max(0, Math.min(8, e.borde === undefined ? 2 : (+e.borde || 0))) }; };
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
-const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
-  bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
+const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre de points affichés', '#count'], version:['Numéro de version', '#b-version'],
+  bt_liste:['Bouton de la liste des points', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des points', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
 const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, tailleTh:Math.max(0, Math.min(30, +t.tailleTh || 0)), larg:(t.larg === 'ligne' || t.larg === 'contenu') ? 'ligne' : 'auto', vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
   cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), tailleTh:Math.max(0, Math.min(30, +l.tailleTh || 0)), larg:(l.larg === 'ligne' || l.larg === 'contenu') ? 'ligne' : 'auto', gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
-const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
+const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', desc:String((s && s.desc) || ''), cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
 const nSt = x => { x = x || {}; return { coul:hex(x.coul), fond:hex(x.fond), taille:Math.max(0, Math.min(40, +x.taille || 0)), gras:!!x.gras, ital:!!x.ital }; };
@@ -364,7 +364,7 @@ const nInd = i => {
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
 const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k] || (k.startsWith('bt_') ? (c.styles || {}).boutons : null))])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, attente = null, optionsChargees = false, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigOpts = '', attente = null, optionsChargees = false, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const optBrut = (n, d) => (opts[n] === undefined || opts[n] === null) ? d : opts[n];   // une valeur vide enregistrée est conservée (titre ou texte volontairement vide)
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
@@ -513,9 +513,9 @@ function montrer(m, cb) { if (cluster.zoomToShowLayer) montrer(m, cb); else { ma
 const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div', 'panel gauche');
-  d.innerHTML = `<button class="link" id="reduire" type="button" aria-expanded="true" style="order:-1">▴ Réduire le panneau</button><div id="commune-zone"></div><div id="b-q" class="b-q"><input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un établissement"><select id="q-champ" aria-label="Rechercher dans" style="display:none"></select><div id="q-sug" class="sug" role="listbox" style="display:none"></div></div>
+  d.innerHTML = `<button class="link" id="reduire" type="button" aria-expanded="true" style="order:-1">▴ Réduire le panneau</button><div id="commune-zone"></div><div id="b-q" class="b-q"><input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un point"><select id="q-champ" aria-label="Rechercher dans" style="display:none"></select><div id="q-sug" class="sug" role="listbox" style="display:none"></div></div>
     <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div><div id="b-version"><small class="ver"></small></div>
-    <div id="b-liste"><button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des établissements</button><div id="liste" style="display:none"></div></div>
+    <div id="b-liste"><button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des points</button><div id="liste" style="display:none"></div></div>
     <button class="link" id="tout" type="button">Voir tous les points</button><button class="link" id="iti-btn" type="button">🧭 Préparer un itinéraire</button><button class="link" id="prog-btn" type="button">📊 Voir la progression</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); sugIdx = -1; appliquerFiltres(); majSug(); });
@@ -581,7 +581,7 @@ function majLegende() {
 function setListe(ouvert) {
   const b = document.getElementById('liste-btn'), l = document.getElementById('liste'); if (!b || !l) return;
   listeOuverte = ouvert; b.setAttribute('aria-expanded', String(ouvert));
-  { const ic = ouvert ? opt('ico_liste2', '') : opt('ico_liste', ''); b.textContent = (ic ? ic + ' ' : '') + (ouvert ? opt('lib_liste2', 'Masquer la liste des établissements') : opt('lib_liste', LIB.liste[1])); }
+  { const ic = ouvert ? opt('ico_liste2', '') : opt('ico_liste', ''); b.textContent = (ic ? ic + ' ' : '') + (ouvert ? opt('lib_liste2', 'Masquer la liste des points') : opt('lib_liste', LIB.liste[1])); }
   l.style.display = ouvert ? 'block' : 'none'; majListe();
 }
 function rechIndex(vals, nom) { const o = { __nom:sansAccent(nom ?? '') }; cfg.recherche.cols.forEach(x => { if (x.c) o['c:' + x.c] = sansAccent(fmt(x.c, vals[x.c]) ?? ''); }); return o; }
@@ -632,7 +632,7 @@ function devant(d) { return etiquetteHtml(d.style, cfg.etiquettes.liste, d.vals)
 function majListe() {
   if (!listeOuverte) return;
   const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 5000);
-  document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun établissement.</p>';
+  document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun point.</p>';
 }
 const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : '') + (f.ital ? 'font-style:italic;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
 function filtreHtml(f) {
@@ -664,7 +664,7 @@ function appliquerFiltres() {
   }
   document.getElementById('compteurs').innerHTML = (opt('lib_compteurs', '') ? `<div class="cpt-main">${esc(opt('lib_compteurs', ''))}</div>` : '') + cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
     [...mp].sort((a, b) => b[1] - a[1]).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
-  document.getElementById('count').innerHTML = esc(opt('lib_count', '{n} sur {total} établissement{s}')).replace(/\{n\}/g, `<strong>${n}</strong>`).replace(/\{total\}/g, marqueurs.size).replace(/\{s\}/g, marqueurs.size > 1 ? 's' : '') + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
+  document.getElementById('count').innerHTML = esc(opt('lib_count', '{n} sur {total} point{s}')).replace(/\{n\}/g, `<strong>${n}</strong>`).replace(/\{total\}/g, marqueurs.size).replace(/\{s\}/g, marqueurs.size > 1 ? 's' : '') + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
   majListe(); if (progOuvert) progDessiner();
 }
 function icone(d, sel) {
@@ -783,7 +783,7 @@ function corpsFiche(d) {
   if (!secs.length) return '<p class="vide">Aucune section à afficher. Créez vos sections dans « Configurer le widget », onglet Fiche.</p>';
   const o = opt('ouverture', 'Première section'), ouvert = (k, i) => etatSections.has(k) ? etatSections.get(k) : (o === 'Toutes' || (o !== 'Aucune' && i === 0));
   return (secs.length > 1 ? '<div class="fp-outils"><button type="button" class="fp-tout">Tout déplier / replier</button></div>' : '') +
-    secs.map((x, k) => `<details class="theme" data-t="s${x.i}"${ouvert('s' + x.i, k) ? ' open' : ''}><summary>${esc(x.sec.nom || 'Section')} <span class="nb">(${x.r.n})</span></summary>${x.r.html}</details>`).join('');
+    secs.map((x, k) => `<details class="theme" data-t="s${x.i}"${ouvert('s' + x.i, k) ? ' open' : ''}><summary>${esc(x.sec.nom || 'Section')} <span class="nb">(${x.r.n})</span></summary>${x.sec.desc ? `<p class="sec-desc">${esc(x.sec.desc)}</p>` : ''}${x.r.html}</details>`).join('');
 }
 const panneau = document.getElementById('fiche-panel');
 function ouvrirFiche(id, focus = true) {
@@ -830,13 +830,13 @@ grist.ready({
   allowSelectBy: true,
   onEditOptions: () => demanderConfig(),   // fait apparaître le bouton « Ouvrir la configuration » dans le panneau de droite de Grist
   columns: [
-    { name:'nom',     title:'Nom de l’établissement', type:'Text' },
+    { name:'nom',     title:'Nom du point', type:'Text' },
     { name:'lat',     title:'Latitude', type:'Numeric' },
     { name:'lng',     title:'Longitude', type:'Numeric' },
     { name:'compteurs', title:'Compteurs : colonnes à compter (choix multiples)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
-grist.onOptions(o => { optionsChargees = true; if (attente && o && o._maj === attente.ts) attente.ok(); if (modal.classList.contains('ouvert')) return; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); chargerLieesManquantes(); });
+grist.onOptions(o => { optionsChargees = true; if (attente && o && o._maj === attente.ts) attente.ok(); if (modal.classList.contains('ouvert')) return; const sg = JSON.stringify({ ...(o || {}), _maj:0 }); if (sg === sigOpts) return; sigOpts = sg; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); chargerLieesManquantes(); });
 grist.onRecords((records, mappings) => {
   lastRec = records; lastMap = mappings;
   if (!allCols.length) allCols = Object.keys(records[0] || {}).filter(k => k !== 'id' && k !== 'manualSort');
@@ -1003,8 +1003,8 @@ const warnInd = x => x.mode === 'ratio' ? (!x.num || !x.den) : x.mode === 'part'
 function progDescr(I) {
   const lc = c => libel(c), cond = k => `${lc(k.c)} ${(OPS.find(o => o[0] === k.op) || [0, ''])[1]}${k.op === 'vide' || k.op === 'rempli' ? '' : ' « ' + k.v + ' »'}`;
   if (I.mode === 'ratio') return `${I.libNum || lc(I.num)} sur ${I.libDen || lc(I.den)}`;
-  if (I.mode === 'part') return `Part des établissements : ${cond(I.cond)}${I.base.on && I.base.c ? ', parmi ceux où ' + cond(I.base) : ''}`;
-  if (I.mode === 'compte') return I.cond.c ? `Nombre d’établissements : ${cond(I.cond)}` : 'Nombre d’établissements';
+  if (I.mode === 'part') return `Part des points : ${cond(I.cond)}${I.base.on && I.base.c ? ', parmi ceux où ' + cond(I.base) : ''}`;
+  if (I.mode === 'compte') return I.cond.c ? `Nombre de points : ${cond(I.cond)}` : 'Nombre de points';
   return `${I.mode === 'somme' ? 'Somme' : 'Moyenne'} de ${lc(I.col)}`;
 }
 function progDessiner() {
@@ -1031,7 +1031,7 @@ function progDessiner() {
   const rows = [...g.values()].sort((x, y) => P.tri === 'nom' ? String(x.nom).localeCompare(String(y.nom), 'fr') : ((val(x) ?? -1) - (val(y) ?? -1)) * (P.tri === 'asc' ? 1 : -1));
   const leg = pctMode ? `<div class="prog-leg">${I.paliers.map((p, j) => `<span><i style="background:${p.couleur}"></i>${j === 0 ? (I.paliers[1] ? 'moins de ' + I.paliers[1].de + ' %' : 'toutes valeurs') : 'dès ' + p.de + ' %'}</span>`).join('')}</div>` : '';
   progPanel.innerHTML = tete + `<div class="fp-corps">${P.inds.length > 1 ? `<label style="font-size:13px">Indicateur <select id="prog-ind">${P.inds.map((x, i) => `<option value="${i}"${x === I ? ' selected' : ''}>${esc(x.nom || 'Indicateur ' + (i + 1))}</option>`).join('')}</select></label>` : ''}
-    <p class="vide" style="font-size:12px;margin:6px 0 0">${esc(progDescr(I))}${I.grp ? ', par ' + esc(libel(I.grp)) : ''}${P.suivre ? ' · établissements visibles' : ''}.</p>${leg}
+    <p class="vide" style="font-size:12px;margin:6px 0 0">${esc(progDescr(I))}${I.grp ? ', par ' + esc(libel(I.grp)) : ''}${P.suivre ? ' · points visibles' : ''}.</p>${leg}
     ${progFocus ? `<div class="prog-focus">Carte limitée à « ${esc(progFocus.v)} » <button type="button" data-p="tous">Tout afficher</button></div>` : ''}
     ${ligne(tot, ' ens')}${rows.map(r => ligne(r)).join('') || (I.grp ? '<p class="vide">Aucune donnée.</p>' : '')}</div>`;
 }
@@ -1070,10 +1070,10 @@ function itiDessiner() {
     <div class="fp-corps">
       <div class="iti-ligne"><label><input type="radio" name="itimode" value="car"${iti.mode === 'car' ? ' checked' : ''}> 🚗 Voiture</label><label><input type="radio" name="itimode" value="pedestrian"${iti.mode === 'pedestrian' ? ' checked' : ''}> 🚶 À pied</label></div>
       <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> Revenir au point de départ</label>
-      <div style="margin-top:8px;font-size:14px">Départ : ${iti.depart ? '🏁 point choisi sur la carte <button type="button" data-i="deldep" class="iti-btn2">✕</button>' : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier établissement de la liste'} <button type="button" data-i="dep" class="iti-btn2">Choisir sur la carte</button></div>
+      <div style="margin-top:8px;font-size:14px">Départ : ${iti.depart ? '🏁 point choisi sur la carte <button type="button" data-i="deldep" class="iti-btn2">✕</button>' : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier point de la liste'} <button type="button" data-i="dep" class="iti-btn2">Choisir sur la carte</button></div>
       <div class="iti-actions"><button type="button" data-i="tous">＋ Tous les points visibles</button><button type="button" data-i="opt">Optimiser l’ordre</button><button type="button" data-i="calc" class="prim">Calculer l’itinéraire</button><button type="button" data-i="vider">Vider</button></div>
       ${iti.msg ? `<p class="vide" style="font-size:13px">${esc(iti.msg)}</p>` : ''}
-      ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : '<p class="vide">Ajoutez des établissements : bouton « ＋ Itinéraire » dans le popup, ou « Tous les points visibles » (après vos filtres).</p>'}
+      ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : '<p class="vide">Ajoutez des points : bouton « ＋ Itinéraire » dans le popup, ou « Tous les points visibles » (après vos filtres).</p>'}
       ${iti.total ? `<div class="iti-total">Total : ${fmtDist(iti.total.d)} · ${fmtDuree(iti.total.t)}</div>` : ''}
     </div><div class="fp-pied"><button type="button" class="iti-btn2" data-i="copier">Copier la feuille de route</button> <button type="button" class="iti-btn2" data-i="imprimer">Imprimer</button></div>`;
   itiMarques();
@@ -1093,7 +1093,7 @@ function itiOptimiser() {
   iti.ids = ordre; itiReset();
 }
 async function itiCalculer() {
-  if (iti.ids.length < (iti.depart ? 1 : 2)) { iti.msg = 'Ajoutez au moins 2 établissements (ou 1 établissement et un départ).'; itiDessiner(); return; }
+  if (iti.ids.length < (iti.depart ? 1 : 2)) { iti.msg = 'Ajoutez au moins 2 points (ou 1 point et un départ).'; itiDessiner(); return; }
   iti.msg = 'Calcul en cours…'; itiDessiner(); itiRoute.clearLayers();
   const url = String(opt('iti_url', 'https://data.geopf.fr/navigation/itineraire')), res = String(opt('iti_resource', 'bdtopo-osrm'));
   const pts = (iti.depart ? [iti.depart] : []).concat(iti.ids.map(ptDe)); if (iti.retour) pts.push(pts[0]);
@@ -1161,7 +1161,7 @@ const optStyleGrist = () => `<label><input type="checkbox" data-o="style_grist"$
 function blocFicheSections() {
   return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'lie' ? (!sec.lie.table || !sec.lie.cle || !sec.lie.cols.some(x => x.c)) : sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
     return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'lie' ? 'tableau lié · ' + sec.lie.cols.length + ' colonne(s)' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
-      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
+      `<div class="rg-l2"><input type="text" value="${esc(sec.nom)}" data-a="nom" ${G} aria-label="Nom de la section" placeholder="Nom de la section"></div><div class="rg-l2"><input type="text" value="${esc(sec.desc)}" data-a="sdesc" ${G} aria-label="Description de la section" placeholder="Description sous le titre (facultatif)"></div>${blocSection(sec, i)}`); }).join('') + '<button type="button" class="rg-ajout" data-a="sadd">+ Ajouter une section</button>';
 }
 function autoLie(table) {   // réglage de départ générique : table, colonne de lien (même libellé ou référence vers cette table), date et premières colonnes
   const tabs = tablesDispo(), pref = table || tabs[0] || '', cc = colsDe(pref), nrm = x => sansAccent(String(x)).replace(/[^a-z0-9]/g, '');
@@ -1178,21 +1178,14 @@ function autoLie(table) {   // réglage de départ générique : table, colonne 
   const cols = [date].concat(cc.filter(c => c !== cle && c !== date)).filter(Boolean).slice(0, 5);
   return nLie({ table:pref, cle, cle2, dateCol:date, mode:'toutes', cols:cols.map(c => ({ c, nom:'' })) });
 }
-function bilanLie(sec) {   // contrôle du lien dans la configuration : ce que le widget lit réellement dans les deux tables
+function bilanLie(sec) {   // un seul message : la table est-elle lue, et des fiches y sont-elles reliées ?
   const L = sec.lie; if (!L.table || !L.cle) return '';
-  const tab = refTabs[L.table], boite = h => `<div class="lie-bilan">${h}</div>`;
-  if (!tab) return boite(refEchec[L.table] ? `<b class="warn">Table illisible :</b> ${esc(refEchec[L.table])}` : 'Table non chargée : réessayez dans un instant.');
-  const typeCle = (typesT[L.table] || {})[L.cle] || '', main = donnees.size ? [...donnees.entries()].map(([id, o]) => ({ id, vals:o })) : [...marqueurs.values()].map(m => ({ id:m._cifi.id, vals:m._cifi.vals }));
-  const cm = r => nk(L.cle2 ? r.vals[L.cle2] : r.id), ex = a => [...new Set(a.filter(x => x !== ''))].slice(0, 3).map(x => '« ' + esc(x) + ' »').join(', ') || '(vide)';
-  const lk = new Map(), ans = {}; let sans = 0;
-  tab.forEach(row => { const k = nk(cleLiee(L.table, L.cle, row, L.cle2)); lk.set(k, (lk.get(k) || 0) + 1); if (L.dateCol) { const a = anneeDe(L.table, L.dateCol, row[L.dateCol]); if (a) ans[a] = (ans[a] || 0) + 1; else sans++; } });
-  const mk = new Set(main.map(cm)), avec = main.filter(r => lk.has(cm(r))).length, an = anneeCible(L);
-  let perN = 0; tab.forEach(row => { if (!mk.has(nk(cleLiee(L.table, L.cle, row, L.cle2)))) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; perN++; });
-  return boite(`<b>Vérification du lien</b><br>Table lue : ${tab.size} ligne(s) · type de la colonne de lien : ${esc(typeCle || 'inconnu')}<br>
-    Valeurs de lien dans la table liée : ${ex([...lk.keys()])}<br>Valeurs de lien dans les fiches : ${ex(main.map(cm))}<br>
-    Fiches ayant au moins une ligne liée : <b>${avec}</b> sur ${main.length}<br>
-    ${L.dateCol ? `Lignes par année : ${Object.keys(ans).sort().map(a => a + ' : ' + ans[a]).join(' · ') || 'aucune date reconnue'}${sans ? ' · dates non reconnues : ' + sans : ''}<br>` : ''}
-    ${an && L.dateCol ? `Lignes liées sur ${esc(periodeTxt(L))} : <b>${perN}</b>` : 'Aucun filtre de période.'}`);
+  const tab = refTabs[L.table], boite = (c, t) => `<div class="lie-bilan ${c}">${t}</div>`;
+  if (!tab) return boite('ko', refEchec[L.table] ? `⚠ Table illisible : ${esc(refEchec[L.table])}` : 'Table non chargée : réessayez dans un instant.');
+  const main = donnees.size ? [...donnees.entries()].map(([id, o]) => ({ id, vals:o })) : [...marqueurs.values()].map(m => ({ id:m._cifi.id, vals:m._cifi.vals })), lk = new Set();
+  tab.forEach(row => lk.add(nk(cleLiee(L.table, L.cle, row, L.cle2))));
+  const n = main.filter(r => lk.has(nk(L.cle2 ? r.vals[L.cle2] : r.id))).length;
+  return n ? boite('ok', `✓ Table lue : ${tab.size} ligne(s), ${n} fiche(s) sur ${main.length} reliée(s).`) : boite('ko', `⚠ Table lue (${tab.size} ligne(s)) mais aucune fiche reliée : vérifiez les colonnes de lien.`);
 }
 function blocLie(sec, i) {
   const L = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(L.table);
@@ -1278,7 +1271,7 @@ function blocElementsGauche() {
     HINTS = { count:'Texte affiché · variables : {n} visibles, {total} au total, {s} pluriel', compteurs:'Titre au-dessus des compteurs (facultatif)', commune:'Texte de la barre de recherche de commune', filtres:'Titre (laissez vide pour n’afficher que l’icône)', version:'Texte avant le numéro (facultatif)' };
   const lignes = vis.map(k => {
     const E = `data-e="${k}"`, L_ = LIB[k], btns = `<span class="rg-btns">${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}${btn('el-del', E, '✕', 'Retirer du panneau')}</span>`;
-    const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(BLANC_OK.includes(L_[0]) ? optBrut(L_[0], L_[1]) : opt(L_[0], L_[1]))}" placeholder="${esc(HINTS[k] || 'Texte affiché')}" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des établissements'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
+    const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(BLANC_OK.includes(L_[0]) ? optBrut(L_[0], L_[1]) : opt(L_[0], L_[1]))}" placeholder="${esc(HINTS[k] || 'Texte affiché')}" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des points'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
       + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
       + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
       + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '')
@@ -1315,7 +1308,7 @@ function carteRegle(r, i) {
     <div class="rg-l2"><label>Sur le point :</label><select data-a="rct" ${R} aria-label="Contenu du point"><option value=""${!r.contenu.t ? ' selected' : ''}>Rien</option><option value="emoji"${r.contenu.t === 'emoji' ? ' selected' : ''}>Un emoji ou un texte</option><option value="valeur"${r.contenu.t === 'valeur' ? ' selected' : ''}>La valeur d’une colonne</option></select>
       ${r.contenu.t === 'emoji' ? `<input type="text" data-a="re" ${R} value="${esc(r.contenu.e)}" placeholder="ex. ✅" style="max-width:90px" aria-label="Emoji">` : r.contenu.t === 'valeur' ? selCol(`data-a="rcc" ${R}`, r.contenu.c) : ''}</div>
     <div class="rg-l2"><label>Bulle :</label><select data-a="rbt" ${R} aria-label="Bulle"><option value=""${!r.bulle.t ? ' selected' : ''}>Aucune</option><option value="coin"${r.bulle.t === 'coin' ? ' selected' : ''}>Pastille dans le coin du point</option><option value="texte"${r.bulle.t === 'texte' ? ' selected' : ''}>Bulle de texte à côté du point</option></select>
-      ${r.bulle.t ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou À vérifier" style="max-width:150px" aria-label="Texte de la bulle">`) + `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` : ''}</div>
+      ${r.bulle.t ? `<select data-a="rbs" ${R} aria-label="Contenu de la bulle"><option value=""${!r.bulle.src ? ' selected' : ''}>Texte fixe</option><option value="col"${r.bulle.src === 'col' ? ' selected' : ''}>Valeur d’une colonne</option></select>` + (r.bulle.src === 'col' ? selCol(`data-a="rbc" ${R}`, r.bulle.c) : `<input type="text" data-a="rbe" ${R} value="${esc(r.bulle.e)}" placeholder="ex. ! ou 3" style="max-width:150px" aria-label="Texte de la bulle">`) + `<input type="color" data-a="rbk" ${R} value="${r.bulle.couleur}" aria-label="Couleur de la bulle">` : ''}</div>
     <div class="rg-l2"><label><input type="checkbox" data-a="rpu-on" ${R}${r.pulse.on ? ' checked' : ''}> Signal pulsé</label>${r.pulse.on ? `<input type="color" data-a="rpuc" ${R} value="${r.pulse.couleur}" aria-label="Couleur du signal"><select data-a="rpur" ${R} aria-label="Rythme du signal">${[['lent', 'Lent'], ['normal', 'Normal'], ['rapide', 'Rapide']].map(([v, t]) => `<option value="${v}"${r.pulse.rythme === v ? ' selected' : ''}>${t}</option>`).join('')}</select>` : ''}</div></div></details>`;
 }
 function blocSauvegarde() {
@@ -1345,24 +1338,24 @@ function blocFiltres() {
     <button type="button" class="rg-ajout" data-a="fl-add">+ Ajouter un filtre</button>`;
 }
 function blocProg() {
-  const P = cfg.prog, MODES = [['ratio', 'Rapport entre deux colonnes (somme ÷ somme)'], ['part', 'Part des établissements qui remplissent une condition'], ['compte', 'Nombre d’établissements'], ['somme', 'Somme d’une colonne'], ['moyenne', 'Moyenne d’une colonne']];
+  const P = cfg.prog, MODES = [['ratio', 'Rapport entre deux colonnes (somme ÷ somme)'], ['part', 'Part des points qui remplissent une condition'], ['compte', 'Nombre de points'], ['somme', 'Somme d’une colonne'], ['moyenne', 'Moyenne d’une colonne']];
   const selV = (at, v, vide) => `<select ${at}><option value="">${vide}</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
   const cond = (i, w, k, titre) => { const C = `data-a="pc" data-i="${i}" data-w="${w}"`; return `<div class="rg-sous">${titre}</div><div class="rg-l2">${selCol(`${C} data-f="c"`, k.c)}<select ${C} data-f="op" aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" ${C} data-f="v" value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}</div>`; };
   return `<section><h3>Options</h3>
-    <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Calculer sur les établissements visibles (selon la recherche et les filtres)</label>
-    <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre n’affiche sur la carte que les établissements de cette barre</label>
+    <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Calculer sur les points visibles (selon la recherche et les filtres)</label>
+    <label><input type="checkbox" data-a="pg" data-f="clic"${P.clic ? ' checked' : ''}> Un clic sur une barre n’affiche sur la carte que les points de cette barre</label>
     <label>Tri des barres <select data-a="pg" data-f="tri">${[['nom', 'Par nom'], ['asc', 'Résultat croissant'], ['desc', 'Résultat décroissant']].map(([v, t]) => `<option value="${v}"${P.tri === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></section>
     ${P.inds.map((x, i) => { const A = `data-a="pi" data-i="${i}"`, pct = x.mode === 'ratio' || x.mode === 'part';
       return rgd('pi', i, '', x.o, `<span class="rg-nom">${esc(x.nom || 'Indicateur ' + (i + 1))}</span>${warnInd(x) ? '<small class="res warn">⚠ à compléter</small>' : `<small class="res">${esc(MODES.find(m => m[0] === x.mode)[1].split(' (')[0])}</small>`}<span class="rg-btns">${btn('pi-del', `data-i="${i}"`, '✕', 'Supprimer l’indicateur')}</span>`,
       `<div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(x.nom)}" placeholder="Nom de l’indicateur" aria-label="Nom de l’indicateur"></div>
       <label>Regrouper par ${selV(`${A} data-f="grp"`, x.grp, 'Aucun (une seule barre)')}</label>
       <label>Mode de calcul <select ${A} data-f="mode">${MODES.map(([v, t]) => `<option value="${v}"${x.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
-      ${x.mode === 'ratio' ? `<label>Numérateur ${selCol(`${A} data-f="num"`, x.num)}</label><label>Libellé du numérateur <input type="text" ${A} data-f="libNum" value="${esc(x.libNum)}" placeholder="ex. réalisés" style="max-width:160px"></label>
-        <label>Dénominateur ${selCol(`${A} data-f="den"`, x.den)}</label><label>Libellé du dénominateur <input type="text" ${A} data-f="libDen" value="${esc(x.libDen)}" placeholder="ex. attendus" style="max-width:160px"></label>` : ''}
-      ${x.mode === 'part' ? cond(i, 'cond', x.cond, 'Part des établissements où…') + `<label><input type="checkbox" ${A} data-f="baseon"${x.base.on ? ' checked' : ''}> Seulement parmi une partie des établissements</label>${x.base.on ? cond(i, 'base', x.base, 'Parmi ceux où…') : ''}` : ''}
+      ${x.mode === 'ratio' ? `<label>Numérateur ${selCol(`${A} data-f="num"`, x.num)}</label><label>Libellé du numérateur <input type="text" ${A} data-f="libNum" value="${esc(x.libNum)}" placeholder="Texte affiché pour le numérateur" style="max-width:160px"></label>
+        <label>Dénominateur ${selCol(`${A} data-f="den"`, x.den)}</label><label>Libellé du dénominateur <input type="text" ${A} data-f="libDen" value="${esc(x.libDen)}" placeholder="Texte affiché pour le dénominateur" style="max-width:160px"></label>` : ''}
+      ${x.mode === 'part' ? cond(i, 'cond', x.cond, 'Part des points où…') + `<label><input type="checkbox" ${A} data-f="baseon"${x.base.on ? ' checked' : ''}> Seulement parmi une partie des points</label>${x.base.on ? cond(i, 'base', x.base, 'Parmi ceux où…') : ''}` : ''}
       ${x.mode === 'compte' ? cond(i, 'cond', x.cond, 'Compter seulement ceux où… (facultatif)') : ''}
       ${x.mode === 'somme' || x.mode === 'moyenne' ? `<label>Colonne ${selCol(`${A} data-f="col"`, x.col)}</label>` : ''}
-      <label>Unité affichée (facultatif) <input type="text" ${A} data-f="unite" value="${esc(x.unite)}" placeholder="ex. dossiers, €" style="max-width:140px"></label>
+      <label>Unité affichée (facultatif) <input type="text" ${A} data-f="unite" value="${esc(x.unite)}" placeholder="ex. kg, €" style="max-width:140px"></label>
       ${pct ? `<div class="rg-sous">Couleur de la barre selon le résultat</div>${x.paliers.map((q, j) => `<div class="rg-l2">${j === 0 ? `<span class="pal-lab">${x.paliers[1] ? 'Moins de ' + x.paliers[1].de + ' %' : 'Toutes les valeurs'}</span>` : `<span class="pal-lab">À partir de</span><input type="number" min="0" max="1000" data-a="pp" data-i="${i}" data-j="${j}" data-f="de" value="${q.de}" style="width:70px" aria-label="Seuil"> %`}<input type="color" data-a="pp" data-i="${i}" data-j="${j}" data-f="couleur" value="${q.couleur}" aria-label="Couleur">${j > 0 ? btn('pp-del', `data-i="${i}" data-j="${j}"`, '✕', 'Retirer ce palier') : ''}</div>`).join('')}${btn('pp-add', `data-i="${i}"`, '+ palier de couleur')}`
         : `<label>Couleur des barres <input type="color" ${A} data-f="couleur" value="${x.couleur}"></label>`}`); }).join('')}
     <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
@@ -1391,7 +1384,7 @@ function blocBarre() {
 function blocEntete(k) {
   const h = cfg.entetes[k], D = `data-a="eh" data-h="${k}"`, opts_ = (val, vide) => `<option value="">${vide}</option>` + allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('');
   return `<section><h3>En-tête ${k === 'popup' ? 'du popup' : 'de la fiche'}</h3>
-    <label>Titre <select ${D} data-f="titre">${opts_(h.titre, 'Nom de l’établissement')}</select></label>
+    <label>Titre <select ${D} data-f="titre">${opts_(h.titre, 'Nom du point')}</select></label>
     <label>Sous-titre <select ${D} data-f="sous">${opts_(h.sous, 'Aucun')}</select></label>
     <label><input type="checkbox" ${D} data-f="etiq"${h.etiq ? ' checked' : ''}> Afficher l’étiquette de la règle d’affichage des points</label>
     <label>Fond <select ${D} data-f="fond"><option value="neutre"${h.fond === 'neutre' ? ' selected' : ''}>Gris clair</option><option value="point"${h.fond === 'point' ? ' selected' : ''}>Couleur du point</option><option value="perso"${h.fond === 'perso' ? ' selected' : ''}>Couleur personnalisée</option></select>
@@ -1410,7 +1403,7 @@ function contenuOnglet() {
   if (onglet === 'messages') return blocMessages();
   if (onglet === 'prog') return blocProg();
   const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des établissements'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
+  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des points'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
   return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">⚙ pour régler un élément (texte, icône, aide), ✕ pour le retirer, « Ajouter un élément » pour en remettre un.</p>
     ${blocElementsGauche()}</section>
     <section><h3>Aides au survol</h3>
@@ -1424,14 +1417,14 @@ function contenuOnglet() {
     <p class="vide" style="font-size:12px;margin:0 0 4px">La police Marianne s’affiche si elle est installée sur le poste, ou si ses fichiers sont placés dans le dossier lib/fonts du widget.</p>
     <label>Emplacement de la recherche de commune ${sl('pos_commune', POS_COMMUNE)}</label>
     <label>Largeur du panneau de gauche <input type="number" min="220" max="520" data-o="largeur_gauche" value="${+opt('largeur_gauche', 300)}"> px</label></section>
-    ${blocEtiquette('liste', 'Étiquette devant le nom (liste des établissements)')}
+    ${blocEtiquette('liste', 'Étiquette devant le nom (liste des points)')}
     ${blocEtiquette('legende', 'Étiquette de la légende')}
     ${blocSauvegarde()}
         <section><h3>Tailles</h3>
     <label>Hauteur maximale des listes dépliées du panneau de gauche <input type="number" min="0" max="1500" data-o="liste_max" data-zero="1" value="${+opt('liste_max', 0) || ''}" placeholder="aucune limite" style="width:120px"> px</label>
     <label>Largeur du popup <input type="number" min="220" max="640" data-o="larg_popup" value="${+opt('larg_popup', 300)}"> px</label>
     <label>Hauteur maximale du contenu du popup <input type="number" min="120" max="700" data-o="haut_popup" value="${+opt('haut_popup', 260)}"> px</label>
-    <label>Largeur de la fiche établissement <input type="number" min="320" max="760" data-o="larg_fiche" value="${+opt('larg_fiche', 400)}"> px</label>
+    <label>Largeur de la fiche <input type="number" min="320" max="760" data-o="larg_fiche" value="${+opt('larg_fiche', 400)}"> px</label>
     <label>Taille du texte de la légende <input type="number" min="10" max="22" data-o="taille_legende" value="${+opt('taille_legende', 13)}"> px</label>
     <label>Largeur de la fenêtre de légende (barre de boutons) <input type="number" min="200" max="560" data-o="larg_pop_leg" value="${+opt('larg_pop_leg', 260)}"> px</label>
     <label>Hauteur maximale de la fenêtre de légende <input type="number" min="120" max="700" data-o="haut_pop_leg" value="${+opt('haut_pop_leg', 360)}"> px</label></section>
@@ -1445,15 +1438,14 @@ function contenuOnglet() {
     <label>Taille du texte de la fiche <input type="number" min="10" max="24" data-o="taille_fiche" value="${+opt('taille_fiche', 14)}"> px</label></section>`;
 }
 const AIDES_ONGLET = {
-  points:'Une règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent ses conditions. Exemple : « Niveau de risque est égal à Critique » → rouge.',
-  popup:'Choisissez les colonnes affichées au clic sur un point. Exemple : commune, statut, date de mise à jour. Cliquez sur une colonne pour régler son style.',
-  fiche:'La fiche s’ouvre avec « Voir la fiche complète ». Créez des sections pliables : liste de colonnes, ou mini tableau (par exemple un historique par année).',
-  filtres:'La barre de recherche et les filtres du panneau de gauche. Exemple : un filtre « Département » à choix multiples et un curseur oui/non sur « Est-ce un cible ? ».',
-  messages:'Bandeaux temporaires sur la carte. Exemple : « Maintenance vendredi », 10 secondes, une fois par session.',
-  prog:'Barres d’avancement par administration ou unité. Exemple : dossiers traités sur dossiers prévus, regroupés par service.',
+  points:'Une règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent ses conditions. La première règle qui définit un effet l’emporte.',
+  popup:'Choisit les colonnes affichées dans la fenêtre qui s’ouvre au clic sur un point. Chaque colonne peut avoir son nom, son style et son affichage.',
+  fiche:'La fiche complète s’ouvre depuis le popup. Elle est composée de sections pliables : liste de colonnes, mini tableau, ou tableau de lignes d’une autre table.',
+  filtres:'Règle la barre de recherche et les filtres du panneau de gauche : liste à cases, liste déroulante, case ou bouton oui/non, curseur.',
+  messages:'Bandeaux temporaires affichés sur la carte, avec une durée, une répétition et des dates facultatives.',
+  prog:'Barres d’avancement calculées à partir des colonnes de votre choix, éventuellement regroupées selon une colonne.',
   barre:'Les boutons de la barre sur la carte. Un bouton placé ici disparaît du panneau de gauche.',
-  general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' };
-const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'lie' ? (!x.lie.table || !x.lie.cle || !x.lie.cols.some(c => c.c)) : x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
+  general:'Apparence et contenu du panneau de gauche, tailles, textes, aides, et sauvegarde de la configuration.' }; const avertOnglet = () => ({ points: cfg.regles.filter(r => !regleActive(r)).length, filtres: cfg.filtres.filter(f => !f.c).length, prog: cfg.prog.inds.filter(warnInd).length, messages: cfg.messages.filter(m => m.actif && !m.texte.trim()).length, fiche: cfg.sections.filter(x => x.type === 'lie' ? (!x.lie.table || !x.lie.cle || !x.lie.cols.some(c => c.c)) : x.type === 'tableau' ? !x.tab.rows.length : !x.cols.length).length });
 function majCfgClasses() { const b = document.body; if (b && b.classList) b.classList.toggle('cfg-large', modal.classList.contains('ouvert') && !modal.classList.contains('reduit')); }
 function dessiner() {
   const y = (modal.querySelector('.rg-corps') || {}).scrollTop || 0, av = avertOnglet();
@@ -1617,6 +1609,7 @@ modal.addEventListener('change', e => {
     case 'bb-b': { const x = cfg.barre.boutons.find(y => y.id === t.dataset.e); if (x) x[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break; }
     case 'et': { const E = cfg.etiquettes[t.dataset.ek], f = t.dataset.f; if (t.type === 'number') { const n = t.value === '' ? +t.defaultValue : +t.value; E[f] = Math.max(+t.min, Math.min(+t.max, isNaN(n) ? +t.min : n)); } else E[f] = t.value; break; }
     case 'nom': cfg.sections[+g].nom = t.value; break;
+    case 'sdesc': cfg.sections[+g].desc = t.value; break;
     case 'defc': cfg.defaut.couleur = t.value; break;
     case 'deff': cfg.defaut.forme = t.value; break;
     case 'rnom': R.nom = t.value; break;
