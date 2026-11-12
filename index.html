@@ -272,7 +272,7 @@
 <aside id="fiche-panel" aria-label="Fiche de l’établissement" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '47';
+const VERSION = '48';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -343,9 +343,9 @@ const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').tri
 const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre d’établissements affichés', '#count'], version:['Numéro de version', '#b-version'],
   bt_liste:['Bouton de la liste des établissements', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des établissements', '#liste button'], legende:['Légende', '#legende, #legende button'] };
 const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
-const nTab = t => { t = t || {}; const heads = (t.heads || []).map(String); return { heads, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
+const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
-  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
+  cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
 const nSec = s => ({ o:!!(s && s.o), nom:(s && s.nom) || '', cols:((s && s.cols) || []).map(nEntree), type:(s && ['tableau', 'lie'].includes(s.type)) ? s.type : 'liste', tab:nTab(s && s.tab), lie:nLie(s && s.lie) });
 const nMsg = m => { m = m || {}; const d = x => /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : ''; return { o:m.o === true, actif:m.actif !== false, texte:String(m.texte || ''), ico:String(m.ico || ''), style:['info', 'attention', 'urgent', 'perso'].includes(m.style) ? m.style : 'info', fond:hex(m.fond) || '#1f4e8c', coul:hex(m.coul) || '#ffffff', pos:m.pos === 'bas' ? 'bas' : 'haut', duree:Math.max(0, Math.min(600, +m.duree || 0)), rep:['ouverture', 'session', 'intervalle'].includes(m.rep) ? m.rep : 'ouverture', min:Math.max(1, Math.min(240, +m.min || 10)), debut:d(m.debut), fin:d(m.fin) }; };
 const nRech = r => { r = r || {}; return { info:String(r.info || ''), nom:r.nom !== false, mode:r.mode === 'choix' ? 'choix' : 'toutes', cols:(r.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })) }; };
@@ -378,7 +378,7 @@ function nomRef(tn, c, id) {
 function fmtG(tn, c, v) {   // formatage selon le type réel de la colonne ; les colonnes « Référence » affichent la valeur de la fiche liée
   const t = (typesT[tn] || {})[c] || '';
   if (refDe(t)) { const ids = (Array.isArray(v) ? v.filter(x => x !== 'L') : [v]).filter(x => x > 0); return ids.length ? ids.map(i => nomRef(tn, c, i)).join(', ') : null; }
-  const wo = opt('style_grist', false) ? ((stylesT[tn] || {})[c] || {}).wo || {} : {};   // format défini dans Grist (si l'option est cochée)
+  const wo = gsOn() ? ((stylesT[tn] || {})[c] || {}).wo || {} : {};   // format défini dans Grist (si l'option est cochée)
   if (typeof v === 'number' && t === 'Date') return wo.dateFormat ? fmtDate(v * 1000, wo.dateFormat) : new Date(v * 1000).toLocaleDateString('fr-FR', { timeZone:'UTC' });
   if (typeof v === 'number' && t.startsWith('DateTime')) return new Date(v * 1000).toLocaleString('fr-FR');
   if (typeof v === 'number' && wo.numMode) { const f = fmtNum(v, wo); if (f !== null) return f; }
@@ -521,12 +521,12 @@ haut.onAdd = () => {
   d.querySelector('#q').addEventListener('input', e => { recherche = sansAccent(e.target.value.trim()); sugIdx = -1; appliquerFiltres(); majSug(); });
   d.querySelector('#q').addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (!sugList.length) return; e.preventDefault(); sugIdx = Math.max(0, Math.min(sugList.length - 1, sugIdx + (e.key === 'ArrowDown' ? 1 : -1))); majSug(); }
-    else if (e.key === 'Enter') { if (sugIdx >= 0 && sugList[sugIdx] !== undefined) { e.preventDefault(); const id = sugList[sugIdx]; cacherSug(); allerA(id); } else cacherSug(); }
+    else if (e.key === 'Enter') { if (sugIdx >= 0 && sugList[sugIdx] !== undefined) { e.preventDefault(); choisirSug(sugList[sugIdx]); } else cacherSug(); }
     else if (e.key === 'Escape') cacherSug();
   });
   d.querySelector('#q-sug').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.classList.contains('sug-tous')) { cacherSug(); recentrer(); } else if (b.dataset.id) { cacherSug(); allerA(Number(b.dataset.id)); }
+    if (b.classList.contains('sug-tous')) { cacherSug(); recentrer(); } else if (b.dataset.id) { choisirSug(Number(b.dataset.id)); }
   });
   d.querySelector('#q-champ').addEventListener('change', e => { rechChamp = e.target.value; appliquerFiltres(); });
   d.querySelector('#tout').addEventListener('click', recentrer);
@@ -561,8 +561,13 @@ haut.onAdd = () => {
 };
 haut.addTo(map);
 
+function choisirSug(id) {   // remplit la barre de recherche avec le nom choisi, puis va sur l'établissement
+  const m = marqueurs.get(id), q = document.getElementById('q');
+  if (m && q && cfg.recherche.nom) { q.value = m._cifi.nom || ''; recherche = sansAccent(String(q.value).trim()); rechChamp = ''; appliquerFiltres(); }
+  cacherSug(); allerA(id);
+}
 function allerA(id) {
-  const m = marqueurs.get(id); if (!m || !cluster.hasLayer(m)) return;
+  const m = marqueurs.get(id); if (!m) return; if (!cluster.hasLayer(m)) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 16)); return; }
   grist.setSelectedRows([id]);
   montrer(m, () => { map.panTo(m.getLatLng()); m.openPopup(); });
 }
@@ -682,7 +687,7 @@ const lignes = l => `<dl>${l.map(([k, v, x]) => { x = x || {};
     cn = [x.gn && 'b', x.gi && 'i'].filter(Boolean).join(' '), cv = [x.vg && 'b', x.vi && 'i'].filter(Boolean).join(' ');
   const val = x.ref ? x.ref.ids.map((id, i) => `<a class="ref" href="#" data-t="${esc(x.ref.t)}" data-id="${id}" data-n="${esc(x.ref.noms[i])}">${esc(x.ref.noms[i])}<span class="ref-ico" aria-hidden="true">↗</span></a>`).join(', ') : x.vb ? `<span class="badge">${esc(v)}</span>` : esc(v);
   return `<dt${cn ? ` class="${cn}"` : ''}${sd ? ` style="${sd}"` : ''}>${esc(k)}</dt><dd${cv ? ` class="${cv}"` : ''}${sv ? ` style="${sv}"` : ''}>${x.gs && cssG(x.gs) ? `<span style="${cssG(x.gs)}">${val}</span>` : val}</dd>`; }).join('')}</dl>`;
-const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, vals[x.c]), { ...x, ref:refInfo(x.c, vals[x.c]), gs:opt('style_grist', false) ? styleGrist(tid, x.c, vals[x.c], vals) : null }]).filter(a => a[1] !== null);
+const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), fmt(x.c, vals[x.c]), { ...x, ref:refInfo(x.c, vals[x.c]), gs:gsOn() ? styleGrist(tid, x.c, vals[x.c], vals) : null }]).filter(a => a[1] !== null);
 const etiquette = d => d.style.cat >= 0 ? `<span class="niv" style="background:${d.style.couleur};color:${sombre(d.style.couleur) ? '#1d2733' : '#fff'}">${esc(nomRegle(cfg.regles[d.style.cat]))}</span>` : '';
 function enteteDe(d, k) {
   const h = cfg.entetes[k], tc = h.titre ? fmt(h.titre, d.vals[h.titre]) : null, sous = h.sous ? fmt(h.sous, d.vals[h.sous]) : null;
@@ -695,6 +700,8 @@ function fichier(d) {
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
     <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> <button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button></div></div>`;
 }
+let gsForce = false;   // vrai pendant l'affichage d'un tableau lié qui reprend le style de Grist
+const gsOn = () => gsForce || opt('style_grist', false) === true;
 const stylesT = {};   // style des colonnes de Grist : options (couleurs, gras…) et colonnes d'aide des règles conditionnelles
 const cssG = st => !st ? '' : [/^#[0-9a-f]{6}$/i.test(st.textColor || '') && `color:${st.textColor}`, /^#[0-9a-f]{6}$/i.test(st.fillColor || '') && `background:${st.fillColor};padding:1px 6px;border-radius:6px`, st.fontBold && 'font-weight:700', st.fontItalic && 'font-style:italic',
   (st.fontUnderline || st.fontStrikethrough) && `text-decoration:${[st.fontUnderline && 'underline', st.fontStrikethrough && 'line-through'].filter(Boolean).join(' ')}`, ['left', 'center', 'right'].includes(st.alignment) && `text-align:${st.alignment}`].filter(Boolean).join(';');
@@ -704,7 +711,7 @@ function styleGrist(tn, c, v, row) {   // colonne, valeur de liste de choix, pui
   const ro = wo.rulesOptions || []; for (let j = 0; j < (m.regles || []).length; j++) if (row && row[m.regles[j]] && ro[j]) { Object.assign(st, ro[j]); break; }
   return st;
 }
-const gsT = (tn, c, r) => { const x = opt('style_grist', false) ? cssG(styleGrist(tn, c, r[c], r)) : ''; return x ? ` style="${x}"` : ''; };
+const gsT = (tn, c, r) => { const x = gsOn() ? cssG(styleGrist(tn, c, r[c], r)) : ''; return x ? ` style="${x}"` : ''; };
 const fmtDate = (ms, f) => { const d = new Date(ms), p = n => String(n).padStart(2, '0'), mois = o => d.toLocaleDateString('fr-FR', { month:o, timeZone:'UTC' }), T = { YYYY:d.getUTCFullYear(), YY:p(d.getUTCFullYear() % 100), MMMM:mois('long'), MMM:mois('short'), MM:p(d.getUTCMonth() + 1), M:d.getUTCMonth() + 1, DD:p(d.getUTCDate()), D:d.getUTCDate() }; return f.replace(/YYYY|YY|MMMM|MMM|MM|M|DD|D/g, k => T[k]); };
 const fmtNum = (v, wo) => { try { const o = wo.numMode === 'currency' ? { style:'currency', currency:wo.currency || 'EUR' } : wo.numMode === 'percent' ? { style:'percent' } : {}; if (wo.decimals != null) o.minimumFractionDigits = wo.decimals; if (wo.maxDecimals != null) o.maximumFractionDigits = wo.maxDecimals; return v.toLocaleString('fr-FR', o); } catch (e) { return null; } };
 const refEchec = {};   // tables liées illisibles : motif renvoyé par Grist
@@ -747,7 +754,7 @@ function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes »,
       const det = !dg ? '' : dg.cle > 0 ? `Il existe ${dg.cle} ligne(s) pour cette fiche sur d’autres périodes (${dg.annees.join(', ') || 'dates non reconnues'}).` : `Aucune ligne de la table ne correspond à cette fiche (valeur de lien : « ${esc(dg.cleP)} » ; ${dg.total} ligne(s) dans la table).`;
       return msg(esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : ''))) + (det ? `<br><small>${det}</small>` : ''));
     }
-    const tab = (cs, rs) => `<div class="mini-wrap"><table class="mini"><thead><tr>${cs.map(x => `<th>${esc(x.nom || libelT(L.table, x.c))}</th>`).join('')}</tr></thead><tbody>${rs.map(r => `<tr>${cs.map(x => `<td${gsT(L.table, x.c, r)}>${esc(fmtG(L.table, x.c, r[x.c]) ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    const tab = (cs, rs) => { gsForce = L.gs; try { return `<div class="mini-wrap"><table class="mini"${L.taille ? ` style="font-size:${L.taille}px"` : ''}><thead><tr>${cs.map(x => `<th>${esc(x.nom || libelT(L.table, x.c))}</th>`).join('')}</tr></thead><tbody>${rs.map(r => `<tr>${cs.map(x => `<td${gsT(L.table, x.c, r)}>${esc(fmtG(L.table, x.c, r[x.c]) ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` } finally { gsForce = false; } };
     let html = '';
     if (!L.grp) html = tab(cols, rows);
     else {   // sous-sections pliables : une par valeur de la colonne choisie (ou par année de la date)
@@ -762,7 +769,7 @@ function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes »,
   if (sec.type !== 'tableau') { const l = champsDe(sec.cols, vals); return { n:l.length, html:lignes(l) }; }
   const T = sec.tab, rows = T.rows.map(r => r.cells.map(x => x.c ? { v:fmt(x.c, vals[x.c]), col:true } : { v:x.v, col:false })).filter(r => !T.vides || !r.some(x => x.col) || r.some(x => x.col && x.v !== null && x.v !== ''));
   if (!rows.length || !T.heads.length) return { n:0, html:'' };
-  return { n:rows.length, html:`<div class="mini-wrap"><table class="mini"><thead><tr>${T.heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
+  return { n:rows.length, html:`<div class="mini-wrap"><table class="mini"${T.taille ? ` style="font-size:${T.taille}px"` : ''}><thead><tr>${T.heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(x => `<td>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` };
 }
 function corpsFiche(d) {
   const secs = cfg.sections.map((sec, i) => ({ sec, i, r:sectionDonnees(sec, d.vals, d, i) })).filter(x => x.r.n || x.r.force);
@@ -1143,6 +1150,7 @@ const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option va
 const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
 const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}" data-aide="${lab}"` : ''}>${t}</button>`;
 
+const optStyleGrist = () => `<label><input type="checkbox" data-o="style_grist"${opt('style_grist', false) === true ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>`;
 function blocFicheSections() {
   return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'lie' ? (!sec.lie.table || !sec.lie.cle || !sec.lie.cols.some(x => x.c)) : sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
     return rgd('sec', i, '', sec.o, `<span class="rg-nom">${esc(sec.nom || 'Section')}</span><small class="res${vide ? ' warn' : ''}">${vide ? '⚠ vide' : sec.type === 'lie' ? 'tableau lié · ' + sec.lie.cols.length + ' colonne(s)' : sec.type === 'tableau' ? 'tableau · ' + sec.tab.rows.length + ' ligne(s)' : sec.cols.length + ' colonne(s)'}</small><span class="rg-btns">${btn('sup', G, '▲', 'Monter')}${btn('sdown', G, '▼', 'Descendre')}${btn('sdel', G, '✕', 'Supprimer la section')}</span>`,
@@ -1190,6 +1198,9 @@ function blocLie(sec, i) {
     <div class="rg-sous">Période</div>
     <label>Colonne de date ${selT('dateCol', L.dateCol, 'Aucune')}</label>
     <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${L.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${L.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${L.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
+    <div class="rg-sous">Présentation</div>
+    <label>Taille du texte du tableau <input type="number" min="8" max="30" ${A('taille')} value="${L.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
+    <label><input type="checkbox" ${A('gs')}${L.gs ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>
     <div class="rg-sous">Regroupement (sous-sections pliables)</div>
     <label>Regrouper par <select ${A('grp')}><option value="">Aucun regroupement</option>${L.dateCol ? '<option value="__annee"' + (L.grp === '__annee' ? ' selected' : '') + '>Année de la colonne de date</option>' : ''}${cT.map(c => `<option value="${esc(c)}"${c === L.grp ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select></label>
     ${L.grp ? `<label>Ordre <select ${A('grpDir')}><option value="desc"${L.grpDir === 'desc' ? ' selected' : ''}>Décroissant</option><option value="asc"${L.grpDir === 'asc' ? ' selected' : ''}>Croissant</option></select></label>
@@ -1218,6 +1229,7 @@ function blocSection(sec, i) {
     ${T.rows.map((r, k) => { const K = `${G} data-k="${k}"`; return `<div class="tb-ligne"><div class="rg-l1"><b>Ligne ${k + 1}</b>${btn('tb-rup', K, '▲', 'Monter')}${btn('tb-rdown', K, '▼', 'Descendre')}${btn('tb-rdup', K, 'Dupliquer')}${btn('tb-rdel', K, '✕', 'Supprimer la ligne')}</div>
       <div class="rg-l2">${T.heads.map((h, j) => { const x = r.cells[j] || { c:'', v:'' }, at = `data-a="tb-c" ${K} data-j="${j}"`; return `<div class="tb-cell"><small>${esc(h || 'Colonne ' + (j + 1))}</small><select ${at} data-f="c" aria-label="Source de la cellule"><option value="">Texte fixe</option>${allCols.map(c => `<option value="${esc(c)}"${c === x.c ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>${x.c ? '' : `<input type="text" ${at} data-f="v" value="${esc(x.v)}" placeholder="texte" aria-label="Texte">`}</div>`; }).join('')}</div></div>`; }).join('')}
     ${btn('tb-radd', G, '+ ligne')}
+    <label>Taille du texte du tableau <input type="number" min="8" max="30" data-a="tb" ${G} data-f="taille" value="${T.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
     <label><input type="checkbox" data-a="tb" ${G} data-f="vides"${T.vides ? ' checked' : ''}> Masquer les lignes dont toutes les valeurs de colonnes sont vides</label>`;
 }
 function rgd(ok, idx, extra, open, sum, body) { return `<details class="regle gen el" data-ok="${ok}" data-i="${idx}" ${extra}${open ? ' open' : ''}><summary data-aide="Configurer">${ok === 'el' ? sum : sum.replace('<span class="rg-btns">', GEAR + '<span class="rg-btns">')}</summary><div class="rg-corps-r">${body}</div></details>`; }
@@ -1380,8 +1392,8 @@ function contenuOnglet() {
   if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label><label>Bordure <input type="color" data-a="defbc" value="${cfg.defaut.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" data-a="defbe" value="${cfg.defaut.borde}" style="width:56px" aria-label="Épaisseur de la bordure"> px</label></div></section>
     <p class="vide" style="font-size:12px">Chaque règle s’applique aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
     ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button>`;
-  if (onglet === 'popup') return blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
-  if (onglet === 'fiche') return blocFicheSections();
+  if (onglet === 'popup') return optStyleGrist() + blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
+  if (onglet === 'fiche') return optStyleGrist() + blocFicheSections();
   if (onglet === 'barre') return blocBarre();
   if (onglet === 'filtres') return blocFiltres();
   if (onglet === 'messages') return blocMessages();
@@ -1396,7 +1408,7 @@ function contenuOnglet() {
     <label>Fond de la bulle <input type="color" data-o="aide_fond" value="${hex(opt('aide_fond', '')) || '#1d2733'}"> Texte <input type="color" data-o="aide_coul" value="${hex(opt('aide_coul', '')) || '#ffffff'}"></label>
     <p class="vide" style="font-size:12px;margin:0">Le texte de l’aide de chaque bouton se saisit dans « Éléments du panneau de gauche » ci-dessous, et dans l’onglet Barre de boutons pour les boutons de la barre.</p></section>
     <section><h3>Apparence</h3>
-    <label><input type="checkbox" data-o="style_grist"${opt('style_grist', false) === true ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, alignement, dates, nombres)</label>
+    ${optStyleGrist()}
     <label>Police d’écriture ${sl('police', Object.keys(POLICES))}</label>
     <p class="vide" style="font-size:12px;margin:0 0 4px">La police Marianne s’affiche si elle est installée sur le poste, ou si ses fichiers sont placés dans le dossier lib/fonts du widget.</p>
     <label>Emplacement de la recherche de commune ${sl('pos_commune', POS_COMMUNE)}</label>
@@ -1575,13 +1587,13 @@ modal.addEventListener('change', e => {
     case 'ms': { const M = cfg.messages[+t.dataset.i], f = t.dataset.f; if (M) M[f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
     case 'pk-chk': { if (t.checked) picker.sel.add(t.dataset.c); else picker.sel.delete(t.dataset.c); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
     case 'lie': { const L = cfg.sections[+t.dataset.g].lie, f = t.dataset.f;
-      if (f === 'afficherVide' || f === 'grpHide') L[f] = t.checked; else if (f === 'annee' || f === 'max') L[f] = Math.max(0, +t.value || 0);
+      if (f === 'afficherVide' || f === 'grpHide' || f === 'gs') L[f] = t.checked; else if (f === 'annee' || f === 'max' || f === 'taille') L[f] = Math.max(0, +t.value || 0);
       else { L[f] = t.value; if (f === 'table') { const a = autoLie(t.value); L.cle = a.cle; L.cle2 = a.cle2; L.dateCol = a.dateCol; L.cols = a.cols; L.triCol = ''; } } break; }
     case 'lc': { const X = cfg.sections[+t.dataset.g].lie.cols[+t.dataset.j]; if (X) X[t.dataset.f] = t.value; break; }
     case 'sec-type': { const S = cfg.sections[+t.dataset.g]; S.type = t.value; if (t.value === 'lie' && !S.lie.table) S.lie = autoLie(); if (t.value === 'tableau' && !S.tab.heads.length) S.tab = nTab({ heads:['Colonne 1', 'Colonne 2'], rows:[{ cells:[{}, {}] }] }); break; }
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
     case 'tb-c': { const C = cfg.sections[+t.dataset.g].tab.rows[+t.dataset.k].cells[+t.dataset.j]; C[t.dataset.f] = t.value; break; }
-    case 'tb': cfg.sections[+t.dataset.g].tab[t.dataset.f] = t.checked; break;
+    case 'tb': { const T = cfg.sections[+t.dataset.g].tab, f = t.dataset.f; T[f] = t.type === 'checkbox' ? t.checked : Math.max(0, Math.min(30, +t.value || 0)); break; }
     case 'rch': cfg.recherche[t.dataset.f] = t.type === 'checkbox' ? t.checked : t.value; break;
     case 'rc': { const X = cfg.recherche.cols[+t.dataset.i]; if (X) X[t.dataset.f] = t.value; break; }
     case 'fl': { const F = cfg.filtres[+t.dataset.i], f = t.dataset.f; if (F) { if (f === 'fond-on') F.fond = t.checked ? '#fff3bf' : ''; else if (f === 'coul-on') F.coul = t.checked ? '#1d2733' : ''; else if (f === 'fonte') { F.gras = t.value.includes('g'); F.ital = t.value.includes('i'); } else if (f === 'bouton') F.bouton = t.value === '1'; else if (t.type === 'checkbox') F[f] = t.checked; else F[f] = t.value; } break; }
