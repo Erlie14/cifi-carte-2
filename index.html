@@ -267,6 +267,7 @@
   .iti-avert { margin:0 0 8px; padding:6px 10px; background:#fff4e5; border-left:3px solid #f4821f; border-radius:6px; font-size:12.5px; }
   .iti-adr { display:flex; gap:6px; margin:6px 0; } .iti-adr input { flex:1; min-width:0; font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; }
   .iti-adr-res { list-style:none; margin:4px 0 8px; padding:0; border:1px solid var(--line); border-radius:6px; } .iti-adr-res button { display:block; width:100%; text-align:left; font:inherit; font-size:13px; padding:6px 8px; background:none; border:0; border-bottom:1px solid #eef1f5; cursor:pointer; } .iti-adr-res button:hover { background:#e8eef7; }
+  .iti-inline { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; } .iti-inline .iti-tit { margin:0; }
   .iti-bloc { margin-top:10px; } .iti-tit { font-size:14px; margin-bottom:4px; }
 </style>
 </head>
@@ -276,7 +277,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '62';
+const VERSION = '64';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -702,7 +703,7 @@ function fichier(d) {
   const e = enteteDe(d, 'popup');
   return `<div class="fiche" style="--niv:${d.style.couleur}"><header style="${e.st}"><h3 style="${e.ts}">${esc(e.titre)}</h3>${e.sous ? `<div class="sous">${esc(e.sous)}</div>` : ''}${e.etiq}</header>
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
-    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> <button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button></div></div>`;
+    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> ${opt('pop_iti', true) !== false ? `<button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button>` : ''}</div></div>`;
 }
 let gsForce = false;   // vrai pendant l'affichage d'un tableau lié qui reprend le style de Grist
 const gsOn = () => gsForce || opt('style_grist', false) === true;
@@ -794,7 +795,7 @@ function ouvrirFiche(id, focus = true) {
   const m = marqueurs.get(id); if (!m) return; const d = m._cifi; ficheId = id; lieeOuverte = false; fermerIti(); fermerProg(); rafraichirLiees(); const eh = enteteDe(d, 'fiche');
   panneau.style.setProperty('--niv', d.style.couleur);
   panneau.innerHTML = `<div class="fp-tete" style="${eh.st}"><button type="button" class="fp-fermer" aria-label="Fermer la fiche">✕</button><h2 style="${eh.ts}">${esc(eh.titre)}</h2>${eh.sous ? `<div class="sous">${esc(eh.sous)}</div>` : ''}${eh.etiq}</div>
-    <div class="fp-corps">${corpsFiche(d)}</div><div class="fp-pied"><button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>`;
+    <div class="fp-corps">${corpsFiche(d)}</div>${opt('fiche_iti', true) !== false ? '<div class="fp-pied"><button type="button" class="fp-iti">＋ Ajouter à l’itinéraire</button></div>' : ''}`;
   panneau.classList.add('ouvert'); panneau.setAttribute('aria-hidden', 'false');
   if (focus) panneau.querySelector('.fp-fermer').focus();
 }
@@ -1048,11 +1049,6 @@ progPanel.addEventListener('change', e => { if (e.target.id === 'prog-ind') { pr
 /* ================= ITINÉRAIRE DE CONTRÔLE ================= */
 const itiPanel = document.createElement('aside'); itiPanel.id = 'iti-panel'; itiPanel.setAttribute('aria-label', 'Préparation d’un itinéraire'); itiPanel.setAttribute('aria-hidden', 'true'); document.body.appendChild(itiPanel);
 const ITI_AVERT = 'Attention : les itinéraires sont calculés automatiquement et peuvent contenir des erreurs (travaux, accès fermés, sens interdits…). Vérifiez le trajet avant de partir.', ITI_AVERT_PIED = 'À pied : trajet donné à titre indicatif, il peut emprunter des chemins difficiles ou non praticables.';   // textes par défaut des avertissements du panneau d’itinéraire
-const ITI_TXT = { depart:'Départ :', carte:'📍 Sur la carte', adr:'🔎 Une adresse', pos:'🧭 Ma position', arr:'Ajouter des arrivées :', tous:'＋ Tous les points visibles', opt:'Optimiser l’ordre des points', sup:'Supprimer', calc:'Calculer l’itinéraire', retour:'Revenir au point de départ',
-  aide:'Pour ajouter des points, cliquez sur le bouton « ＋ Itinéraire » dans le popup d’un point de la carte, ou sur « Tous les points visibles ».' };
-const ITI_LIB = { depart:'Titre du départ', carte:'Bouton : départ sur la carte', adr:'Bouton : départ par adresse', pos:'Bouton : départ par position', arr:'Titre des arrivées', tous:'Bouton : ajouter tous les points visibles', opt:'Bouton : optimiser l’ordre', sup:'Bouton : supprimer', calc:'Bouton : calculer', retour:'Case : retour au point de départ', aide:'Message d’indication (vide = masqué)' };
-const itT = k => esc(k === 'aide' ? optBrut('iti_t_aide', ITI_TXT.aide) : opt('iti_t_' + k, ITI_TXT[k]));
-const itiTxtUi = () => `<div class="rg-sous">Textes du panneau d’itinéraire</div><div class="rg-l2"><label><input type="checkbox" data-o="iti_pos"${opt('iti_pos', true) !== false ? ' checked' : ''}> Proposer « Ma position » comme départ</label></div>${Object.keys(ITI_TXT).map(k => `<div class="rg-l2"><input type="text" data-o="iti_t_${k}" value="${esc(k === 'aide' ? optBrut('iti_t_aide', ITI_TXT.aide) : opt('iti_t_' + k, ITI_TXT[k]))}" placeholder="${esc(ITI_LIB[k])}" aria-label="${esc(ITI_LIB[k])}" style="flex:1;min-width:200px"></div>`).join('')}`;
 const iti = { ids:[], mode:'car', retour:false, depart:null, departLib:'', adr:{ ouvert:false, q:'', res:[], msg:'' }, legs:[], total:null, msg:'' };
 const itiRoute = L.featureGroup().addTo(map), itiPts = L.layerGroup().addTo(map);
 let attendDepart = false;
@@ -1099,15 +1095,15 @@ function itiDessiner() {
   itiPanel.innerHTML = `<div class="fp-tete" style="--niv:var(--accent)"><button type="button" class="fp-fermer" data-i="fermer" aria-label="Fermer">✕</button><h2>Itinéraire</h2></div>
     <div class="fp-corps">${itiAvert()}
       <div class="iti-ligne"><label><input type="radio" name="itimode" value="car"${iti.mode === 'car' ? ' checked' : ''}> 🚗 Voiture</label><label><input type="radio" name="itimode" value="pedestrian"${iti.mode === 'pedestrian' ? ' checked' : ''}> 🚶 À pied</label></div>
-      <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> ${itT('retour')}</label>
-      <div class="iti-bloc"><div class="iti-tit">${itT('depart')} ${iti.depart ? `🏁 ${esc(iti.departLib || 'point choisi sur la carte')} <button type="button" data-i="deldep" class="iti-btn2" aria-label="Retirer le départ">✕</button>` : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier point de la liste'}</div>
-        <div class="iti-actions"><button type="button" data-i="dep" class="iti-btn2">${itT('carte')}</button><button type="button" data-i="adr" class="iti-btn2" aria-expanded="${iti.adr.ouvert}">${itT('adr')}</button>${opt('iti_pos', true) !== false ? `<button type="button" data-i="pos" class="iti-btn2">${itT('pos')}</button>` : ''}</div>
+      <label style="font-size:14px"><input type="checkbox" id="iti-retour"${iti.retour ? ' checked' : ''}> Revenir au point de départ</label>
+      <div class="iti-bloc"><div class="iti-tit">Départ : ${iti.depart ? `🏁 ${esc(iti.departLib || 'point choisi sur la carte')} <button type="button" data-i="deldep" class="iti-btn2" aria-label="Retirer le départ">✕</button>` : attendDepart ? '<em>cliquez sur la carte…</em>' : 'premier point de la liste'}</div>
+        <div class="iti-actions"><button type="button" data-i="dep" class="iti-btn2">📍 Sur la carte</button><button type="button" data-i="adr" class="iti-btn2" aria-expanded="${iti.adr.ouvert}">🔎 Une adresse</button>${opt('iti_pos', true) !== false ? `<button type="button" data-i="pos" class="iti-btn2">🧭 Ma position</button>` : ''}</div>
         ${iti.adr.ouvert ? `<div class="iti-adr"><input type="search" id="iti-adr-q" value="${esc(iti.adr.q)}" placeholder="Saisissez une adresse…" aria-label="Adresse de départ"><button type="button" data-i="adr-go" class="iti-btn2">Chercher</button></div>${iti.adr.msg ? `<p class="vide" style="font-size:13px">${esc(iti.adr.msg)}</p>` : ''}${iti.adr.res.length ? `<ul class="iti-adr-res">${iti.adr.res.map((r, k) => `<li><button type="button" data-i="adr-ok" data-k="${k}">${esc(r.lib)}</button></li>`).join('')}</ul>` : ''}` : ''}</div>
-      <div class="iti-bloc"><div class="iti-tit">${itT('arr')}</div><div class="iti-actions"><button type="button" data-i="tous">${itT('tous')}</button></div></div>
-      <div class="iti-actions"><button type="button" data-i="opt">${itT('opt')}</button><button type="button" data-i="vider">${itT('sup')}</button></div>
-      <div class="iti-actions"><button type="button" data-i="calc" class="prim">${itT('calc')}</button></div>
+      <div class="iti-bloc iti-inline"><span class="iti-tit">Ajouter des arrivées :</span><button type="button" data-i="tous">＋ Tous les points visibles</button></div>
+      <div class="iti-actions"><button type="button" data-i="opt">Optimiser l’ordre des points</button><button type="button" data-i="vider">Supprimer</button></div>
+      <div class="iti-actions"><button type="button" data-i="calc" class="prim">Calculer l’itinéraire</button></div>
       ${iti.msg ? `<p class="vide" style="font-size:13px">${esc(iti.msg)}</p>` : ''}
-      ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : (optBrut('iti_t_aide', ITI_TXT.aide) ? `<p class="vide">${itT('aide')}</p>` : '')}
+      ${iti.ids.length ? `<ol class="iti-liste">${iti.ids.map((id, k) => `<li><span class="num">${k + 1}</span><span>${esc(nomDe(id))}${info(legDe(k))}</span><span><button type="button" data-i="up" data-k="${k}" aria-label="Monter">▲</button> <button type="button" data-i="down" data-k="${k}" aria-label="Descendre">▼</button> <button type="button" data-i="del" data-k="${k}" aria-label="Retirer">✕</button></span></li>`).join('')}${iti.retour && retourLeg !== undefined ? `<li><span class="num">↩</span><span>Retour au départ${info(retourLeg)}</span><span></span></li>` : ''}</ol>` : '<p class="vide">Pour ajouter des points, cliquez sur le bouton « ＋ Itinéraire » dans le popup d’un point de la carte, ou sur « Tous les points visibles ».</p>'}
       ${iti.total ? `<div class="iti-total">Total : ${fmtDist(iti.total.d)} · ${fmtDuree(iti.total.t)}</div>` : ''}
     </div><div class="fp-pied"><button type="button" class="iti-btn2" data-i="copier">Copier la feuille de route</button> <button type="button" class="iti-btn2" data-i="imprimer">Imprimer</button></div>`;
   itiMarques();
@@ -1197,6 +1193,7 @@ const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option va
 const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
 const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}" data-aide="${lab}"` : ''}>${t}</button>`;
 
+const optCase = (n, t) => `<div class="rg-l2"><label><input type="checkbox" data-o="${n}"${opt(n, true) !== false ? ' checked' : ''}> ${t}</label></div>`;
 const optStyleGrist = () => `<label><input type="checkbox" data-o="style_grist"${opt('style_grist', false) === true ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>`;
 function blocFicheSections() {
   return blocEntete('fiche') + cfg.sections.map((sec, i) => { const G = `data-g="${i}"`, vide = sec.type === 'lie' ? (!sec.lie.table || !sec.lie.cle || !sec.lie.cols.some(x => x.c)) : sec.type === 'tableau' ? !sec.tab.rows.length : !sec.cols.length;
@@ -1315,7 +1312,7 @@ function blocElementsGauche() {
       + (ICO_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="ico_${k}" value="${esc(opt('ico_' + k, ICO_DEF[k] || ''))}" placeholder="Icône (emoji ou symbole)" style="max-width:170px" aria-label="Icône">${k === 'liste' ? `<input type="text" data-o="ico_liste2" value="${esc(opt('ico_liste2', ''))}" placeholder="Icône quand la liste est ouverte" style="max-width:210px" aria-label="Icône liste ouverte">` : ''}</div>` : '')
       + (AIDE_K.includes(k) ? `<div class="rg-l2"><input type="text" data-o="aide_${k}" value="${esc(opt('aide_' + k, ''))}" placeholder="Aide au survol (facultatif)" style="flex:1;min-width:200px" aria-label="Aide au survol"></div>` : '')
       + ((k === 'liste' || k === 'legende') ? `<div class="rg-l2"><label><input type="checkbox" data-o="ouv_${k}"${(k === 'liste' ? opt('ouv_liste', false) === true : opt('ouv_legende', true) !== false) ? ' checked' : ''}> déplié par défaut</label></div>` : '')
-      + (k === 'iti' ? `<div class="rg-l2"><input type="text" data-o="iti_avert" value="${esc(optBrut('iti_avert', ITI_AVERT))}" placeholder="Avertissement du panneau d’itinéraire (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement"></div><div class="rg-l2"><input type="text" data-o="iti_avert_pied" value="${esc(optBrut('iti_avert_pied', ITI_AVERT_PIED))}" placeholder="Avertissement supplémentaire pour l’itinéraire à pied (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement à pied"></div>${itiTxtUi()}` : '')
+      + (k === 'iti' ? `<div class="rg-l2"><input type="text" data-o="iti_avert" value="${esc(optBrut('iti_avert', ITI_AVERT))}" placeholder="Avertissement du panneau d’itinéraire (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement"></div><div class="rg-l2"><input type="text" data-o="iti_avert_pied" value="${esc(optBrut('iti_avert_pied', ITI_AVERT_PIED))}" placeholder="Avertissement supplémentaire pour l’itinéraire à pied (vide = masqué)" style="flex:1;min-width:200px" aria-label="Avertissement à pied"></div>${optCase('iti_pos', 'Proposer « Ma position » comme départ')}` : '')
       + (ELT_STYLES[k] || []).map(blocStyleTexte).join('');
     return corps ? `<li>${rgd('el', '', `data-e="${k}"`, elOuverts.has(k), `<span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${GEAR}${btns}`, corps)}</li>`
       : `<li><div class="rg-simple"><span class="rg-nom">${esc(ELTS_GAUCHE[k])}</span>${btns}</div></li>`;
@@ -1462,8 +1459,8 @@ function contenuOnglet() {
   if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label><label>Bordure <input type="color" data-a="defbc" value="${cfg.defaut.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" data-a="defbe" value="${cfg.defaut.borde}" style="width:56px" aria-label="Épaisseur de la bordure"> px</label></div></section>
     <section><h3>Règles d’affichage des points</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Chaque règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
     ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button></section>`;
-  if (onglet === 'popup') return optStyleGrist() + blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
-  if (onglet === 'fiche') return optStyleGrist() + blocFicheSections();
+  if (onglet === 'popup') return optStyleGrist() + optCase('pop_iti', 'Afficher le bouton « ＋ Itinéraire » dans le popup') + blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
+  if (onglet === 'fiche') return optStyleGrist() + optCase('fiche_iti', 'Afficher le bouton « Ajouter à l’itinéraire » en bas de la fiche') + blocFicheSections();
   if (onglet === 'barre') return blocBarre();
   if (onglet === 'filtres') return blocFiltres();
   if (onglet === 'messages') return blocMessages();
