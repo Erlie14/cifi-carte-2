@@ -277,7 +277,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '64';
+const VERSION = '65';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -703,7 +703,7 @@ function fichier(d) {
   const e = enteteDe(d, 'popup');
   return `<div class="fiche" style="--niv:${d.style.couleur}"><header style="${e.st}"><h3 style="${e.ts}">${esc(e.titre)}</h3>${e.sous ? `<div class="sous">${esc(e.sous)}</div>` : ''}${e.etiq}</header>
     <div class="corps">${cfg.popup.length ? lignes(champsDe(cfg.popup, d.vals)) : '<p style="padding:10px 14px;margin:0;color:var(--muted);font-size:13px">Choisissez les colonnes du popup dans « Configurer le widget ».</p>'}</div>
-    <div class="pied"><button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button> ${opt('pop_iti', true) !== false ? `<button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button>` : ''}</div></div>`;
+    ${(bt => bt ? `<div class="pied">${bt}</div>` : '')([opt('pop_fiche', true) !== false && `<button type="button" class="btn-fiche" data-id="${Number(d.id)}">Voir la fiche complète</button>`, opt('pop_iti', true) !== false && `<button type="button" class="btn-iti" data-id="${Number(d.id)}" style="background:#fff;color:var(--accent);border:1px solid var(--accent)">＋ Itinéraire</button>`].filter(Boolean).join(' '))}</div>`;
 }
 let gsForce = false;   // vrai pendant l'affichage d'un tableau lié qui reprend le style de Grist
 const gsOn = () => gsForce || opt('style_grist', false) === true;
@@ -1459,7 +1459,7 @@ function contenuOnglet() {
   if (onglet === 'points') return `<section><h3>Style par défaut des points</h3><div class="rg-l2"><label>Couleur <input type="color" data-a="defc" value="${cfg.defaut.couleur}"></label><label>Forme ${selForme('data-a="deff"', cfg.defaut.forme)}</label><label>Bordure <input type="color" data-a="defbc" value="${cfg.defaut.bordc}" aria-label="Couleur de la bordure"> <input type="number" min="0" max="8" data-a="defbe" value="${cfg.defaut.borde}" style="width:56px" aria-label="Épaisseur de la bordure"> px</label></div></section>
     <section><h3>Règles d’affichage des points</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Chaque règle applique un style (couleur, forme, bordure, contenu, bulle, signal pulsé) aux points qui remplissent toutes ses conditions. Pour la couleur, la forme et le contenu, la première règle qui en définit une l’emporte.</p>
     ${cfg.regles.map(carteRegle).join('')}<button type="button" class="rg-ajout" data-a="radd">+ Ajouter une règle</button></section>`;
-  if (onglet === 'popup') return optStyleGrist() + optCase('pop_iti', 'Afficher le bouton « ＋ Itinéraire » dans le popup') + blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
+  if (onglet === 'popup') return optStyleGrist() + optCase('pop_fiche', 'Afficher le bouton « Voir la fiche complète » dans le popup') + optCase('pop_iti', 'Afficher le bouton « ＋ Itinéraire » dans le popup') + blocEntete('popup') + `<section><h3>Colonnes du popup (clic sur un point)</h3>${blocListe('p')}</section>`;
   if (onglet === 'fiche') return optStyleGrist() + optCase('fiche_iti', 'Afficher le bouton « Ajouter à l’itinéraire » en bas de la fiche') + blocFicheSections();
   if (onglet === 'barre') return blocBarre();
   if (onglet === 'filtres') return blocFiltres();
