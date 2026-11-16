@@ -27,10 +27,6 @@
   /* Marqueurs : couleur + forme + lettre */
   .pin { width:30px; height:30px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1px #0007;
          display:flex; align-items:center; justify-content:center; font:700 12px/1 system-ui,sans-serif; color:#fff; box-sizing:border-box; }
-  .pin.moyen { color:#1d2733; border-radius:7px; }
-  .pin.eleve { border-radius:7px; transform:rotate(45deg); }
-  .pin.eleve span { transform:rotate(-45deg); }
-  .pin.critique { box-shadow:0 0 0 4px #c1121f55, 0 0 0 1px #0007; }
   .pin.sel { outline:3px solid var(--accent); outline-offset:3px; }
 
   /* Panneaux */
@@ -44,9 +40,6 @@
   .legend button[aria-pressed=false] { opacity:.45; text-decoration:line-through; }
   .legend strong { display:block; margin-bottom:4px; }
   .legend i { flex:none; width:13px; height:13px; border:1px solid #0006; }
-  .b-faible { background:#2a9d8f; border-radius:50%; } .b-moyen { background:#e9c46a; border-radius:3px; }
-  .b-eleve { background:#f4821f; transform:rotate(45deg) scale(.85); } .b-critique { background:#c1121f; border-radius:50%; box-shadow:0 0 0 2px #c1121f55; }
-  .b-neutre { background:#6b7785; border-radius:50%; }
   button:focus-visible, input:focus-visible, summary:focus-visible { outline:3px solid #f4821f; outline-offset:2px; }
 
   /* Popup pliable */
@@ -95,7 +88,6 @@
   .badge { display:inline-block; padding:1px 9px; border-radius:10px; background:#e8eef7; border:1px solid #c9d6ea; }
   .rg-corps li { flex-direction:column; align-items:stretch; border-bottom:1px solid #eef1f5; padding:6px 0; }
   .rg-l1, .rg-l2 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; } .rg-l2 input[type=text] { flex:1; min-width:120px; }
-  .rg-corps .nomcol small { color:var(--muted); }
   #reglages { position:absolute; inset:0; z-index:1200; background:#0006; display:none; align-items:center; justify-content:center; padding:12px; }
   #reglages.ouvert { display:flex; }
   .rg-boite { background:#fff; border-radius:12px; width:min(620px,100%); max-height:100%; display:flex; flex-direction:column; box-shadow:0 8px 30px #0005; }
@@ -106,7 +98,6 @@
   .rg-corps h3 { margin:0 0 8px; font-size:14px; }
   .rg-corps ul { list-style:none; margin:0 0 8px; padding:0; }
   .rg-corps li { display:flex; align-items:center; gap:6px; padding:3px 0; font-size:13px; }
-  .rg-corps .nomcol { flex:1; overflow:hidden; text-overflow:ellipsis; }
   .rg-corps button, .rg-tete button { font:inherit; font-size:12px; padding:3px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; }
   .rg-corps select, .rg-corps input[type=text] { font:inherit; font-size:13px; padding:5px 7px; border:1px solid var(--line); border-radius:6px; max-width:100%; }
   .rg-sec { display:flex; gap:6px; margin-bottom:8px; } .rg-sec input { flex:1; font-weight:600; }
@@ -119,15 +110,11 @@
   .pin.sombre { color:#1d2733; } .pin.f-rond { border-radius:50%; } .pin.f-carre { border-radius:7px; }
   .pin.f-losange { border-radius:7px; transform:rotate(45deg); } .pin.f-losange span { transform:rotate(-45deg); }
   .pin.f-triangle { border-radius:0; border:0; clip-path:polygon(50% 4%,98% 92%,2% 92%); padding-top:7px; box-shadow:none; }
-  .legend .sep { margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
   #filtres label { display:block; margin-top:6px; color:var(--muted); font-size:12px; }
   #filtres select { display:block; width:210px; margin-top:2px; padding:5px; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:6px; }
   .rg-corps label { display:block; margin:8px 0; font-size:13px; } .rg-corps label select, .rg-corps label input[type=number] { margin-left:6px; }
   .rg-corps .rg-sec { margin-bottom:6px; } .rg-corps .rg-sec input { width:100%; }
   .leaflet-top.leaflet-left .panel { max-height:72vh; overflow:auto; }
-  .leaflet-tooltip.nom-etab { display:none; font:600 12px system-ui,sans-serif; border:1px solid #0004; padding:2px 6px; }
-  .noms-on .leaflet-tooltip.nom-etab { display:block; }
-  #compteurs { margin-top:6px; line-height:1.5; } #compteurs strong { font-size:16px; color:var(--accent); }
   #filtres details { margin-top:6px; border:1px solid var(--line); border-radius:6px; }
   #filtres summary { padding:5px 8px; cursor:pointer; font-size:13px; }
   #filtres details label { display:block; margin:0; padding:2px 10px; color:var(--ink); font-size:13px; }
@@ -148,7 +135,6 @@
   .pin.f-goutte { border-radius:50% 50% 50% 0; transform:rotate(-45deg); } .pin.f-goutte span { transform:rotate(45deg); }
   .legend .gt { display:inline-block; width:11px; height:11px; border:1px solid #0006; border-radius:50% 50% 50% 0; transform:rotate(-45deg); }
   .legend button.titre { width:auto; } .legend button.titre strong { display:inline; margin:0; }
-  .cpt-t { font-weight:700; margin-top:6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
   .rg-etat { font-size:12px; color:var(--muted); margin:0 10px 0 auto; }
   .fiche dl { font-size:var(--fs-popup,13px); } .fp-corps dl { font-size:var(--fs-fiche,14px); }
   .fiche h3 { font-size:calc(var(--fs-popup,13px) + 3px); } .fp-tete h2 { font-size:calc(var(--fs-fiche,14px) + 4px); }
@@ -196,7 +182,6 @@
   .panel.gauche { display:flex; flex-direction:column; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
   .panel.gauche > * { flex:none; } .panel.gauche > button.link, .panel.gauche #b-liste > button.link { align-self:flex-start; margin-top:4px; }
   #b-liste { margin-top:4px; } .panel.reduit > :not(#reduire) { display:none !important; }
-  .rg-ord { border-bottom:1px solid #eef1f5; }
   .leaflet-top.leaflet-left, .leaflet-top.leaflet-right { display:flex; flex-direction:column; } .leaflet-top.leaflet-right { align-items:flex-end; } .leaflet-top .leaflet-control { flex:none; }
   .leaflet-top.leaflet-left .panel.gauche { width:var(--larg-gauche, 300px); }
   #barre { position:absolute; z-index:950; } #barre-btns { display:flex; gap:6px; }
@@ -259,7 +244,6 @@
   .flt-btn:hover { background:#f1f4f8; } .flt-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; outline:2px solid var(--accent); outline-offset:1px; }
   details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
-  .cpt-main { font-weight:700; margin-top:6px; }
   .lie-bilan { font-size:12px; color:var(--muted); background:#f6f8fb; border-radius:8px; padding:8px 10px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; } .lie-bilan.ok { color:#18753c; } .lie-bilan.ko { color:#b34000; } .sec-desc { margin:0; padding:6px 12px 2px; font-size:12.5px; color:var(--muted); }
   .mini th { white-space:normal; } .mini th, .mini td { padding:4px 8px; overflow-wrap:normal; word-break:normal; } .mini th { font-size:var(--th, inherit); } .mini:not(.ligne) { width:100%; } .mini td.nw { white-space:nowrap; } .mini.ligne th, .mini.ligne td { white-space:nowrap; } .mini-wrap { padding:0 6px 8px; } table.mini { font-size:calc(var(--fs-fiche, 14px) - 1px); }
   .fp-corps details.sub { border:1px solid var(--line); border-radius:8px; margin:6px 8px; } details.sub > summary { font-size:13px; padding:6px 10px; }
@@ -277,7 +261,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '65';
+const VERSION = '68';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -321,14 +305,14 @@ const nRegle = r => {
   let pu = r.pulse || null, bt = b.t || '';
   if (!pu) { if (b.t === 'signal') { pu = { on:true, couleur:b.couleur }; bt = ''; } else if (b.pulse) pu = { on:true, couleur:b.couleur }; }   // ancienne configuration : bulle et signal liés
   pu = pu || {};
-  return { o:r.o === true, nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:r.couleur || '', forme:r.forme || '', bordc:hex(r.bordc), borde:Math.max(0, Math.min(8, +r.borde || 0)),
+  return { o:r.o === true, nom:r.nom || '', si:(r.si || []).map(k => ({ c:k.c || '', op:k.op || '=', v:k.v ?? '' })), couleur:hex(r.couleur), forme:FORMES.includes(r.forme) ? r.forme : '', bordc:hex(r.bordc), borde:Math.max(0, Math.min(8, +r.borde || 0)),
     contenu:{ t:(r.contenu && r.contenu.t) || '', e:(r.contenu && r.contenu.e) || '', c:(r.contenu && r.contenu.c) || '' },
     bulle:{ t:bt === 'signal' ? '' : bt, src:b.src || '', e:b.e || '', c:b.c || '', couleur:hc(b.couleur) },
     pulse:{ on:pu.on === true, couleur:hc(pu.couleur), rythme:['lent', 'normal', 'rapide'].includes(pu.rythme) ? pu.rythme : 'normal' } };
 };
-const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', compteurs:'Compteurs', count:'Nombre de points affichés', version:'Numéro de version', liste:'Liste des points', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
+const ELTS_GAUCHE = { commune:'Recherche de commune (si placée dans le panneau)', q:'Recherche par nom', filtres:'Filtres', count:'Nombre de points affichés', version:'Numéro de version', liste:'Liste des points', tout:'Bouton « Voir tous les points »', iti:'Bouton « Préparer un itinéraire »', prog:'Bouton « Voir la progression »', legende:'Légende' };
 const normOrdre = o => { const a = (Array.isArray(o) ? o : []).filter((k, i, t) => ELTS_GAUCHE[k] && t.indexOf(k) === i); Object.keys(ELTS_GAUCHE).forEach(k => { if (!a.includes(k)) a.push(k); }); return a; };
-const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des points'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'], filtres:['filtres_titre', 'Filtres'], compteurs:['lib_compteurs', ''], count:['lib_count', '{n} sur {total} point{s}'], commune:['lib_commune', 'Aller à une commune…'] };
+const LIB = { q:['lib_q', 'Rechercher un nom…'], liste:['lib_liste', 'Afficher la liste des points'], tout:['lib_tout', 'Voir tous les points'], iti:['lib_iti', 'Préparer un itinéraire'], prog:['lib_prog', 'Voir la progression'], legende:['lib_legende', 'Légende'], version:['lib_version', 'version'], filtres:['filtres_titre', 'Filtres'], count:['lib_count', '{n} sur {total} point{s}'], commune:['lib_commune', 'Aller à une commune…'] };
 const hex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '';
 const nEnt = h => { h = h || {}; return { titre:h.titre || '', sous:h.sous || '', etiq:h.etiq !== false, fond:['neutre', 'point', 'perso'].includes(h.fond) ? h.fond : 'neutre', fondc:hex(h.fondc) || '#f6f8fb', txtc:hex(h.txtc), taille:+h.taille || 0 }; };
 const nDef = d => { d = d || {}; return { couleur:hex(d.couleur) || DEFAUT.couleur, forme:FORMES.includes(d.forme) ? d.forme : DEFAUT.forme, bordc:hex(d.bordc) || DEFAUT.bordc, borde:(d.borde === undefined || d.borde === null || isNaN(+d.borde)) ? DEFAUT.borde : Math.max(0, Math.min(8, +d.borde)) }; };
@@ -345,9 +329,9 @@ const nBarre = b => {
 const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#1f4e8c',
   contenu:['point', 'rien', 'texte', 'colonne'].includes(e.contenu) ? e.contenu : 'point', texte:String(e.texte || ''), col:String(e.col || ''), taille:Math.max(12, Math.min(44, +e.taille || 22)), bord:e.bord === 'perso' ? 'perso' : 'point', bordc:hex(e.bordc) || '#ffffff', borde:Math.max(0, Math.min(8, e.borde === undefined ? 2 : (+e.borde || 0))) }; };
 const egalTxt = (a, b) => sansAccent(a ?? '').trim() === sansAccent(b ?? '').trim();
-const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], compteurs:['Compteurs', '#compteurs'], count:['Nombre de points affichés', '#count'], version:['Numéro de version', '#b-version'],
+const STYLES_TXT = { titre:['Titre « Filtres »', '#filtres-titre'], filtre:['Noms des filtres', '#filtres details.flt-d > summary, #filtres label.flt, #filtres .flt-btn'], valeurs:['Valeurs dans les filtres', '#filtres .liste label'], count:['Nombre de points affichés', '#count'], version:['Numéro de version', '#b-version'],
   bt_liste:['Bouton de la liste des points', '#liste-btn'], bt_tout:['Bouton « Voir tous les points »', '#tout'], bt_iti:['Bouton « Préparer un itinéraire »', '#iti-btn'], bt_prog:['Bouton « Voir la progression »', '#prog-btn'], liste:['Noms dans la liste des points', '#liste button'], legende:['Légende', '#legende, #legende button'] };
-const ELT_STYLES = { filtres:['titre'], compteurs:['compteurs'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
+const ELT_STYLES = { filtres:['titre'], count:['count'], version:['version'], liste:['bt_liste', 'liste'], tout:['bt_tout'], iti:['bt_iti'], prog:['bt_prog'], legende:['legende'] };
 const nTab = t => { t = t || {}; const taille = Math.max(0, Math.min(30, +t.taille || 0)); const heads = (t.heads || []).map(String); return { heads, taille, tailleTh:Math.max(0, Math.min(30, +t.tailleTh || 0)), larg:(t.larg === 'ligne' || t.larg === 'contenu') ? 'ligne' : 'auto', vides:t.vides !== false, rows:(t.rows || []).map(r => ({ cells:heads.map((h, j) => { const x = ((r && r.cells) || [])[j] || {}; return { c:String(x.c || ''), v:String(x.v || '') }; }) })) }; };
 const nLie = l => { l = l || {}; return { table:String(l.table || ''), cle:String(l.cle || ''), cle2:String(l.cle2 || ''), dateCol:String(l.dateCol || ''), mode:['toutes', 'courante', 'precedente', 'fixe'].includes(l.mode) ? l.mode : 'toutes', annee:Math.max(0, Math.min(2200, +l.annee || 0)),
   cols:(l.cols || []).map(x => ({ c:String((x && x.c) || ''), nom:String((x && x.nom) || '') })), triCol:String(l.triCol || ''), triDir:l.triDir === 'asc' ? 'asc' : 'desc', max:Math.max(0, Math.min(200, +l.max || 0)), afficherVide:l.afficherVide !== false, taille:Math.max(0, Math.min(30, +l.taille || 0)), tailleTh:Math.max(0, Math.min(30, +l.tailleTh || 0)), larg:(l.larg === 'ligne' || l.larg === 'contenu') ? 'ligne' : 'auto', gs:l.gs === true, videTxt:String(l.videTxt || ''), grp:String(l.grp || ''), grpDir:l.grpDir === 'asc' ? 'asc' : 'desc', grpHide:l.grpHide !== false, sousOuvert:['premiere', 'toutes', 'aucune'].includes(l.sousOuvert) ? l.sousOuvert : 'premiere' }; };
@@ -369,7 +353,7 @@ const nInd = i => {
 const nProg = p => { p = p || {}; return { inds:(p.inds || []).map(nInd), tri:['nom', 'asc', 'desc'].includes(p.tri) ? p.tri : 'nom', suivre:p.suivre !== false, clic:p.clic !== false }; };
 const norm = c => { c = c || {}; return { popup:(c.popup || []).map(nEntree), sections:(c.sections || []).map(nSec), regles:(c.regles || []).map(nRegle), defaut:nDef(c.defaut), entetes:{ popup:nEnt((c.entetes || {}).popup), fiche:nEnt((c.entetes || {}).fiche) }, ordre:normOrdre(c.ordre), barre:nBarre(c.barre), messages:(c.messages || []).map(nMsg), recherche:nRech(c.recherche), styles:Object.fromEntries(Object.keys(STYLES_TXT).map(k => [k, nSt((c.styles || {})[k] || (k.startsWith('bt_') ? (c.styles || {}).boutons : null))])), filtres:(c.filtres || []).map(nFiltre), prog:nProg(c.prog), etiquettes:{ liste:nEtq((c.etiquettes || {}).liste), legende:nEtq((c.etiquettes || {}).legende) } }; };
 let opts = {}, cfg = norm(), lastRec = null, lastMap = null, labels = {}, types = {}, allCols = [], donnees = new Map(), tid = null, erreurAcces = '', labelsCharges = false, labelsT = {}, typesT = {}, visT = {}, refTabs = {}, lieeOuverte = false;
-let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigOpts = '', attente = null, optionsChargees = false, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, cptCols = [], sigAff = '', legOuverte = true, legCats = [];
+let recherche = '', premierChargement = true, idSelectionne = null, ficheId = null, sansGps = 0, regroupPrec = true, sigOpts = '', attente = null, optionsChargees = false, rechChamp = '', progFocus = null, sugIdx = -1, sugList = [], msgTimers = [], msgFile = [], msgCourant = null, msgSig = '', msgFin = null, aideT = null, sigFiltres = '', sigFiltresDef = '', etatFiltres = new Map(), filtresSecOuvert = true, sigStyles = '', filtresDefs = [], listeOuverte = false, sigAff = '', legOuverte = true, legCats = [];
 const marqueurs = new Map(), masques = new Set(), filtreSel = {}, etatSections = new Map();
 const optBrut = (n, d) => (opts[n] === undefined || opts[n] === null) ? d : opts[n];   // une valeur vide enregistrée est conservée (titre ou texte volontairement vide)
 const opt = (n, d) => (opts[n] === undefined || opts[n] === null || opts[n] === '') ? d : opts[n];
@@ -519,7 +503,7 @@ const haut = L.control({ position:'topleft' });
 haut.onAdd = () => {
   const d = L.DomUtil.create('div', 'panel gauche');
   d.innerHTML = `<button class="link" id="reduire" type="button" aria-expanded="true" style="order:-1">▴ Réduire le panneau</button><div id="commune-zone"></div><div id="b-q" class="b-q"><input type="search" id="q" placeholder="Rechercher un nom…" aria-label="Rechercher un point"><select id="q-champ" aria-label="Rechercher dans" style="display:none"></select><div id="q-sug" class="sug" role="listbox" style="display:none"></div></div>
-    <div id="filtres"></div><div id="compteurs"></div><div class="count" id="count"></div><div id="b-version"><small class="ver"></small></div>
+    <div id="filtres"></div><div class="count" id="count"></div><div id="b-version"><small class="ver"></small></div>
     <div id="b-liste"><button class="link" id="liste-btn" type="button" aria-expanded="false">Afficher la liste des points</button><div id="liste" style="display:none"></div></div>
     <button class="link" id="tout" type="button">Voir tous les points</button><button class="link" id="iti-btn" type="button">🧭 Préparer un itinéraire</button><button class="link" id="prog-btn" type="button">📊 Voir la progression</button><div class="legend" id="legende"></div><div id="cfg-secours"></div>`;
   L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
@@ -613,7 +597,7 @@ function appliquerStyles() {   // couleur, fond (en pastille), taille, gras, ita
   el.textContent = Object.entries(STYLES_TXT).map(([k, [, sel]]) => {
     const x = cfg.styles[k], d = [];
     if (x.coul) d.push(`color:${x.coul}`);
-    if (x.fond) { d.push(`background:${x.fond}`, 'padding:2px 8px', 'border-radius:8px'); if (['compteurs', 'count', 'version'].includes(k)) d.push('width:fit-content'); }
+    if (x.fond) { d.push(`background:${x.fond}`, 'padding:2px 8px', 'border-radius:8px'); if (['count', 'version'].includes(k)) d.push('width:fit-content'); }
     if (x.taille) d.push(`font-size:${x.taille}px`); if (x.gras) d.push('font-weight:700'); if (x.ital) d.push('font-style:italic');
     return d.length ? `${sel} { ${d.map(v => v + ' !important').join('; ')} }` : '';
   }).join('\n');
@@ -621,12 +605,12 @@ function appliquerStyles() {   // couleur, fond (en pastille), taille, gras, ita
 const avecIco = (k, txt) => { const i = opt('ico_' + k, ICO_DEF[k] || ''); return (i ? i + ' ' : '') + txt; };
 function appliquerAffichage() {   // éléments du panneau de gauche affichés ou masqués, selon la configuration générale
   const A = k => opt('aff_' + k, true) !== false, show = (id, on) => { const e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; };
-  const ids = { commune:'commune-zone', q:'b-q', filtres:'filtres', compteurs:'compteurs', count:'count', version:'b-version', liste:'b-liste', tout:'tout', iti:'iti-btn', prog:'prog-btn', legende:'legende' };
+  const ids = { commune:'commune-zone', q:'b-q', filtres:'filtres', count:'count', version:'b-version', liste:'b-liste', tout:'tout', iti:'iti-btn', prog:'prog-btn', legende:'legende' };
   cfg.ordre.forEach((k, i) => { const e = document.getElementById(ids[k]); if (e) e.style.order = i; });
   const qq = document.getElementById('q'); if (qq) qq.placeholder = opt('lib_q', LIB.q[1]);
   const tt = document.getElementById('tout'); if (tt) tt.textContent = avecIco('tout', opt('lib_tout', LIB.tout[1]));
   const ib = document.getElementById('iti-btn'); if (ib) ib.textContent = avecIco('iti', opt('lib_iti', LIB.iti[1]));
-  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('b-version', A('version')); { const vv = document.querySelector('#b-version .ver'); if (vv) vv.textContent = (optBrut('lib_version', 'version') ? optBrut('lib_version', 'version') + ' ' : '') + VERSION; } show('filtres', A('filtres')); show('compteurs', A('compteurs')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); { const ci = document.getElementById('commune'); if (ci) ci.placeholder = opt('lib_commune', 'Aller à une commune…'); } dessinerBarre();
+  appliquerStyles(); appliquerAides(); planifierMessages(); show('b-q', A('q')); majRechChamp(); show('b-version', A('version')); { const vv = document.querySelector('#b-version .ver'); if (vv) vv.textContent = (optBrut('lib_version', 'version') ? optBrut('lib_version', 'version') + ' ' : '') + VERSION; } show('filtres', A('filtres')); show('tout', A('tout') && !barreOn('tout')); show('legende', barreOn('legende') ? true : A('legende')); show('commune-ctl', A('commune')); show('iti-btn', A('iti') && !barreOn('iti')); show('prog-btn', A('prog') && !barreOn('prog') && cfg.prog.inds.length > 0); { const pb = document.getElementById('prog-btn'); if (pb) pb.textContent = avecIco('prog', opt('lib_prog', LIB.prog[1])); } placerCommune(); { const ci = document.getElementById('commune'); if (ci) ci.placeholder = opt('lib_commune', 'Aller à une commune…'); } dessinerBarre();
   const racine = document.documentElement;
   if (racine && racine.style) { [['--larg-popup', 'larg_popup', 300], ['--haut-popup', 'haut_popup', 260], ['--larg-fiche', 'larg_fiche', 400], ['--fs-legende', 'taille_legende', 13], ['--larg-pop-leg', 'larg_pop_leg', 260], ['--haut-pop-leg', 'haut_pop_leg', 360]].forEach(([v, o, d]) => racine.style.setProperty(v, (+opt(o, d) || d) + 'px')); racine.style.setProperty('--liste-max', +opt('liste_max', 0) > 0 ? (+opt('liste_max', 0) + 'px') : 'none'); racine.style.setProperty('--larg-gauche', (+opt('largeur_gauche', 300) || 300) + 'px'); racine.style.setProperty('--police', POLICES[opt('police', 'Système (par défaut)')] || POLICES['Système (par défaut)']); racine.style.setProperty('--fs-popup', (+opt('taille_popup', 13) || 13) + 'px'); racine.style.setProperty('--fs-fiche', (+opt('taille_fiche', 14) || 14) + 'px'); } show('liste-btn', A('liste'));
   const sig = JSON.stringify([opt('ouv_liste', false), opt('ouv_legende', true)]);
@@ -657,7 +641,7 @@ function filtresBloc() {   // titre « Filtres » pliable, qui contient les filt
   return `<details id="filtres-sec"${filtresSecOuvert ? ' open' : ''}><summary id="filtres-titre" data-aide="${esc(opt('aide_filtres', ''))}">${(ico || tt) ? (ico ? esc(ico) + (tt ? ' ' : '') : '') + esc(tt) : 'Filtres'}</summary><div class="filtres-in">${corps}</div></details>`;
 }
 function appliquerFiltres() {
-  let n = 0; const cnt = cptCols.map(c => [c, new Map()]);
+  let n = 0;
   for (const m of marqueurs.values()) {
     const d = m._cifi;
     const ok = !(d.style.regles.length ? d.style.regles.some(i => masques.has('r' + i)) : masques.has('r-1')) && correspondRech(d) && (!progFocus || (fmt(progFocus.c, d.vals[progFocus.c]) ?? '(vide)') === progFocus.v) && Object.entries(filtreSel).every(([c, v]) => {
@@ -665,10 +649,8 @@ function appliquerFiltres() {
       if (df && df.type === 'oui') return egalTxt(d.fv[c], df.oui);
       if (df && df.type === 'curseur') return egalTxt(d.fv[c], v.includes('__oui__') ? df.oui : df.non);
       return v.includes(d.fv[c]); });
-    if (ok) { n++; cnt.forEach(([c, mp]) => mp.set(d.fv[c], (mp.get(d.fv[c]) || 0) + 1)); if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
+    if (ok) { n++; if (!cluster.hasLayer(m)) cluster.addLayer(m); } else if (cluster.hasLayer(m)) cluster.removeLayer(m);
   }
-  document.getElementById('compteurs').innerHTML = (opt('lib_compteurs', '') ? `<div class="cpt-main">${esc(opt('lib_compteurs', ''))}</div>` : '') + cnt.map(([c, mp]) => `<div class="cpt-t">${esc(libel(c))}</div>` +
-    [...mp].sort((a, b) => b[1] - a[1]).map(([v, k]) => `<div><strong>${k}</strong> ${esc(v)}</div>`).join('')).join('');
   document.getElementById('count').innerHTML = esc(opt('lib_count', '{n} sur {total} point{s}')).replace(/\{n\}/g, `<strong>${n}</strong>`).replace(/\{total\}/g, marqueurs.size).replace(/\{s\}/g, marqueurs.size > 1 ? 's' : '') + (sansGps ? `<br>${sansGps} sans coordonnées valides` : '') + (progFocus ? `<br><button type="button" class="link" id="prog-x">✕ Carte limitée à « ${esc(progFocus.v)} » (retirer)</button>` : '') ;
   majListe(); if (progOuvert) progDessiner();
 }
@@ -731,21 +713,21 @@ function anneeDe(tn, c, v) {
   if (v instanceof Date) return v.getUTCFullYear();
   const m = /\b(19|20)\d{2}\b/.exec(String(v ?? '')); return m ? +m[0] : null;
 }
-function cleLiee(tn, L, row, M) { if (refDe((typesT[tn] || {})[L])) return M ? String(fmtG(tn, L, row[L]) ?? '').trim() : String(row[L]); return String(row[L] ?? '').trim(); }
-const anneeCible = L => L.mode === 'courante' ? new Date().getFullYear() : L.mode === 'precedente' ? new Date().getFullYear() - 1 : L.mode === 'fixe' ? (L.annee || new Date().getFullYear()) : null;
-const periodeTxt = L => { const a = anneeCible(L); return a ? (L.mode === 'courante' ? 'l’année en cours (' + a + ')' : L.mode === 'precedente' ? 'l’année précédente (' + a + ')' : String(a)) : ''; };
+function cleLiee(tn, lien, row, M) { if (refDe((typesT[tn] || {})[lien])) return M ? String(fmtG(tn, lien, row[lien]) ?? '').trim() : String(row[lien]); return String(row[lien] ?? '').trim(); }
+const anneeCible = lien => lien.mode === 'courante' ? new Date().getFullYear() : lien.mode === 'precedente' ? new Date().getFullYear() - 1 : lien.mode === 'fixe' ? (lien.annee || new Date().getFullYear()) : null;
+const periodeTxt = lien => { const a = anneeCible(lien); return a ? (lien.mode === 'courante' ? 'l’année en cours (' + a + ')' : lien.mode === 'precedente' ? 'l’année précédente (' + a + ')' : String(a)) : ''; };
 function diagLie(sec, d) {   // explique pourquoi un tableau lié est vide : lien introuvable, ou lignes seulement sur d'autres périodes
-  const L = sec.lie, tab = refTabs[L.table], cleP = nk(L.cle2 ? d.vals[L.cle2] : d.id), annees = new Set(); let cle = 0;
-  tab.forEach(row => { if (cleP && nk(cleLiee(L.table, L.cle, row, L.cle2)) === cleP) { cle++; const a = L.dateCol ? anneeDe(L.table, L.dateCol, row[L.dateCol]) : null; if (a) annees.add(a); } });
+  const lien = sec.lie, tab = refTabs[lien.table], cleP = nk(lien.cle2 ? d.vals[lien.cle2] : d.id), annees = new Set(); let cle = 0;
+  tab.forEach(row => { if (cleP && nk(cleLiee(lien.table, lien.cle, row, lien.cle2)) === cleP) { cle++; const a = lien.dateCol ? anneeDe(lien.table, lien.dateCol, row[lien.dateCol]) : null; if (a) annees.add(a); } });
   return { total:tab.size, cle, cleP:String(cleP), annees:[...annees].sort() };
 }
 function ligneLiees(sec, d) {   // lignes de l'autre table qui concernent cet établissement, sur la période choisie
-  const L = sec.lie, tab = refTabs[L.table]; if (!tab || !L.cle) return [];
-  const cleP = nk(L.cle2 ? d.vals[L.cle2] : d.id); if (!cleP) return [];
-  const an = anneeCible(L), rows = [];
-  tab.forEach(row => { if (nk(cleLiee(L.table, L.cle, row, L.cle2)) !== cleP) return; if (an && L.dateCol && anneeDe(L.table, L.dateCol, row[L.dateCol]) !== an) return; rows.push(row); });
-  const tc = L.triCol || L.dateCol; if (tc) { const sg = L.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
-  return L.max ? rows.slice(0, L.max) : rows;
+  const lien = sec.lie, tab = refTabs[lien.table]; if (!tab || !lien.cle) return [];
+  const cleP = nk(lien.cle2 ? d.vals[lien.cle2] : d.id); if (!cleP) return [];
+  const an = anneeCible(lien), rows = [];
+  tab.forEach(row => { if (nk(cleLiee(lien.table, lien.cle, row, lien.cle2)) !== cleP) return; if (an && lien.dateCol && anneeDe(lien.table, lien.dateCol, row[lien.dateCol]) !== an) return; rows.push(row); });
+  const tc = lien.triCol || lien.dateCol; if (tc) { const sg = lien.triDir === 'asc' ? 1 : -1; rows.sort((a, b) => { const x = a[tc], y = b[tc]; return sg * ((typeof x === 'number' && typeof y === 'number') ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'fr')); }); }
+  return lien.max ? rows.slice(0, lien.max) : rows;
 }
 const largeurs = (heads, m) => heads.map((h, j) => {   // colonne courte : une seule ligne, largeur de son contenu ; colonne de texte long : reçoit la place restante
   const v = m.map(r => String(r[j] ?? '')), tot = Math.max(0, ...v.map(x => x.length)), mot = Math.max(...[String(h), ...v].map(x => Math.max(0, ...x.split(/\s+/).map(y => y.length))));
@@ -755,25 +737,25 @@ const tabHtml = (o, heads, rows, w) => { const st = [o.taille && `font-size:${o.
   return `<div class="mini-wrap"><table class="mini${a ? '' : ' ligne'}"${st ? ` style="${st}"` : ''}>${a ? `<colgroup>${w.map(c => `<col${c.w ? ` style="width:${c.w}"` : ''}>`).join('')}</colgroup>` : ''}<thead><tr>${heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((x, j) => `<td${x.s || ''}${a && w[j].nw ? ' class="nw"' : ''}>${esc(x.v ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
 function sectionDonnees(sec, vals, d, i) {   // section « liste de colonnes », « mini tableau » ou « tableau lié »
   if (sec.type === 'lie') {
-    const L = sec.lie, cols = L.cols.filter(x => x.c), msg = t => ({ n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${t}</p>` });
-    if (!L.table || !L.cle || !cols.length) return msg('Tableau lié incomplet : choisissez la table, la colonne de lien et au moins une colonne (onglet Fiche de la configuration).');
-    if (!refTabs[L.table]) return msg(refEchec[L.table] ? `Impossible de lire la table « ${esc(joli(L.table))} » : ${esc(refEchec[L.table])}` : 'Chargement…');
-    const rows = d ? ligneLiees(sec, d) : [], per = periodeTxt(L);
+    const lien = sec.lie, cols = lien.cols.filter(x => x.c), msg = t => ({ n:0, force:true, html:`<p class="vide" style="padding:6px 12px 10px;margin:0;font-size:13px">${t}</p>` });
+    if (!lien.table || !lien.cle || !cols.length) return msg('Tableau lié incomplet : choisissez la table, la colonne de lien et au moins une colonne (onglet Fiche de la configuration).');
+    if (!refTabs[lien.table]) return msg(refEchec[lien.table] ? `Impossible de lire la table « ${esc(joli(lien.table))} » : ${esc(refEchec[lien.table])}` : 'Chargement…');
+    const rows = d ? ligneLiees(sec, d) : [], per = periodeTxt(lien);
     if (!rows.length) {
-      if (!L.afficherVide) return { n:0, html:'' };
+      if (!lien.afficherVide) return { n:0, html:'' };
       const dg = d ? diagLie(sec, d) : null;
       const det = !dg ? '' : dg.cle > 0 ? `Il existe ${dg.cle} ligne(s) pour cette fiche sur d’autres périodes (${dg.annees.join(', ') || 'dates non reconnues'}).` : `Aucune ligne de la table ne correspond à cette fiche (valeur de lien : « ${esc(dg.cleP)} » ; ${dg.total} ligne(s) dans la table).`;
-      return msg(esc(L.videTxt || ('Aucun résultat' + (per ? ' pour ' + per : ''))) + (det ? `<br><small>${det}</small>` : ''));
+      return msg(lien.videTxt ? esc(lien.videTxt) : esc('Aucun résultat' + (per ? ' pour ' + per : '')) + (det ? `<br><small>${det}</small>` : ''));
     }
-    const hd = cs => cs.map(x => x.nom || libelT(L.table, x.c)), cel = (cs, rs) => { gsForce = L.gs; try { return rs.map(r => cs.map(x => ({ v:fmtG(L.table, x.c, r[x.c]), s:gsT(L.table, x.c, r) }))); } finally { gsForce = false; } };
-    const lg = cs => largeurs(hd(cs), cel(cs, rows).map(r => r.map(c => c.v))), tab = (cs, rs, w) => tabHtml(L, hd(cs), cel(cs, rs), w);
+    const hd = cs => cs.map(x => x.nom || libelT(lien.table, x.c)), cel = (cs, rs) => { gsForce = lien.gs; try { return rs.map(r => cs.map(x => ({ v:fmtG(lien.table, x.c, r[x.c]), s:gsT(lien.table, x.c, r) }))); } finally { gsForce = false; } };
+    const lg = cs => largeurs(hd(cs), cel(cs, rows).map(r => r.map(c => c.v))), tab = (cs, rs, w) => tabHtml(lien, hd(cs), cel(cs, rs), w);
     let html = '';
-    if (!L.grp) html = tab(cols, rows, lg(cols));
+    if (!lien.grp) html = tab(cols, rows, lg(cols));
     else {   // sous-sections pliables : une par valeur de la colonne choisie (ou par année de la date)
-      const g = new Map(), cle = r => String(L.grp === '__annee' ? (anneeDe(L.table, L.dateCol, r[L.dateCol]) ?? '(sans date)') : (fmtG(L.table, L.grp, r[L.grp]) ?? '(vide)'));
+      const g = new Map(), cle = r => String(lien.grp === '__annee' ? (anneeDe(lien.table, lien.dateCol, r[lien.dateCol]) ?? '(sans date)') : (fmtG(lien.table, lien.grp, r[lien.grp]) ?? '(vide)'));
       rows.forEach(r => { const k = cle(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); });
-      const ks = [...g.keys()].sort((a, b) => (isNaN(a - b) ? a.localeCompare(b, 'fr') : a - b) * (L.grpDir === 'asc' ? 1 : -1)), cs = L.grpHide ? cols.filter(x => x.c !== L.grp) : cols, w = lg(cs);
-      html = ks.map((k, j) => { const id = `s${i}:${k}`, o = etatSections.has(id) ? etatSections.get(id) : (L.sousOuvert === 'toutes' || (L.sousOuvert === 'premiere' && j === 0));
+      const ks = [...g.keys()].sort((a, b) => (isNaN(a - b) ? a.localeCompare(b, 'fr') : a - b) * (lien.grpDir === 'asc' ? 1 : -1)), cs = lien.grpHide ? cols.filter(x => x.c !== lien.grp) : cols, w = lg(cs);
+      html = ks.map((k, j) => { const id = `s${i}:${k}`, o = etatSections.has(id) ? etatSections.get(id) : (lien.sousOuvert === 'toutes' || (lien.sousOuvert === 'premiere' && j === 0));
         return `<details class="theme sub" data-t="${esc(id)}"${o ? ' open' : ''}><summary>${esc(k)} <span class="nb">(${g.get(k).length})</span></summary>${tab(cs, g.get(k), w)}</details>`; }).join('');
     }
     return { n:rows.length, html:(per ? `<p class="vide" style="padding:0 12px;margin:0 0 4px;font-size:12px">Période : ${esc(per)}</p>` : '') + html };
@@ -836,7 +818,6 @@ grist.ready({
     { name:'nom',     title:'Nom du point', type:'Text' },
     { name:'lat',     title:'Latitude', type:'Numeric' },
     { name:'lng',     title:'Longitude', type:'Numeric' },
-    { name:'compteurs', title:'Compteurs : colonnes à compter (choix multiples)', type:'Any', optional:true, allowMultiple:true },
   ],
 });
 grist.onOptions(o => { optionsChargees = true; if (attente && o && o._maj === attente.ts) attente.ok(); if (modal.classList.contains('ouvert')) return; const sg = JSON.stringify({ ...(o || {}), _maj:0 }); if (sg === sigOpts) return; sigOpts = sg; opts = o || {}; cfg = norm(opts.cfg); if (lastRec) construire(); chargerLieesManquantes(); });
@@ -883,15 +864,13 @@ function construire() {
   const mapped = grist.mapColumnNames(lastRec), m = lastMap;
   if (!mapped || !m) { afficherMsg('<div><strong>Associez les colonnes</strong><br>Dans le panneau de droite, indiquez le nom, la latitude et la longitude.</div>'); return; }
   afficherMsg('');
-  cptCols = [].concat(m.compteurs || []).filter(Boolean);
   filtresDefs = cfg.filtres.filter(f => f.c); const cFil = filtresDefs.map(f => f.c);
-  const cTous = [...new Set([...cFil, ...cptCols])];
   const vus = new Set(), presents = new Set(); sansGps = 0;
   lastRec.forEach((raw, i) => {
     const r = mapped[i], lat = Number(r.lat), lng = Number(r.lng);
     if (r.lat == null || r.lng == null || r.lat === '' || r.lng === '' || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) { sansGps++; return; }
     const vals = donnees.get(raw.id) || raw, fv = {};
-    cTous.forEach(c => { fv[c] = fmt(c, vals[c]) ?? '(vide)'; });
+    cFil.forEach(c => { fv[c] = fmt(c, vals[c]) ?? '(vide)'; });
     const d = { id:raw.id, nom:r.nom, vals, fv, style:styleDe(vals), rk:rechIndex(vals, r.nom) };
     vus.add(raw.id); if (d.style.regles.length) d.style.regles.forEach(i => presents.add(i)); else presents.add(-1);
     let mk = marqueurs.get(raw.id);
@@ -1189,8 +1168,10 @@ const modal = document.createElement('div'); modal.id = 'reglages'; document.bod
 let onglet = 'points', minuteur, etatSauv = '';
 const listeDe = g => g === 'p' ? cfg.popup : cfg.sections[+g].cols;
 const deplacer = (l, i, d) => { const j = i + d; if (j >= 0 && j < l.length) [l[i], l[j]] = [l[j], l[i]]; };
-const selCol = (attrs, val) => `<select ${attrs} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === val ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
-const selForme = (attrs, val, dis) => `<select ${attrs}${dis ? ' disabled' : ''} aria-label="Forme">${FORMES.map(f => `<option value="${f}"${f === val ? ' selected' : ''}>${FORMES_LIB[f]}</option>`).join('')}</select>`;
+const selectHtml = (attrs, choix, val, vide) => `<select ${attrs}>${vide === undefined ? '' : `<option value="">${vide}</option>`}${choix.map(([v, t]) => `<option value="${v}"${v === val ? ' selected' : ''}>${t}</option>`).join('')}</select>`;   // liste déroulante : choix = [[valeur, texte]]
+const colsOpt = (cols, lib = libel) => cols.map(c => [esc(c), esc(lib(c))]);
+const selCol = (attrs, val, vide = 'Colonne…') => selectHtml(`${attrs} aria-label="Colonne"`, colsOpt(allCols), val, vide);
+const selForme = (attrs, val, dis) => selectHtml(`${attrs}${dis ? ' disabled' : ''} aria-label="Forme"`, FORMES.map(f => [f, FORMES_LIB[f]]), val);
 const btn = (a, att, t, lab) => `<button type="button" data-a="${a}" ${att}${lab ? ` aria-label="${lab}" data-aide="${lab}"` : ''}>${t}</button>`;
 
 const optCase = (n, t) => `<div class="rg-l2"><label><input type="checkbox" data-o="${n}"${opt(n, true) !== false ? ' checked' : ''}> ${t}</label></div>`;
@@ -1216,45 +1197,45 @@ function autoLie(table) {   // réglage de départ générique : table, colonne 
   return nLie({ table:pref, cle, cle2, dateCol:date, mode:'toutes', cols:cols.map(c => ({ c, nom:'' })) });
 }
 function bilanLie(sec) {   // un seul message : la table est-elle lue, et des fiches y sont-elles reliées ?
-  const L = sec.lie; if (!L.table || !L.cle) return '';
-  const tab = refTabs[L.table], boite = (c, t) => `<div class="lie-bilan ${c}">${t}</div>`;
-  if (!tab) return boite('ko', refEchec[L.table] ? `⚠ Table illisible : ${esc(refEchec[L.table])}` : 'Table non chargée : réessayez dans un instant.');
+  const lien = sec.lie; if (!lien.table || !lien.cle) return '';
+  const tab = refTabs[lien.table], boite = (c, t) => `<div class="lie-bilan ${c}">${t}</div>`;
+  if (!tab) return boite('ko', refEchec[lien.table] ? `⚠ Table illisible : ${esc(refEchec[lien.table])}` : 'Table non chargée : réessayez dans un instant.');
   const main = donnees.size ? [...donnees.entries()].map(([id, o]) => ({ id, vals:o })) : [...marqueurs.values()].map(m => ({ id:m._cifi.id, vals:m._cifi.vals })), lk = new Set();
-  tab.forEach(row => lk.add(nk(cleLiee(L.table, L.cle, row, L.cle2))));
-  const n = main.filter(r => lk.has(nk(L.cle2 ? r.vals[L.cle2] : r.id))).length;
+  tab.forEach(row => lk.add(nk(cleLiee(lien.table, lien.cle, row, lien.cle2))));
+  const n = main.filter(r => lk.has(nk(lien.cle2 ? r.vals[lien.cle2] : r.id))).length;
   return n ? boite('ok', `✓ Table lue : ${tab.size} ligne(s), ${n} fiche(s) sur ${main.length} reliée(s).`) : boite('ko', `⚠ Table lue (${tab.size} ligne(s)) mais aucune fiche reliée : vérifiez les colonnes de lien.`);
 }
 function blocLie(sec, i) {
-  const L = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(L.table);
-  const selT = (f, v, vide) => `<select ${A(f)}><option value="">${vide}</option>${cT.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select>`;
+  const lien = sec.lie, G = `data-g="${i}"`, A = f => `data-a="lie" ${G} data-f="${f}"`, cT = colsDe(lien.table);
+  const selT = (f, v, vide) => selectHtml(A(f), colsOpt(cT, c => libelT(lien.table, c)), v, vide);
   return `<div class="rg-sous">Table liée</div>
-    <div class="rg-l2"><select ${A('table')} aria-label="Table liée"><option value="">Choisir une table…</option>${tablesDispo().map(t => `<option value="${esc(t)}"${t === L.table ? ' selected' : ''}>${esc(joli(t))}</option>`).join('')}</select></div>
-    ${L.table ? `<div class="rg-sous">Lien avec la fiche</div>
-    <label>Colonne de la table liée ${selT('cle', L.cle, 'Choisir…')}</label>
-    <label>correspond à la colonne de la fiche <select ${A('cle2')}><option value="">(identifiant de la ligne)</option>${allCols.map(c => `<option value="${esc(c)}"${c === L.cle2 ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select></label>
+    <div class="rg-l2"><select ${A('table')} aria-label="Table liée"><option value="">Choisir une table…</option>${tablesDispo().map(t => `<option value="${esc(t)}"${t === lien.table ? ' selected' : ''}>${esc(joli(t))}</option>`).join('')}</select></div>
+    ${lien.table ? `<div class="rg-sous">Lien avec la fiche</div>
+    <label>Colonne de la table liée ${selT('cle', lien.cle, 'Choisir…')}</label>
+    <label>correspond à la colonne de la fiche <select ${A('cle2')}><option value="">(identifiant de la ligne)</option>${allCols.map(c => `<option value="${esc(c)}"${c === lien.cle2 ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select></label>
     <div class="rg-sous">Période</div>
-    <label>Colonne de date ${selT('dateCol', L.dateCol, 'Aucune')}</label>
-    <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${L.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${L.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${L.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
+    <label>Colonne de date ${selT('dateCol', lien.dateCol, 'Aucune')}</label>
+    <label>Afficher <select ${A('mode')}>${[['toutes', 'Toutes les périodes'], ['courante', 'Année en cours'], ['precedente', 'Année précédente'], ['fixe', 'Une année précise']].map(([v, t]) => `<option value="${v}"${lien.mode === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${lien.mode === 'fixe' ? `<input type="number" min="1990" max="2200" ${A('annee')} value="${lien.annee || ''}" placeholder="année" style="width:90px" aria-label="Année">` : ''}</label>
     <div class="rg-sous">Présentation</div>
-    <label>Taille du texte du tableau <input type="number" min="8" max="30" ${A('taille')} value="${L.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
-    <label>Taille du texte des en-têtes <input type="number" min="8" max="30" ${A('tailleTh')} value="${L.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
-    <label>Largeur des colonnes <select ${A('larg')}><option value="auto"${L.larg === 'auto' ? ' selected' : ''}>Ajustée : colonnes courtes sur une ligne, texte long à la ligne</option><option value="ligne"${L.larg === 'ligne' ? ' selected' : ''}>Tout sur une ligne (défilement horizontal, comme dans Grist)</option></select></label>
-    <label><input type="checkbox" ${A('gs')}${L.gs ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>
+    <label>Taille du texte du tableau <input type="number" min="8" max="30" ${A('taille')} value="${lien.taille || ''}" placeholder="par défaut" style="width:92px"> px</label>
+    <label>Taille du texte des en-têtes <input type="number" min="8" max="30" ${A('tailleTh')} value="${lien.tailleTh || ''}" placeholder="comme le tableau" style="width:120px"> px</label>
+    <label>Largeur des colonnes <select ${A('larg')}><option value="auto"${lien.larg === 'auto' ? ' selected' : ''}>Ajustée : colonnes courtes sur une ligne, texte long à la ligne</option><option value="ligne"${lien.larg === 'ligne' ? ' selected' : ''}>Tout sur une ligne (défilement horizontal, comme dans Grist)</option></select></label>
+    <label><input type="checkbox" ${A('gs')}${lien.gs ? ' checked' : ''}> Reprendre le style et le format des colonnes de Grist (couleurs, gras, dates, nombres)</label>
     <div class="rg-sous">Regroupement (sous-sections pliables)</div>
-    <label>Regrouper par <select ${A('grp')}><option value="">Aucun regroupement</option>${L.dateCol ? '<option value="__annee"' + (L.grp === '__annee' ? ' selected' : '') + '>Année de la colonne de date</option>' : ''}${cT.map(c => `<option value="${esc(c)}"${c === L.grp ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select></label>
-    ${L.grp ? `<label>Ordre <select ${A('grpDir')}><option value="desc"${L.grpDir === 'desc' ? ' selected' : ''}>Décroissant</option><option value="asc"${L.grpDir === 'asc' ? ' selected' : ''}>Croissant</option></select></label>
-    <label>Sous-sections dépliées par défaut <select ${A('sousOuvert')}>${[['premiere', 'La première'], ['toutes', 'Toutes'], ['aucune', 'Aucune']].map(([v, t]) => `<option value="${v}"${L.sousOuvert === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
-    <label><input type="checkbox" ${A('grpHide')}${L.grpHide ? ' checked' : ''}> Masquer la colonne de regroupement dans le tableau</label>` : ''}
+    <label>Regrouper par <select ${A('grp')}><option value="">Aucun regroupement</option>${lien.dateCol ? '<option value="__annee"' + (lien.grp === '__annee' ? ' selected' : '') + '>Année de la colonne de date</option>' : ''}${cT.map(c => `<option value="${esc(c)}"${c === lien.grp ? ' selected' : ''}>${esc(libelT(lien.table, c))}</option>`).join('')}</select></label>
+    ${lien.grp ? `<label>Ordre <select ${A('grpDir')}><option value="desc"${lien.grpDir === 'desc' ? ' selected' : ''}>Décroissant</option><option value="asc"${lien.grpDir === 'asc' ? ' selected' : ''}>Croissant</option></select></label>
+    <label>Sous-sections dépliées par défaut <select ${A('sousOuvert')}>${[['premiere', 'La première'], ['toutes', 'Toutes'], ['aucune', 'Aucune']].map(([v, t]) => `<option value="${v}"${lien.sousOuvert === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label><input type="checkbox" ${A('grpHide')}${lien.grpHide ? ' checked' : ''}> Masquer la colonne de regroupement dans le tableau</label>` : ''}
     <div class="rg-sous">Colonnes du tableau</div>
-    ${L.cols.map((x, j) => { const B = `${G} data-j="${j}"`, e = `lc:${i}:${j}`;
-      return rgd('el', '', `data-e="${e}"`, elOuverts.has(e) || !x.c, `<span class="rg-nom">${esc(x.c ? libelT(L.table, x.c) : 'Choisir une colonne…')}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span>${GEAR}<span class="rg-btns">${btn('lc-up', B, '▲', 'Monter')}${btn('lc-down', B, '▼', 'Descendre')}${btn('lc-del', B, '✕', 'Retirer la colonne')}</span>`,
-      `<div class="rg-l2"><select data-a="lc" ${B} data-f="c" aria-label="Colonne"><option value="">Colonne…</option>${cT.map(c => `<option value="${esc(c)}"${c === x.c ? ' selected' : ''}>${esc(libelT(L.table, c))}</option>`).join('')}</select><input type="text" data-a="lc" ${B} data-f="nom" value="${esc(x.nom)}" placeholder="Titre (par défaut : nom de la colonne)" style="flex:1;min-width:120px" aria-label="Titre"></div>`); }).join('')}
+    ${lien.cols.map((x, j) => { const B = `${G} data-j="${j}"`, e = `lc:${i}:${j}`;
+      return rgd('el', '', `data-e="${e}"`, elOuverts.has(e) || !x.c, `<span class="rg-nom">${esc(x.c ? libelT(lien.table, x.c) : 'Choisir une colonne…')}${x.nom ? ' <small>→ ' + esc(x.nom) + '</small>' : ''}</span>${GEAR}<span class="rg-btns">${btn('lc-up', B, '▲', 'Monter')}${btn('lc-down', B, '▼', 'Descendre')}${btn('lc-del', B, '✕', 'Retirer la colonne')}</span>`,
+      `<div class="rg-l2"><select data-a="lc" ${B} data-f="c" aria-label="Colonne"><option value="">Colonne…</option>${cT.map(c => `<option value="${esc(c)}"${c === x.c ? ' selected' : ''}>${esc(libelT(lien.table, c))}</option>`).join('')}</select><input type="text" data-a="lc" ${B} data-f="nom" value="${esc(x.nom)}" placeholder="Titre (par défaut : nom de la colonne)" style="flex:1;min-width:120px" aria-label="Titre"></div>`); }).join('')}
     ${btn('lc-add', G, '+ colonne')}
     <div class="rg-sous">Tri et limite</div>
-    <label>Trier par ${selT('triCol', L.triCol, 'La date (par défaut)')} <select ${A('triDir')}><option value="desc"${L.triDir === 'desc' ? ' selected' : ''}>Du plus récent au plus ancien</option><option value="asc"${L.triDir === 'asc' ? ' selected' : ''}>Du plus ancien au plus récent</option></select></label>
-    <label>Nombre maximal de lignes <input type="number" min="0" max="200" ${A('max')} value="${L.max || ''}" placeholder="toutes" style="width:90px"></label>
-    <label><input type="checkbox" ${A('afficherVide')}${L.afficherVide ? ' checked' : ''}> Afficher la section quand il n’y a aucun résultat</label>
-    ${L.afficherVide ? `<label>Texte affiché <input type="text" ${A('videTxt')} value="${esc(L.videTxt)}" placeholder="Aucun résultat pour l’année en cours"></label>` : ''}
+    <label>Trier par ${selT('triCol', lien.triCol, 'La date (par défaut)')} <select ${A('triDir')}><option value="desc"${lien.triDir === 'desc' ? ' selected' : ''}>Du plus récent au plus ancien</option><option value="asc"${lien.triDir === 'asc' ? ' selected' : ''}>Du plus ancien au plus récent</option></select></label>
+    <label>Nombre maximal de lignes <input type="number" min="0" max="200" ${A('max')} value="${lien.max || ''}" placeholder="toutes" style="width:90px"></label>
+    <label><input type="checkbox" ${A('afficherVide')}${lien.afficherVide ? ' checked' : ''}> Afficher la section quand il n’y a aucun résultat</label>
+    ${lien.afficherVide ? `<label>Texte affiché <input type="text" ${A('videTxt')} value="${esc(lien.videTxt)}" placeholder="Aucun résultat pour l’année en cours"></label>` : ''}
     ${bilanLie(sec)}` : ''}`;
 }
 function blocSection(sec, i) {
@@ -1300,12 +1281,12 @@ function blocStyleTexte(k) {
 }
 const FONTES = [['n', 'Normal'], ['g', 'Gras'], ['i', 'Italique'], ['gi', 'Gras italique']];
 const fonteDe = (g, i) => g ? (i ? 'gi' : 'g') : (i ? 'i' : 'n');
-const selFonte = (attrs, g, i) => `<select ${attrs} aria-label="Style de texte">${FONTES.map(([v, t]) => `<option value="${v}"${v === fonteDe(g, i) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+const selFonte = (attrs, g, i) => selectHtml(`${attrs} aria-label="Style de texte"`, FONTES, fonteDe(g, i));
 const GEAR = '<span class="gear" aria-hidden="true">⚙</span>';
 function blocElementsGauche() {
   const vis = cfg.ordre.filter(k => opt('aff_' + k, true) !== false), cache = cfg.ordre.filter(k => opt('aff_' + k, true) === false);
-  const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], BLANC_OK = ['filtres_titre', 'lib_compteurs', 'lib_version'],
-    HINTS = { count:'Texte affiché · variables : {n} visibles, {total} au total, {s} pluriel', compteurs:'Titre au-dessus des compteurs (facultatif)', commune:'Texte de la barre de recherche de commune', filtres:'Titre (laissez vide pour n’afficher que l’icône)', version:'Texte avant le numéro (facultatif)' };
+  const AIDE_K = ['q', 'filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], ICO_K = ['filtres', 'liste', 'tout', 'iti', 'prog', 'legende'], BLANC_OK = ['filtres_titre', 'lib_version'],
+    HINTS = { count:'Texte affiché · variables : {n} visibles, {total} au total, {s} pluriel', commune:'Texte de la barre de recherche de commune', filtres:'Titre (laissez vide pour n’afficher que l’icône)', version:'Texte avant le numéro (facultatif)' };
   const lignes = vis.map(k => {
     const E = `data-e="${k}"`, L_ = LIB[k], btns = `<span class="rg-btns">${btn('ord-up', E, '▲', 'Monter')}${btn('ord-down', E, '▼', 'Descendre')}${btn('el-del', E, '✕', 'Retirer du panneau')}</span>`;
     const corps = (L_ ? `<div class="rg-l2"><input type="text" data-o="${L_[0]}" value="${esc(BLANC_OK.includes(L_[0]) ? optBrut(L_[0], L_[1]) : opt(L_[0], L_[1]))}" placeholder="${esc(HINTS[k] || 'Texte affiché')}" style="flex:1;min-width:150px" aria-label="Texte : ${esc(ELTS_GAUCHE[k])}">${k === 'liste' ? `<input type="text" data-o="lib_liste2" value="${esc(opt('lib_liste2', 'Masquer la liste des points'))}" placeholder="Texte quand la liste est ouverte" style="flex:1;min-width:150px" aria-label="Texte quand la liste est ouverte">` : ''}</div>` : '')
@@ -1373,7 +1354,7 @@ function blocRecherche() {
   const R = cfg.recherche;
   return `<section><h3>Barre de recherche</h3>
     <label><input type="checkbox" data-a="rch" data-f="nom"${R.nom ? ' checked' : ''}> Rechercher dans le nom du point</label>
-    <label>Mode <select data-a="rch" data-f="mode"><option value="toutes"${R.mode === 'toutes' ? ' selected' : ''}>Une seule barre, tous les champs à la fois</option><option value="choix"${R.mode === 'choix' ? ' selected' : ''}>L’utilisateur choisit le champ (liste à côté de la barre)</option></select></label>
+    <label>Mode <select data-a="rch" data-f="mode"><option value="toutes"${R.mode === 'toutes' ? ' selected' : ''}>Une seule barre, tous les champs à la fois</option><option value="choix"${R.mode === 'choix' ? ' selected' : ''}>lien’utilisateur choisit le champ (liste à côté de la barre)</option></select></label>
     ${R.cols.map((x, i) => `<div class="rg-sec">${selCol(`data-a="rc" data-i="${i}" data-f="c"`, x.c)}<input type="text" data-a="rc" data-i="${i}" data-f="nom" value="${esc(x.nom)}" placeholder="Libellé (facultatif)" aria-label="Libellé">${btn('rc-up', `data-i="${i}"`, '▲', 'Monter')}${btn('rc-down', `data-i="${i}"`, '▼', 'Descendre')}${btn('rc-del', `data-i="${i}"`, '✕', 'Retirer')}</div>`).join('')}
     <button type="button" class="rg-ajout" data-a="rc-add">+ Ajouter un champ de recherche</button>
     <label><input type="checkbox" data-o="sug_on"${opt('sug_on', true) !== false ? ' checked' : ''}> Proposer des suggestions pendant la frappe</label>
@@ -1382,7 +1363,6 @@ function blocRecherche() {
     <p class="vide" style="font-size:12px;margin:6px 0 0">Avec plusieurs mots, tous doivent être trouvés. Le texte affiché dans la barre se règle dans l’onglet Général, « Éléments du panneau de gauche ».</p></section>`;
 }
 function blocFiltres() {
-  const selC = (at, v) => `<select ${at} aria-label="Colonne"><option value="">Colonne…</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
   return blocRecherche() + `<section><h3>Présentation des filtres</h3><p class="vide" style="font-size:12px;margin:0 0 4px">Le texte et l’icône du titre « Filtres » se règlent dans Général, « Éléments du panneau de gauche ».</p>
     <label><input type="checkbox" data-o="filtres_titre_on"${opt('filtres_titre_on', true) !== false ? ' checked' : ''}> Afficher un titre pliable au-dessus des filtres</label>
     <label><input type="checkbox" data-o="filtres_ouvert"${opt('filtres_ouvert', true) !== false ? ' checked' : ''}> Section dépliée par défaut</label>
@@ -1390,7 +1370,7 @@ function blocFiltres() {
     <p class="vide" style="font-size:12px">Créez ici tous les filtres proposés dans le panneau de gauche : le panneau de droite de Grist n’en propose plus.</p>
     ${cfg.filtres.map((f, i) => { const A = `data-a="fl" data-i="${i}"`, I = `data-i="${i}"`, TL = { multi:'choix multiples', unique:'choix unique', oui:'case oui/non', curseur:'curseur oui/non' };
       return rgd('fl', i, '', f.o, `<span class="rg-nom">${esc(f.nom || (f.c ? libel(f.c) : 'Nouveau filtre'))}</span>${f.c ? `<small class="res">${TL[f.type]}</small>` : '<small class="res warn">⚠ choisissez une colonne</small>'}<span class="rg-btns">${btn('fl-up', I, '▲', 'Monter')}${btn('fl-down', I, '▼', 'Descendre')}${btn('fl-del', I, '✕', 'Supprimer')}</span>`,
-      `<div class="rg-l2">${selC(`${A} data-f="c"`, f.c)}</div>
+      `<div class="rg-l2">${selCol(`${A} data-f="c"`, f.c)}</div>
       <div class="rg-l2"><input type="text" ${A} data-f="nom" value="${esc(f.nom)}" placeholder="Nom affiché (par défaut : ${esc(f.c ? libel(f.c) : 'nom de la colonne')})" aria-label="Nom affiché"></div>
       <div class="rg-l2"><select ${A} data-f="type" aria-label="Type de filtre"><option value="multi"${f.type === 'multi' ? ' selected' : ''}>Choix multiples (cases à cocher)</option><option value="unique"${f.type === 'unique' ? ' selected' : ''}>Choix unique (liste déroulante)</option><option value="oui"${f.type === 'oui' ? ' selected' : ''}>Oui / non : case « seulement les oui »</option><option value="curseur"${f.type === 'curseur' ? ' selected' : ''}>Oui / non : curseur Tous · Oui · Non</option></select>
       ${f.type === 'oui' || f.type === 'curseur' ? `<label>Valeur « oui » <input type="text" ${A} data-f="oui" value="${esc(f.oui)}" style="max-width:110px"></label>` : ''}${f.type === 'curseur' ? `<label>Valeur « non » <input type="text" ${A} data-f="non" value="${esc(f.non)}" style="max-width:110px"></label>` : ''}</div>
@@ -1402,7 +1382,7 @@ function blocFiltres() {
 }
 function blocProg() {
   const P = cfg.prog, MODES = [['ratio', 'Rapport entre deux colonnes (somme ÷ somme)'], ['part', 'Part des points qui remplissent une condition'], ['compte', 'Nombre de points'], ['somme', 'Somme d’une colonne'], ['moyenne', 'Moyenne d’une colonne']];
-  const selV = (at, v, vide) => `<select ${at}><option value="">${vide}</option>${allCols.map(c => `<option value="${esc(c)}"${c === v ? ' selected' : ''}>${esc(libel(c))}</option>`).join('')}</select>`;
+  const selV = (at, v, vide) => selectHtml(at, colsOpt(allCols), v, vide);
   const cond = (i, w, k, titre) => { const C = `data-a="pc" data-i="${i}" data-w="${w}"`; return `<div class="rg-sous">${titre}</div><div class="rg-l2">${selCol(`${C} data-f="c"`, k.c)}<select ${C} data-f="op" aria-label="Condition">${OPS.map(([v, t]) => `<option value="${v}"${v === k.op ? ' selected' : ''}>${t}</option>`).join('')}</select>${k.op === 'vide' || k.op === 'rempli' ? '' : `<input type="text" ${C} data-f="v" value="${esc(k.v)}" placeholder="valeur" aria-label="Valeur">`}</div>`; };
   return `<section><h3>Options</h3>
     <label><input type="checkbox" data-a="pg" data-f="suivre"${P.suivre ? ' checked' : ''}> Calculer sur les points visibles (selon la recherche et les filtres)</label>
@@ -1424,7 +1404,7 @@ function blocProg() {
     <button type="button" class="rg-ajout" data-a="pi-add">+ Ajouter un indicateur</button>`;
 }
 function blocEtiquette(k, titre) {
-  const e = cfg.etiquettes[k], D = `data-a="et" data-ek="${k}"`, S = (f, ch, v) => `<select ${D} data-f="${f}">${ch.map(([val, t]) => `<option value="${val}"${val === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  const e = cfg.etiquettes[k], D = `data-a="et" data-ek="${k}"`, S = (f, ch, v) => selectHtml(`${D} data-f="${f}"`, ch, v);
   return `<section><h3>${titre}</h3>
     <label>Forme ${S('forme', [['point', 'Identique au point'], ['rond', 'Rond'], ['goutte', 'Goutte'], ['carre', 'Carré'], ['losange', 'Losange'], ['triangle', 'Triangle'], ['aucune', 'Aucune étiquette']], e.forme)}</label>
     <label>Couleur ${S('couleur', [['point', 'Identique au point'], ['fixe', 'Couleur fixe']], e.couleur)} ${e.couleur === 'fixe' ? `<input type="color" ${D} data-f="coul" value="${e.coul}" aria-label="Couleur">` : ''}</label>
@@ -1466,7 +1446,7 @@ function contenuOnglet() {
   if (onglet === 'messages') return blocMessages();
   if (onglet === 'prog') return blocProg();
   const sl = (n, ch) => `<select data-o="${n}">${ch.map(c => `<option${opt(n, ch[0]) === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['compteurs', 'Compteurs'], ['liste', 'Liste des points'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
+  const elts = [['q', 'Recherche par nom'], ['filtres', 'Filtres'], ['liste', 'Liste des points'], ['tout', 'Bouton « Voir tous les points »'], ['legende', 'Légende'], ['iti', 'Bouton « Préparer un itinéraire »'], ['commune', 'Recherche de commune (en haut à droite de la carte)']];
   return `<section><h3>Éléments du panneau de gauche</h3><p class="vide" style="font-size:12px;margin:0 0 4px">⚙ pour régler un élément (texte, icône, aide), ✕ pour le retirer, « Ajouter un élément » pour en remettre un.</p>
     ${blocElementsGauche()}</section>
     <section><h3>Aides au survol</h3>
@@ -1533,18 +1513,18 @@ function ecrireEtConfirmer(delai) {   // écrit les réglages, puis attend que G
   });
 }
 async function diagnostic() {   // ?diag=1 : mesure ce que Grist fait réellement ; aucun secret affiché (le jeton d'accès n'est jamais montré)
-  const L = [], pause = ms => new Promise(r => setTimeout(r, ms)), t0 = Date.now(), dt = () => ((Date.now() - t0) / 1000).toFixed(1) + ' s';
-  L.push('Diagnostic CIFI – version ' + VERSION + ' – ' + new Date().toLocaleString('fr-FR'));
+  const rapport = [], pause = ms => new Promise(r => setTimeout(r, ms)), t0 = Date.now(), dt = () => ((Date.now() - t0) / 1000).toFixed(1) + ' s';
+  rapport.push('Diagnostic CIFI – version ' + VERSION + ' – ' + new Date().toLocaleString('fr-FR'));
   const ts = 'diag-' + Date.now(); opts._maj = ts; opts.cfg = cfg; let echo = null; attente = { ts, ok: () => { if (echo === null) echo = dt(); }, fin() {} };
-  try { await grist.setOptions(opts); L.push('1. Écriture des réglages : acceptée par l’appel (rien ne prouve encore l’enregistrement)'); } catch (e) { L.push('1. Écriture des réglages : ERREUR ' + e.message); }
+  try { await grist.setOptions(opts); rapport.push('1. Écriture des réglages : acceptée par l’appel (rien ne prouve encore l’enregistrement)'); } catch (e) { rapport.push('1. Écriture des réglages : ERREUR ' + e.message); }
   for (const d of [300, 700, 1500, 3000, 6000]) {
     await pause(d);
-    try { const t = await grist.docApi.fetchTable('_grist_Views_section'), x = JSON.stringify(t); L.push(`2. Relecture du serveur à ${dt()} : ${(t.id || []).length} widget(s) lu(s) ; réglages précédents lisibles : ${x.includes('entetes') ? 'oui' : 'non'} ; nouveau marqueur : ${x.includes(ts) ? 'TROUVÉ' : 'absent'}`); if (x.includes(ts)) break; } catch (e) { L.push('2. Relecture du serveur : ERREUR ' + e.message); break; }
+    try { const t = await grist.docApi.fetchTable('_grist_Views_section'), x = JSON.stringify(t); rapport.push(`2. Relecture du serveur à ${dt()} : ${(t.id || []).length} widget(s) lu(s) ; réglages précédents lisibles : ${x.includes('entetes') ? 'oui' : 'non'} ; nouveau marqueur : ${x.includes(ts) ? 'TROUVÉ' : 'absent'}`); if (x.includes(ts)) break; } catch (e) { rapport.push('2. Relecture du serveur : ERREUR ' + e.message); break; }
   }
-  L.push('3. Écho de Grist vers le widget : ' + (echo === null ? 'aucun reçu' : 'reçu à ' + echo)); attente = null;
-  try { const tk = await grist.docApi.getAccessToken({ readOnly: true }); L.push('4. Jeton d’accès au document : obtenu'); try { const r = await fetch(tk.baseUrl + '/access', { headers: { Authorization: 'Bearer ' + tk.token } }); L.push('5. Liste des accès du document : HTTP ' + r.status + (r.status === 200 ? ' (réservé aux propriétaires : vous l’êtes)' : r.status === 403 ? ' (refusé : vous n’êtes pas propriétaire)' : '')); } catch (e) { L.push('5. Liste des accès du document : ERREUR ' + e.message); } } catch (e) { L.push('4. Jeton d’accès : ERREUR ' + e.message); }
+  rapport.push('3. Écho de Grist vers le widget : ' + (echo === null ? 'aucun reçu' : 'reçu à ' + echo)); attente = null;
+  try { const tk = await grist.docApi.getAccessToken({ readOnly: true }); rapport.push('4. Jeton d’accès au document : obtenu'); try { const r = await fetch(tk.baseUrl + '/access', { headers: { Authorization: 'Bearer ' + tk.token } }); rapport.push('5. Liste des accès du document : HTTP ' + r.status + (r.status === 200 ? ' (réservé aux propriétaires : vous l’êtes)' : r.status === 403 ? ' (refusé : vous n’êtes pas propriétaire)' : '')); } catch (e) { rapport.push('5. Liste des accès du document : ERREUR ' + e.message); } } catch (e) { rapport.push('4. Jeton d’accès : ERREUR ' + e.message); }
   const z = document.createElement('div'); z.style.cssText = 'position:fixed;inset:12px 12px auto 12px;z-index:3000;background:#fff;border:2px solid #1f4e8c;border-radius:10px;padding:12px;font:13px/1.5 system-ui;white-space:pre-wrap;box-shadow:0 8px 30px rgba(0,0,0,.35)';
-  z.textContent = L.join('\n') + '\n\n'; const f = document.createElement('button'); f.textContent = 'Fermer'; f.onclick = () => z.remove(); z.appendChild(f); document.body.appendChild(z); return L;
+  z.textContent = rapport.join('\n') + '\n\n'; const f = document.createElement('button'); f.textContent = 'Fermer'; f.onclick = () => z.remove(); z.appendChild(f); document.body.appendChild(z); return rapport;
 }
 async function demanderConfig() {   // c'est Grist qui décide : le volet ne s'ouvre que si l'enregistrement est confirmé
   if (modal.classList.contains('ouvert')) { modal.classList.remove('reduit'); majCfgClasses(); return; }
@@ -1666,9 +1646,9 @@ modal.addEventListener('change', e => {
     case 'eh-txt-on': cfg.entetes[t.dataset.h].txtc = t.checked ? '#1d2733' : ''; break;
     case 'ms': { const M = cfg.messages[+t.dataset.i], f = t.dataset.f; if (M) M[f] = t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(+t.min, Math.min(+t.max, +t.value || 0)) : t.value; break; }
     case 'pk-chk': { if (t.checked) picker.sel.add(t.dataset.c); else picker.sel.delete(t.dataset.c); const n = modal.querySelector('#pk-n'); if (n) n.textContent = picker.sel.size; return; }
-    case 'lie': { const L = cfg.sections[+t.dataset.g].lie, f = t.dataset.f;
-      if (f === 'afficherVide' || f === 'grpHide' || f === 'gs') L[f] = t.checked; else if (f === 'annee' || f === 'max' || f === 'taille' || f === 'tailleTh') L[f] = Math.max(0, +t.value || 0);
-      else { L[f] = t.value; if (f === 'table') { const a = autoLie(t.value); L.cle = a.cle; L.cle2 = a.cle2; L.dateCol = a.dateCol; L.cols = a.cols; L.triCol = ''; } } break; }
+    case 'lie': { const lien = cfg.sections[+t.dataset.g].lie, f = t.dataset.f;
+      if (f === 'afficherVide' || f === 'grpHide' || f === 'gs') lien[f] = t.checked; else if (f === 'annee' || f === 'max' || f === 'taille' || f === 'tailleTh') lien[f] = Math.max(0, +t.value || 0);
+      else { lien[f] = t.value; if (f === 'table') { const a = autoLie(t.value); lien.cle = a.cle; lien.cle2 = a.cle2; lien.dateCol = a.dateCol; lien.cols = a.cols; lien.triCol = ''; } } break; }
     case 'lc': { const X = cfg.sections[+t.dataset.g].lie.cols[+t.dataset.j]; if (X) X[t.dataset.f] = t.value; break; }
     case 'sec-type': { const S = cfg.sections[+t.dataset.g]; S.type = t.value; if (t.value === 'lie' && !S.lie.table) S.lie = autoLie(); if (t.value === 'tableau' && !S.tab.heads.length) S.tab = nTab({ heads:['Colonne 1', 'Colonne 2'], rows:[{ cells:[{}, {}] }] }); break; }
     case 'tb-h': cfg.sections[+t.dataset.g].tab.heads[+t.dataset.j] = t.value; break;
