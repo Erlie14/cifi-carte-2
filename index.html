@@ -34,6 +34,7 @@
   .panel { background:var(--paper); border:1px solid var(--line); border-radius:0; box-shadow:0 2px 8px #0002; padding:10px; font-size:13px; }
   .panel input[type=search] { width:210px; box-sizing:border-box; padding:7px 9px; font:inherit; border:1px solid var(--line); border-radius:0; }
   .panel .count { margin-top:6px; color:var(--muted); line-height:1.4; }
+  #flt-raz:not([hidden]) { display:block; margin-top:8px !important; }
   .panel button.link { margin-top:4px; padding:0; border:0; background:none; color:var(--accent); font:inherit; cursor:pointer; text-decoration:underline; }
   .legend button { display:flex; align-items:center; gap:8px; width:100%; padding:5px 6px; margin:1px 0; font:inherit; text-align:left;
                    background:none; border:1px solid transparent; border-radius:0; cursor:pointer; color:var(--ink); }
@@ -241,7 +242,7 @@
   .prog-leg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--muted); margin:4px 0 8px; } .prog-leg i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
   .prog-focus { background:#fff3bf; border-radius:0; padding:6px 10px; font-size:13px; margin:6px 0; } .prog-focus button { margin-left:8px; font:inherit; font-size:12px; cursor:pointer; }
   .prog-l.cl { cursor:pointer; border-radius:0; } .prog-l.cl:hover { background:#f6f6f6; } .pal-lab { min-width:104px; font-size:13px; }
-  .flt-btn { display:inline-block; margin-top:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+  .flt-btn { display:inline-block; margin-top:8px; padding:6px 12px; border:1px solid var(--line); border-radius:4px; background:#fff; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
   .flt-btn:hover { background:#f6f6f6; } .flt-btn.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; outline:2px solid var(--accent); outline-offset:1px; }
   details.regle.el > summary::before { content:none !important; } .gear { color:var(--muted); font-size:16px; flex:none; line-height:1; } details.regle.el[open] .gear { color:var(--accent); }
   details.regle.el > summary .gear { margin-left:auto; } details.regle.el > summary .rg-nom { flex:0 1 auto; }
@@ -262,7 +263,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '73';
+const VERSION = '75';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -324,7 +325,7 @@ const nBarre = b => {
   b = b || {}; const sv = Array.isArray(b.boutons) ? b.boutons : [], out = [];
   sv.forEach(x => { const d = BOUTONS_DEF.find(y => y.id === x.id); if (d && !out.some(o => o.id === d.id)) out.push({ id:d.id, on: x.on === undefined ? d.on : x.on === true, txt:String(x.txt || ''), ti:String(x.ti || d.ti) }); });
   BOUTONS_DEF.forEach(d => { if (!out.some(o => o.id === d.id)) out.push({ ...d }); });
-  return { pos:Object.keys(BARRE_POS).includes(b.pos) ? b.pos : 'Haut au centre', taille:Math.max(26, Math.min(60, +b.taille || 36)), forme:['carre', 'arrondi', 'rond'].includes(b.forme) ? b.forme : 'arrondi',
+  return { pos:Object.keys(BARRE_POS).includes(b.pos) ? b.pos : 'Haut au centre', taille:Math.max(26, Math.min(60, +b.taille || 36)), forme:['carre', 'arrondi', 'rond'].includes(b.forme) ? b.forme : 'carre',
     fond:hex(b.fond) || '#ffffff', coul:hex(b.coul) || '#161616', bordc:hex(b.bordc) || '#d5dbe3', borde:Math.max(0, Math.min(4, b.borde === undefined ? 1 : (+b.borde || 0))), ombre:b.ombre !== false, boutons:out };
 };
 const nEtq = e => { e = e || {}; return { forme:['point', 'rond', 'goutte', 'carre', 'losange', 'triangle', 'aucune'].includes(e.forme) ? e.forme : 'point', couleur:e.couleur === 'fixe' ? 'fixe' : 'point', coul:hex(e.coul) || '#000091',
@@ -421,7 +422,7 @@ const barre = document.createElement('div'); barre.id = 'barre'; barre.innerHTML
 const barreOn = id => cfg.barre.boutons.some(x => x.id === id && x.on);
 function dessinerBarre() {
   const b = cfg.barre, cl = BARRE_POS[b.pos] || 'hc'; barre.className = `pos-${cl} ${cl[0] === 'b' ? 'bas' : 'haut'} ${cl[1] === 'd' ? 'dr' : cl[1] === 'c' ? 'ce' : 'ga'}`;
-  const st = barre.style, rayon = { carre:'3px', arrondi:'10px', rond:'50%' }[b.forme];
+  const st = barre.style, rayon = { carre:'0', arrondi:'10px', rond:'50%' }[b.forme];
   st.setProperty('--bb-t', b.taille + 'px'); st.setProperty('--bb-fond', b.fond); st.setProperty('--bb-coul', b.coul); st.setProperty('--bb-bc', b.bordc); st.setProperty('--bb-bw', b.borde + 'px'); st.setProperty('--bb-r', rayon); st.setProperty('--bb-sh', b.ombre ? '0 1px 4px #0004' : 'none');
   const pop = barre.querySelector('#pop-legende'), leg = document.getElementById('legende'), pan = document.querySelector('.panel.gauche');
   barre.querySelector('#barre-btns').innerHTML = b.boutons.filter(x => x.on).map(x => `<button type="button" class="bb" data-b="${x.id}" data-aide="${esc(x.ti)}" aria-label="${esc(x.ti)}"${x.id === 'legende' ? ` aria-pressed="${pop.classList.contains('ouvert')}"` : ''}>${x.txt ? esc(x.txt) : ICONES_BARRE[x.id]}</button>`).join('');
@@ -599,7 +600,7 @@ function appliquerStyles() {   // couleur, fond (en pastille), taille, gras, ita
   el.textContent = Object.entries(STYLES_TXT).map(([k, [, sel]]) => {
     const x = cfg.styles[k], d = [];
     if (x.coul) d.push(`color:${x.coul}`);
-    if (x.fond) { d.push(`background:${x.fond}`, 'padding:2px 8px', 'border-radius:8px'); if (['count', 'version'].includes(k)) d.push('width:fit-content'); }
+    if (x.fond) { d.push(`background:${x.fond}`, 'padding:2px 8px', 'border-radius:4px'); if (['count', 'version'].includes(k)) d.push('width:fit-content'); }
     if (x.taille) d.push(`font-size:${x.taille}px`); if (x.gras) d.push('font-weight:700'); if (x.ital) d.push('font-style:italic');
     return d.length ? `${sel} { ${d.map(v => v + ' !important').join('; ')} }` : '';
   }).join('\n');
@@ -625,7 +626,7 @@ function majListe() {
   const l = [...marqueurs.values()].filter(m => cluster.hasLayer(m)).sort((a, b) => String(a._cifi.nom).localeCompare(String(b._cifi.nom), 'fr')).slice(0, 5000);
   document.getElementById('liste').innerHTML = l.length ? l.map(m => `<button type="button" data-id="${Number(m._cifi.id)}">${devant(m._cifi)}${esc(m._cifi.nom || 'Sans nom')}</button>`).join('') : '<p class="vide" style="margin:8px">Aucun point.</p>';
 }
-const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:8px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : '') + (f.ital ? 'font-style:italic;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
+const fs = f => { const a = (coul(f.coul) ? `color:${coul(f.coul)};` : '') + (coul(f.fond) ? `background:${coul(f.fond)};padding:2px 8px;border-radius:4px;width:fit-content;` : '') + (f.gras ? 'font-weight:700;' : '') + (f.ital ? 'font-style:italic;' : ''); return (a ? ` style="${a}"` : '') + (f.aide ? ` data-aide="${esc(f.aide)}"` : ''); };
 function filtreHtml(f) {
   const c = f.c, nom = f.nom || libel(c), sl = new Set(filtreSel[c] || []);
   if (f.type === 'oui' && f.bouton) { const on = sl.size > 0; return `<button type="button" class="flt-btn${on ? ' on' : ''}" data-c="${esc(c)}" data-nom="${esc(nom)}" aria-pressed="${on}"${fs(f)}>${on ? '✓ ' : ''}${esc(nom)}</button>`; }
