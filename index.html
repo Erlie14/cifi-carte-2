@@ -263,7 +263,7 @@
 <aside id="fiche-panel" aria-label="Fiche du point" aria-hidden="true"></aside>
 
 <script>
-const VERSION = '78';
+const VERSION = '80';
 const peutModifier = !/[?&]readonly=(1|true)/i.test(location.search);
 const FORMES = ['rond','goutte','carre','losange','triangle'], FORMES_LIB = { rond:'Rond', goutte:'Goutte', carre:'Carré', losange:'Losange', triangle:'Triangle' }, SYMBOLES = { rond:'●', carre:'■', losange:'◆', triangle:'▲' };
 const pastille = (f, c, t, bc, be, tail) => `<span class="sw" style="width:${tail + 4}px"><span class="pin f-${f}${sombre(c) ? ' sombre' : ''}" style="background:${c};${bc ? (be === 0 ? 'border:0;' : `border:${Math.max(1, Math.round((be ?? 3) * tail / 30))}px solid ${bc};`) : ''}width:${tail}px;height:${tail}px;font-size:${String(t || '').length > 2 ? Math.round(tail * 0.36) : Math.round(tail * 0.55)}px"><span>${esc(t || '')}</span></span></span>`;
@@ -376,7 +376,7 @@ function fmtG(tn, c, v) {   // formatage selon le type réel de la colonne ; les
   return formater(c, v);
 }
 const fmt = (c, v) => fmtG(tid, c, v);
-const caseG = (tn, c, v) => gsOn() && typeof v === 'boolean' && (typesT[tn] || {})[c] === 'Bool' && (((stylesT[tn] || {})[c] || {}).wo || {}).widget !== 'TextBox' ? (v ? '☑' : '☐') : null;   // colonne booléenne affichée en case à cocher, comme dans Grist
+const caseG = (tn, c, v) => gsOn() && typeof v === 'boolean' && (typesT[tn] || {})[c] === 'Bool' && (((stylesT[tn] || {})[c] || {}).wo || {}).widget !== 'TextBox' ? (v ? '✔︎' : '') : null;   // colonne booléenne : coche si vrai, vide si faux, comme dans Grist
 function refInfo(c, v) {
   const rf = refDe(types[c]); if (!rf) return null;
   const ids = (Array.isArray(v) ? v.filter(x => x !== 'L') : [v]).filter(x => x > 0); if (!ids.length) return null;
@@ -684,7 +684,7 @@ const lignes = l => `<dl>${l.map(([k, v, x]) => { x = x || {};
     cn = [x.gn && 'b', x.gi && 'i'].filter(Boolean).join(' '), cv = [x.vg && 'b', x.vi && 'i'].filter(Boolean).join(' ');
   const val = x.ref ? x.ref.ids.map((id, i) => `<a class="ref" href="#" data-t="${esc(x.ref.t)}" data-id="${id}" data-n="${esc(x.ref.noms[i])}">${esc(x.ref.noms[i])}<span class="ref-ico" aria-hidden="true">↗</span></a>`).join(', ') : x.vb ? `<span class="badge">${esc(v)}</span>` : esc(v);
   return `<dt${cn ? ` class="${cn}"` : ''}${sd ? ` style="${sd}"` : ''}>${esc(k)}</dt><dd${cv ? ` class="${cv}"` : ''}${sv ? ` style="${sv}"` : ''}>${x.gs && cssG(x.gs) ? `<span style="${cssG(x.gs)}">${val}</span>` : val}</dd>`; }).join('')}</dl>`;
-const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), caseG(tid, x.c, vals[x.c]) ?? fmt(x.c, vals[x.c]), { ...x, ref:refInfo(x.c, vals[x.c]), gs:gsOn() ? styleGrist(tid, x.c, vals[x.c], vals) : null }]).filter(a => a[1] !== null);
+const champsDe = (liste, vals) => liste.map(x => [(x.nom || '').trim() || libel(x.c), caseG(tid, x.c, vals[x.c]) ?? fmt(x.c, vals[x.c]), { ...x, ref:refInfo(x.c, vals[x.c]), gs:gsOn() ? styleGrist(tid, x.c, vals[x.c], vals) : null }]).filter(a => a[1] !== null && a[1] !== '');   // une valeur vide (ou booléen faux) n'affiche pas la ligne
 const etiquette = d => d.style.cat >= 0 ? `<span class="niv" style="background:${d.style.couleur};color:${sombre(d.style.couleur) ? '#161616' : '#fff'}">${esc(nomRegle(cfg.regles[d.style.cat]))}</span>` : '';
 function enteteDe(d, k) {
   const h = cfg.entetes[k], tc = h.titre ? fmt(h.titre, d.vals[h.titre]) : null, sous = h.sous ? fmt(h.sous, d.vals[h.sous]) : null;
